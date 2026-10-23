@@ -102,6 +102,21 @@ export class ApiError extends Error {}
 const cache = new Map<string, { expires: number; value: unknown }>()
 const MAX_ENTRIES = 300
 
+async function cached<T>(key: string, ttlSeconds: number, load: () => Promise<T>): Promise<T> {
+    const hit = cache.get(key)
+    if (hit && hit.expires > Date.now()) return hit.value as T
+
+    try {
+        const value = await load()
+        if (cache.size >= MAX_ENTRIES) cache.delete(cache.keys().next().value!)
+        cache.set(key, { expires: Date.now() + ttlSeconds * 1000, value })
+        return value
+    } catch (err) {
+        if (hit) return hit.value as T // stale beats nothing
+        throw err instanceof ApiError ? err : new ApiError(`${key} failed: ${String(err)}`)
+    }
+}
+
 async function get<T>(
     path: string,
     params: Record<string, string | undefined>,
@@ -111,21 +126,13 @@ async function get<T>(
     for (const [k, v] of Object.entries(params)) if (v) qs.set(k, v)
     const url = `${BASE}/${path}?${qs.toString()}`
 
-    const hit = cache.get(url)
-    if (hit && hit.expires > Date.now()) return hit.value as T
-
-    try {
+    return cached(url, ttlSeconds, async () => {
         const res = await fetch(url, { headers: { 'x-api-key': API_KEY } })
         if (!res.ok) throw new ApiError(`${path} returned ${res.status}`)
         const body = await res.json<{ data?: T }>()
         if (!body.data) throw new ApiError(`${path} returned no data`)
-        if (cache.size >= MAX_ENTRIES) cache.delete(cache.keys().next().value!)
-        cache.set(url, { expires: Date.now() + ttlSeconds * 1000, value: body.data })
         return body.data
-    } catch (err) {
-        if (hit) return hit.value as T // stale beats nothing
-        throw err instanceof ApiError ? err : new ApiError(`${path} failed: ${String(err)}`)
-    }
+    })
 }
 
 export async function fetchSchedule(
@@ -158,4 +165,58 @@ export async function fetchStandings(tournamentId: string): Promise<RawStage[]> 
 export async function fetchEventDetails(matchId: string): Promise<RawEventDetails | null> {
     const data = await get<{ event: RawEventDetails | null }>('getEventDetails', { id: matchId }, 30)
     return data.event
+}
+
+// ---------- Global Power Rankings ----------
+// Not part of the API above: GPR lives in lolesports.com's own GraphQL API, which only runs
+// registered ("persisted") queries. This is the id their GPR page uses, taken from the
+// query manifest in their frontend bundle. If Riot changes the query, the id stops working
+// and callers fall back gracefully.
+
+const GQL = 'https://lolesports.com/api/gql'
+const GPR_QUERY_ID = '9411e88d02eb7f7ea8516ed9f206cb557d150208d6654c06f044781f8d9789ba'
+
+export interface RawGpr {
+    gprScore: number
+    rank: number
+    dateCalculated: string
+}
+
+export interface RawTeamGpr {
+    team: {
+        id: string
+        code: string
+        name: string
+        slug: string
+        image: string
+        homeLeague: { name: string; slug: string; image: string } | null
+    }
+    currentTeamGPR: RawGpr
+    previousTeamGPR: RawGpr | null
+    teamMatchRecord: { wins: number; losses: number } | null
+}
+
+// Rankings are recalculated every few days; `endDate` is today, so the cache key rolls daily.
+export async function fetchPowerRankings(startDate: string, endDate: string): Promise<RawTeamGpr[]> {
+    const qs = new URLSearchParams({
+        operationName: 'GetTeamGpr',
+        variables: JSON.stringify({ hl: 'en-US', step: 10, startDate, endDate, sport: 'lol' }),
+        extensions: JSON.stringify({ persistedQuery: { version: 1, sha256Hash: GPR_QUERY_ID } }),
+    })
+    const url = `${GQL}?${qs.toString()}`
+
+    return cached(url, 3 * 3600, async () => {
+        const res = await fetch(url, {
+            headers: {
+                // Apollo rejects GETs without a non-simple content type (CSRF protection).
+                'content-type': 'application/json',
+                'apollographql-client-name': 'Esports Web',
+                'apollographql-client-version': '1.0.0',
+            },
+        })
+        if (!res.ok) throw new ApiError(`GetTeamGpr returned ${res.status}`)
+        const body = await res.json<{ data?: { teamGPR?: RawTeamGpr[] } }>()
+        if (!body.data?.teamGPR?.length) throw new ApiError('GetTeamGpr returned no teams')
+        return body.data.teamGPR
+    })
 }

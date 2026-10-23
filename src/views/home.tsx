@@ -1,5 +1,6 @@
-import { activeEvents, eventUrl, isSwiss, swissTable, type Event, type Match } from '../data'
+import { activeEvents, eventUrl, isSwiss, swissTable, type Event, type Match, type Ranking } from '../data'
 import type { Fmt } from '../format'
+import { Movement } from './ranking'
 import { ByDay, CompactMatch, EventBanner, eventWhen, Layout, Logo, MatchRow, ResultRow } from './ui'
 
 export function HomePage(props: {
@@ -8,6 +9,7 @@ export function HomePage(props: {
     featured: Event | null
     featuredMatches: Match[]
     schedule: Match[]
+    ranking: Ranking | null
 }) {
     const { fmt, featured } = props
     const fm = props.featuredMatches
@@ -29,7 +31,27 @@ export function HomePage(props: {
         <Layout fmt={fmt} live={anyLive} nav="home">
             <div class="home">
                 <div class="col left">
-                    {swiss.length > 0 && featured && (
+                    {props.ranking && (
+                        <section>
+                            <h3 class="label">Power ranking</h3>
+                            <div class="list mini">
+                                {props.ranking.teams.slice(0, 5).map((t) => (
+                                    <a class="li" href="/ranking">
+                                        <span class="num">{t.rank}.</span>
+                                        <Logo src={t.team.image} size={18} />
+                                        <span class="grow name">{t.team.code}</span>
+                                        <Movement t={t} />
+                                    </a>
+                                ))}
+                            </div>
+                            <a class="more" href="/ranking">
+                                Complete ranking
+                                <small>Last updated: {fmt.ordinalDate(props.ranking.updated)}</small>
+                            </a>
+                        </section>
+                    )}
+                    {/* Fallback when the ranking can't be loaded */}
+                    {!props.ranking && swiss.length > 0 && featured && (
                         <section>
                             <h3 class="label">{featured.name} · Swiss</h3>
                             <div class="list mini">
