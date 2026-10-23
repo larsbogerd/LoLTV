@@ -1,0 +1,157 @@
+import { Hono, type Context } from 'hono'
+import { getCookie } from 'hono/cookie'
+import type { HtmlEscapedString } from 'hono/utils/html'
+import { ApiError } from './api'
+import {
+    featuredEvent,
+    getEvent,
+    getEventMatches,
+    getEvents,
+    getMatchDetail,
+    getSchedulePage,
+    getStages,
+    getUpcoming,
+    matchSlug,
+    eventUrl,
+} from './data'
+import { makeFmt, safeTimeZone, type Fmt } from './format'
+import { CSS } from './style'
+import { ErrorPage } from './views/error'
+import { EventPage } from './views/event'
+import { HomePage } from './views/home'
+import { EventsPage, MatchesPage, ResultsPage } from './views/lists'
+import { MatchPage } from './views/match'
+
+const app = new Hono()
+
+const FAVICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="5" fill="#3c7ac4"/><path d="M9 7h4v14h8v4H9z" fill="#c8aa6e"/></svg>`
+
+function fmtFor(c: Context): Fmt {
+    return makeFmt(safeTimeZone(getCookie(c, 'tz')))
+}
+
+async function render(
+    c: Context,
+    page: HtmlEscapedString | Promise<HtmlEscapedString>,
+    status: 200 | 404 | 502 = 200,
+) {
+    c.header('cache-control', 'private, max-age=0, must-revalidate')
+    const html: string = await page
+    return c.html(`<!DOCTYPE html>${html}`, status)
+}
+
+app.get('/style.css', (c) =>
+    c.body(CSS, 200, {
+        'content-type': 'text/css; charset=utf-8',
+        'cache-control': 'public, max-age=31536000, immutable',
+    }),
+)
+app.get('/favicon.svg', (c) =>
+    c.body(FAVICON, 200, { 'content-type': 'image/svg+xml', 'cache-control': 'public, max-age=86400' }),
+)
+app.get('/favicon.ico', (c) => c.redirect('/favicon.svg', 301))
+
+app.get('/', async (c) => {
+    const [events, page] = await Promise.all([getEvents(), getSchedulePage()])
+    const featured = featuredEvent(events)
+    const featuredMatches = featured ? await getEventMatches(featured) : []
+    return render(
+        c,
+        <HomePage
+            fmt={fmtFor(c)}
+            events={events}
+            featured={featured}
+            featuredMatches={featuredMatches}
+            schedule={page.matches}
+        />,
+    )
+})
+
+// HLTV style: /matches, /matches?event=<id>
+app.get('/matches', async (c) => {
+    const eventId = c.req.query('event')
+    const event = eventId ? await getEvent(eventId) : null
+    if (eventId && !event) return notFound(c)
+    const matches = event ? await getEventMatches(event) : await getUpcoming()
+    return render(c, <MatchesPage fmt={fmtFor(c)} event={event} matches={matches} />)
+})
+
+// HLTV style: /results, /results?event=<id>; older pages via ?before=<token>
+app.get('/results', async (c) => {
+    const eventId = c.req.query('event')
+    const before = c.req.query('before')
+    if (eventId) {
+        const event = await getEvent(eventId)
+        if (!event) return notFound(c)
+        return render(
+            c,
+            <ResultsPage fmt={fmtFor(c)} event={event} matches={await getEventMatches(event)} older={null} />,
+        )
+    }
+    const page = await getSchedulePage(before)
+    return render(
+        c,
+        <ResultsPage
+            fmt={fmtFor(c)}
+            event={null}
+            matches={page.matches}
+            older={page.older}
+            newer={!!before}
+        />,
+    )
+})
+
+app.get('/events', async (c) => render(c, <EventsPage fmt={fmtFor(c)} events={await getEvents()} />))
+
+// HLTV style: /events/<id>/<slug>
+app.get('/events/:id/:slug?', async (c) => {
+    const event = await getEvent(c.req.param('id'))
+    if (!event) return notFound(c)
+    if (c.req.param('slug') !== event.slug) return c.redirect(eventUrl(event), 301)
+    const matches = await getEventMatches(event)
+    const stages = await getStages(event, matches)
+    return render(c, <EventPage fmt={fmtFor(c)} event={event} matches={matches} stages={stages} />)
+})
+
+// HLTV style: /matches/<id>/<team1>-vs-<team2>-<event>
+app.get('/matches/:id/:slug?', async (c) => {
+    const id = c.req.param('id')
+    if (!/^\d+$/.test(id)) return notFound(c)
+    const detail = await getMatchDetail(id)
+    if (!detail) return notFound(c)
+    if (detail.match && c.req.param('slug') !== matchSlug(detail.match)) {
+        return c.redirect(`/matches/${id}/${matchSlug(detail.match)}`, 301)
+    }
+    const event = await getEvent(detail.details.tournament.id)
+    return render(c, <MatchPage fmt={fmtFor(c)} detail={detail} event={event} />)
+})
+
+function notFound(c: Context) {
+    return render(
+        c,
+        <ErrorPage
+            fmt={fmtFor(c)}
+            title="Not found"
+            message="That page doesn't exist (or the API doesn't know it)."
+        />,
+        404,
+    )
+}
+
+app.notFound(notFound)
+
+app.onError((err, c) => {
+    console.error(err)
+    const upstream = err instanceof ApiError
+    return render(
+        c,
+        <ErrorPage
+            fmt={fmtFor(c)}
+            title={upstream ? 'Data unavailable' : 'Something broke'}
+            message={upstream ? "The lolesports API didn't respond. Try again in a minute." : String(err)}
+        />,
+        502,
+    )
+})
+
+export default app
