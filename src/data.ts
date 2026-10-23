@@ -758,10 +758,10 @@ export async function getTeamProfile(id: string, now = new Date()): Promise<Team
             role: p.role,
         }))
         .sort((a, b) => roleIndex(a.role) - roleIndex(b.role) || a.handle.localeCompare(b.handle))
-    const latest = (past ?? [])
-        .filter((e) => e.match)
-        .sort((a, b) => b.startTime.localeCompare(a.startTime))[0]
-    const starters = latest?.match ? await optional(lineup(raw.id, raw.code, latest.match.id, players)) : null
+    // Lineup source: the live match if there is one, else the latest result. Only matches at
+    // followed events count: at off-season cups (WSCI, KeSPA Cup) teams often field academy players.
+    const latest = upcoming.find((m) => m.state === 'inProgress') ?? results[0]
+    const starters = latest ? await optional(lineup(raw.id, raw.code, latest.id, players)) : null
     const starterIds = new Set((starters ?? []).map((p) => p.id))
 
     const rankedTeam = ranking?.teams.find((t) => t.team.id === raw.id)
@@ -791,7 +791,8 @@ export async function getTeamProfile(id: string, now = new Date()): Promise<Team
 }
 
 // lolesports.com lists everyone attached to a team (subs, academy) without saying who starts.
-// The live-stats metadata of the team's latest game does: the five who actually played.
+// The live-stats metadata of the team's latest game does: the five who actually played. A game
+// in progress already has its metadata, so a live match gives today's lineup.
 async function lineup(
     teamId: string,
     code: string,
@@ -799,7 +800,7 @@ async function lineup(
     roster: Player[],
 ): Promise<Player[] | null> {
     const details = await fetchEventDetails(matchId)
-    const game = details?.match.games.filter((g) => g.state === 'completed').pop()
+    const game = details?.match.games.filter((g) => g.state === 'completed' || g.state === 'inProgress').pop()
     if (!game) return null
     const meta = await fetchGameMetadata(game.id)
     const side = [meta?.blueTeamMetadata, meta?.redTeamMetadata].find((s) => s?.esportsTeamId === teamId)
