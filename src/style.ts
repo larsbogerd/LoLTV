@@ -224,6 +224,7 @@ details.stage > summary small { margin-right: auto; color: var(--muted); }
 .einfo span { display: block; color: var(--muted); font-size: 11px; }
 .einfo b { font-size: 14px; font-weight: 600; text-transform: capitalize; }
 .egrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; align-items: start; }
+.tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px 16px; }
 details.sub { margin-top: 10px; }
 details.sub > summary { cursor: pointer; color: var(--link); font-size: 12px; margin-bottom: 8px; }
 

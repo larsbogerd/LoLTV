@@ -86,7 +86,19 @@ export function EventPage(props: { fmt: Fmt; event: Event; matches: Match[]; sta
 function StageBody(props: { stage: Stage; fmt: Fmt }) {
     const s = props.stage
     if (s.kind === 'swiss') return <SwissStage stage={s} fmt={props.fmt} />
-    if (s.kind === 'table') return <RankTable rows={s.table ?? []} />
+    if (s.kind === 'table') {
+        const tables = s.tables ?? []
+        return (
+            <div class="tables">
+                {tables.map((t) => (
+                    <div>
+                        {tables.length > 1 && <h4 class="label">{t.name}</h4>}
+                        <RankTable rows={t.rows} />
+                    </div>
+                ))}
+            </div>
+        )
+    }
     return <Bracket columns={s.columns ?? []} fmt={props.fmt} />
 }
 
@@ -251,7 +263,7 @@ function SwissTable(props: { rows: SwissRow[] }) {
 
 // ---------- other stage types ----------
 
-function RankTable(props: { rows: NonNullable<Stage['table']> }) {
+function RankTable(props: { rows: NonNullable<Stage['tables']>[number]['rows'] }) {
     return (
         <table class="stand">
             <thead>
@@ -293,6 +305,10 @@ function Bracket(props: { columns: { name: string; matches: Match[] }[]; fmt: Fm
                             <div class="bd">
                                 <span>
                                     {fmt.shortDate(m.start)} {fmt.time(m.start)}
+                                    {props.columns.length === 1 &&
+                                        m.stage &&
+                                        m.stage !== col.name &&
+                                        ` · ${m.stage}`}
                                 </span>
                                 {m.state === 'inProgress' ? (
                                     <span class="live">LIVE</span>
