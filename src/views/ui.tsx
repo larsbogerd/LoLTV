@@ -7,12 +7,29 @@ import { CSS_VERSION } from '../style'
 // Reloads once (per tab session) when the cookie was missing or outdated.
 const TZ_SCRIPT = `(function(){try{var z=Intl.DateTimeFormat().resolvedOptions().timeZone;var m=document.cookie.match(/(?:^|; )tz=([^;]*)/);if(z&&(!m||decodeURIComponent(m[1])!==z)){document.cookie="tz="+encodeURIComponent(z)+"; path=/; max-age=31536000; samesite=lax";if(!sessionStorage.getItem("tzr")){sessionStorage.setItem("tzr","1");location.reload();}}}catch(e){}})();`
 
-// Pages with a live match refresh themselves every minute while visible.
-const LIVE_SCRIPT = `(function(){if(!document.body.dataset.live)return;var t=Date.now();function r(){if(document.visibilityState==="visible"&&Date.now()-t>60000)location.reload();}setInterval(r,5000);document.addEventListener("visibilitychange",r);})();`
+// Keeps pages current without polling all day: reload every minute while something is live
+// (data-live), or once when the next match is due to start (data-next). Only while visible.
+const REFRESH_SCRIPT = `(function(){var d=document.body.dataset,t=Date.now(),due=d.next?Date.parse(d.next)+30000:0;if(!d.live&&!due)return;function r(){if(document.visibilityState!=="visible")return;var n=Date.now();if(d.live?n-t>60000:n>=due)location.reload();}setInterval(r,5000);document.addEventListener("visibilitychange",r);})();`
+
+// A match counts as live from its scheduled start: the API often flips to inProgress a few
+// minutes late. Matches that are hours overdue are ignored (postponed or stale data).
+function refreshHints(matches: Match[], now = Date.now()): { live: boolean; next: string | null } {
+    let live = false
+    let next: string | null = null
+    for (const m of matches) {
+        if (m.state === 'inProgress') live = true
+        if (m.state !== 'unstarted') continue
+        const start = Date.parse(m.start)
+        if (start <= now && now - start < 3 * 3600e3) live = true
+        else if (start > now && start - now < 12 * 3600e3 && (!next || m.start < next)) next = m.start
+    }
+    return { live, next }
+}
 
 type NavKey = 'home' | 'matches' | 'results' | 'events' | 'ranking'
 
-export function Layout(props: { title?: string; fmt: Fmt; live?: boolean; nav?: NavKey; children: Child }) {
+export function Layout(props: { title?: string; fmt: Fmt; watch?: Match[]; nav?: NavKey; children: Child }) {
+    const { live, next } = refreshHints(props.watch ?? [])
     const link = (key: NavKey, href: string, label: string) => (
         <a href={href} class={props.nav === key ? 'on' : undefined}>
             {label}
@@ -31,7 +48,7 @@ export function Layout(props: { title?: string; fmt: Fmt; live?: boolean; nav?: 
                 <link rel="stylesheet" href={`/style.css?v=${CSS_VERSION}`} />
                 <script dangerouslySetInnerHTML={{ __html: TZ_SCRIPT }} />
             </head>
-            <body data-live={props.live ? '1' : undefined}>
+            <body data-live={live ? '1' : undefined} data-next={!live && next ? next : undefined}>
                 <header class="nav">
                     <div class="nav-inner">
                         <a class="brand" href="/">
@@ -51,9 +68,12 @@ export function Layout(props: { title?: string; fmt: Fmt; live?: boolean; nav?: 
                     <span>
                         Data: <a href="https://lolesports.com">lolesports.com</a> (unofficial)
                     </span>
-                    {props.live && <span>Auto-refreshing while live</span>}
+                    {live && <span>Auto-refreshing while live</span>}
+                    {!live && next && (
+                        <span>Refreshes when the next match starts ({props.fmt.time(next)})</span>
+                    )}
                 </footer>
-                <script dangerouslySetInnerHTML={{ __html: LIVE_SCRIPT }} />
+                <script dangerouslySetInnerHTML={{ __html: REFRESH_SCRIPT }} />
             </body>
         </html>
     )

@@ -25,7 +25,7 @@ export function MatchPage(props: { fmt: Fmt; detail: MatchDetail; event: Event |
     const side = (t: Team) => (t.won === false ? 'side lost' : 'side')
 
     return (
-        <Layout fmt={fmt} title={title} live={live} nav="matches">
+        <Layout fmt={fmt} title={title} watch={m ? [m] : []} nav="matches">
             <div class="mhead">
                 <div class="mhead-ev">
                     <Logo src={raw.league.image} size={18} />

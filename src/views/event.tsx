@@ -22,7 +22,7 @@ export function EventPage(props: { fmt: Fmt; event: Event; matches: Match[]; sta
     const isOpen = (s: Stage) => (anyActive ? s.status === 'active' : s === fallback)
 
     return (
-        <Layout fmt={fmt} title={event.name} live={live.length > 0} nav="events">
+        <Layout fmt={fmt} title={event.name} watch={matches} nav="events">
             <EventBanner event={event} fmt={fmt} tab="overview" sub={stage} />
             <div class="einfo">
                 <div>

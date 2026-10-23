@@ -10,7 +10,7 @@ export function MatchesPage(props: { fmt: Fmt; event: Event | null; matches: Mat
         <Layout
             fmt={fmt}
             title={event ? `${event.name} matches` : 'Matches'}
-            live={live.length > 0}
+            watch={props.matches}
             nav="matches"
         >
             {event ? (
