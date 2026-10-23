@@ -1,4 +1,4 @@
-import { eventUrl, matchUrl, teamUrl, type Match, type Player, type Team, type TeamProfile } from '../data'
+import { eventUrl, matchUrl, type Match, type Player, type Team, type TeamProfile } from '../data'
 import { logoUrl, ordinal, type Fmt } from '../format'
 import { Layout, Logo, Tag } from './ui'
 
@@ -215,9 +215,9 @@ function TeamMatchRow(props: { m: Match; team: TeamProfile; fmt: Fmt }) {
     const us = own(m, props.team)
     const them = m.teams.find((x) => x !== us) ?? m.teams[1]
     const date = fmt.dayKey(m.start).split('-').reverse().join('/')
-    const themUrl = teamUrl(them)
+    // The whole row links to the match (like match rows elsewhere), so no nested team link.
     return (
-        <div class={`tp-row ${m.state}`}>
+        <a class={`tp-row ${m.state}`} href={matchUrl(m)}>
             <span class="tp-date">{m.state === 'unstarted' ? `${date} ${fmt.time(m.start)}` : date}</span>
             <span class={`tp-side us ${us.won === false ? 'lost' : ''}`}>
                 <span class="tn">{us.name}</span>
@@ -236,18 +236,10 @@ function TeamMatchRow(props: { m: Match; team: TeamProfile; fmt: Fmt }) {
             </span>
             <span class={`tp-side them ${them.won === false ? 'lost' : ''}`}>
                 <Logo src={them.image} size={18} />
-                {themUrl ? (
-                    <a class="tn" href={themUrl}>
-                        {them.name}
-                    </a>
-                ) : (
-                    <span class="tn">{them.name}</span>
-                )}
+                <span class="tn">{them.name}</span>
                 <Tag t={them} />
             </span>
-            <a class="tp-btn" href={matchUrl(m)}>
-                {m.state === 'inProgress' ? 'LIVE' : 'Match'}
-            </a>
-        </div>
+            <span class="tp-btn">{m.state === 'inProgress' ? 'LIVE' : 'Match'}</span>
+        </a>
     )
 }
