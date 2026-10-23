@@ -81,6 +81,11 @@ function teamClass(base: string, t: Team) {
         .join(' ')
 }
 
+// Small grey home-league label after a team name, at international events only.
+export function Tag(props: { t: Team }) {
+    return props.t.tag ? <span class="tag">{props.t.tag}</span> : null
+}
+
 function eventLabel(m: Match) {
     return m.event?.name ?? m.leagueName
 }
@@ -101,6 +106,7 @@ export function MatchRow(props: { m: Match; fmt: Fmt; showEvent?: boolean }) {
                     <div class={teamClass('tl', t)}>
                         <Logo src={t.image} size={18} />
                         <span class="tn">{t.name}</span>
+                        <Tag t={t} />
                         {live && <span class="ts">{t.score ?? 0}</span>}
                     </div>
                 ))}
@@ -124,6 +130,7 @@ export function ResultRow(props: { m: Match; showEvent?: boolean }) {
     return (
         <a class="rrow" href={matchUrl(m)}>
             <div class={teamClass('rt r1', a)}>
+                <Tag t={a} />
                 <span class="tn">{a.name}</span>
                 <Logo src={a.image} size={18} />
             </div>
@@ -134,6 +141,7 @@ export function ResultRow(props: { m: Match; showEvent?: boolean }) {
             <div class={teamClass('rt r2', b)}>
                 <Logo src={b.image} size={18} />
                 <span class="tn">{b.name}</span>
+                <Tag t={b} />
             </div>
             <div class="rev">
                 <Logo src={m.leagueImage} size={18} />

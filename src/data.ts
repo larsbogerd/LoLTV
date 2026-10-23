@@ -46,6 +46,7 @@ export interface Team {
     score: number | null // game wins in the series
     won: boolean | null
     tbd: boolean
+    tag?: string // home league (LEC, LCK...), only set at international events
 }
 
 export interface Match {
@@ -185,18 +186,30 @@ function toTeam(raw: RawTeam | undefined): Team {
 }
 
 // Schedule entries only carry league name + slug; logos and events come from these lookups.
+// Home leagues come from the power ranking (optional: no ranking means no tags).
 interface Lookups {
     events: Event[]
     leagues: Map<string, League>
+    homeLeagues: Map<string, string> // team code -> league name
 }
 
 async function getLookups(): Promise<Lookups> {
-    const [events, leagues] = await Promise.all([getEvents(), getLeagues()])
-    return { events, leagues: new Map(leagues.map((l) => [l.slug, l])) }
+    const [events, leagues, ranking] = await Promise.all([getEvents(), getLeagues(), getRanking()])
+    const homeLeagues = new Map<string, string>()
+    for (const t of ranking?.teams ?? []) if (t.league) homeLeagues.set(t.team.code, t.league.name)
+    return { events, leagues: new Map(leagues.map((l) => [l.slug, l])), homeLeagues }
 }
 
-function toMatch(raw: RawScheduleEvent, { events, leagues }: Lookups): Match | null {
+export function isInternational(e: Event | null): boolean {
+    return e?.league.region === 'INTERNATIONAL'
+}
+
+function toMatch(raw: RawScheduleEvent, { events, leagues, homeLeagues }: Lookups): Match | null {
     if (raw.type !== 'match' || !raw.match) return null
+    const event = eventFor(events, raw.league.slug, raw.startTime)
+    const teams: [Team, Team] = [toTeam(raw.match.teams[0]), toTeam(raw.match.teams[1])]
+    // At international events, show where each team comes from ("G2 · LEC").
+    if (isInternational(event)) for (const t of teams) if (!t.tbd) t.tag = homeLeagues.get(t.code)
     return {
         id: raw.match.id,
         start: raw.startTime,
@@ -206,8 +219,8 @@ function toMatch(raw: RawScheduleEvent, { events, leagues }: Lookups): Match | n
         leagueSlug: raw.league.slug,
         leagueName: raw.league.name,
         leagueImage: raw.league.image ?? leagues.get(raw.league.slug)?.image ?? null,
-        event: eventFor(events, raw.league.slug, raw.startTime),
-        teams: [toTeam(raw.match.teams[0]), toTeam(raw.match.teams[1])],
+        event,
+        teams,
     }
 }
 
