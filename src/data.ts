@@ -64,12 +64,16 @@ export interface Match {
 
 // ---------- leagues & events ----------
 
-const TIER1 = new Set(['worlds', 'msi', 'first_stand'])
-const TIER2 = new Set(['lck', 'lpl', 'lec', 'lcs', 'lcp', 'cblol-brazil', 'lta_n', 'lta_s'])
-const EXCLUDED = new Set(['tft_esports'])
+// LOLTV only follows tier 1: Riot's international events plus the six major regions.
+// Everything else the API carries (ERLs, Challengers, promotion tournaments, off-season cups,
+// national-team events) is left out on purpose. Add a league slug here to follow it.
+const TIER1 = new Set(['worlds', 'msi', 'first_stand']) // featured on the homepage
+const CROSS_REGION = new Set([...TIER1, 'ewc_lol', 'americas_cup'])
+const REGIONS = new Set(['lck', 'lpl', 'lec', 'lcs', 'cblol-brazil', 'lcp'])
+const FOLLOWED = new Set([...CROSS_REGION, ...REGIONS])
 
 function toLeague(raw: RawLeague): League {
-    const tier = TIER1.has(raw.slug) ? 1 : TIER2.has(raw.slug) ? 2 : 3
+    const tier = TIER1.has(raw.slug) ? 1 : CROSS_REGION.has(raw.slug) ? 2 : 3
     return { id: raw.id, slug: raw.slug, name: raw.name, region: raw.region, image: raw.image, tier }
 }
 
@@ -93,7 +97,7 @@ function titleCase(slug: string, known = new Map<string, string>()): string {
 
 export async function getLeagues(): Promise<League[]> {
     const raw = await fetchLeagues()
-    return raw.filter((l) => l.displayPriority.status !== 'hidden' && !EXCLUDED.has(l.slug)).map(toLeague)
+    return raw.filter((l) => FOLLOWED.has(l.slug)).map(toLeague)
 }
 
 export async function getEvents(): Promise<Event[]> {
@@ -200,12 +204,13 @@ async function getLookups(): Promise<Lookups> {
     return { events, leagues: new Map(leagues.map((l) => [l.slug, l])), homeLeagues }
 }
 
+// Events where teams from different regions meet, so home-league tags add information.
 export function isInternational(e: Event | null): boolean {
-    return e?.league.region === 'INTERNATIONAL'
+    return !!e && CROSS_REGION.has(e.league.slug)
 }
 
 function toMatch(raw: RawScheduleEvent, { events, leagues, homeLeagues }: Lookups): Match | null {
-    if (raw.type !== 'match' || !raw.match) return null
+    if (raw.type !== 'match' || !raw.match || !leagues.has(raw.league.slug)) return null
     const event = eventFor(events, raw.league.slug, raw.startTime)
     const teams: [Team, Team] = [toTeam(raw.match.teams[0]), toTeam(raw.match.teams[1])]
     // At international events, show where each team comes from ("G2 · LEC").
@@ -230,8 +235,12 @@ export interface MatchPage {
     newer: string | null
 }
 
+// The "global" schedule, limited to the followed leagues so pages aren't padded with
+// matches we'd throw away.
 export async function getSchedulePage(pageToken?: string): Promise<MatchPage> {
-    const [schedule, lookups] = await Promise.all([fetchSchedule({ pageToken }), getLookups()])
+    const lookups = await getLookups()
+    const leagueId = [...lookups.leagues.values()].map((l) => l.id).join(',')
+    const schedule = await fetchSchedule({ leagueId, pageToken })
     return {
         matches: schedule.events.map((e) => toMatch(e, lookups)).filter((m): m is Match => m !== null),
         older: schedule.pages.older,
