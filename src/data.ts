@@ -470,8 +470,8 @@ export interface Stage {
     kind: 'swiss' | 'table' | 'bracket'
     swiss?: SwissRow[]
     swissBracket?: SwissBracket | null
-    table?: { position: number; team: Team; wins: number; losses: number }[]
-    columns?: { name: string; matches: Match[] }[]
+    tables?: { name: string; rows: { position: number; team: Team; wins: number; losses: number }[] }[]
+    columns?: { name: string; matches: Match[] }[] // one column = plain grid, several = bracket
 }
 
 export function isSwiss(name: string): boolean {
@@ -491,7 +491,6 @@ export async function getStages(event: Event, eventMatches: Match[]): Promise<St
     for (const stage of raw) {
         const ids = stage.sections.flatMap((s) => s.matches.map((m) => m.id))
         const matches = ids.map((id) => byId.get(id)).filter((m): m is Match => !!m)
-        const rankings = stage.sections.flatMap((s) => s.rankings ?? [])
 
         const status = stageStatus(matches)
 
@@ -503,22 +502,33 @@ export async function getStages(event: Event, eventMatches: Match[]): Promise<St
                 swiss: swissTable(matches),
                 swissBracket: swissBracket(matches),
             })
-        } else if (rankings.length) {
+        } else if (stage.sections.some((sec) => sec.rankings?.length)) {
+            // One table per section: LCK, for example, splits its groups into Legend and Rise.
             stages.push({
                 name: stage.name,
                 status,
                 kind: 'table',
-                table: rankings.flatMap((r) =>
-                    r.teams.map((t) => ({
-                        position: r.ordinal,
-                        team: toTeam(t),
-                        wins: t.record?.wins ?? 0,
-                        losses: t.record?.losses ?? 0,
+                tables: stage.sections
+                    .filter((sec) => sec.rankings?.length)
+                    .map((sec) => ({
+                        name: sec.name,
+                        rows: sec.rankings.flatMap((r) =>
+                            r.teams.map((t) => ({
+                                position: r.ordinal,
+                                team: toTeam(t),
+                                wins: t.record?.wins ?? 0,
+                                losses: t.record?.losses ?? 0,
+                            })),
+                        ),
                     })),
-                ),
             })
         } else {
-            stages.push({ name: stage.name, status, kind: 'bracket', columns: columnsByStage(matches) })
+            stages.push({
+                name: stage.name,
+                status,
+                kind: 'bracket',
+                columns: bracketColumns(stage.name, matches),
+            })
         }
     }
 
@@ -527,7 +537,7 @@ export async function getStages(event: Event, eventMatches: Match[]): Promise<St
             name: 'Matches',
             status: stageStatus(eventMatches),
             kind: 'bracket',
-            columns: columnsByStage(eventMatches),
+            columns: bracketColumns('Matches', eventMatches),
         })
     }
     return stages
@@ -539,14 +549,21 @@ function stageStatus(matches: Match[]): Stage['status'] {
     return 'upcoming'
 }
 
-// Groups matches into columns by their block name, in chronological order of first appearance.
-function columnsByStage(matches: Match[]): { name: string; matches: Match[] }[] {
+// The API has no bracket structure (previousMatchIds is empty), only block names. When those
+// blocks form a clean single-elimination tree (4 -> 2 -> 1, like Worlds knockouts) they become
+// bracket columns; anything else (double elimination, gauntlets) is one chronological grid.
+function bracketColumns(stageName: string, matches: Match[]): { name: string; matches: Match[] }[] {
+    const sorted = [...matches].sort((a, b) => a.start.localeCompare(b.start))
     const cols = new Map<string, Match[]>()
-    for (const m of [...matches].sort((a, b) => a.start.localeCompare(b.start))) {
-        const key = m.stage || 'Matches'
+    for (const m of sorted) {
+        const key = m.stage || stageName
         cols.set(key, [...(cols.get(key) ?? []), m])
     }
-    return [...cols].map(([name, ms]) => ({ name, matches: ms }))
+    const columns = [...cols].map(([name, ms]) => ({ name, matches: ms }))
+    const isTree =
+        columns.length > 1 &&
+        columns.every((c, i) => i === 0 || c.matches.length * 2 === columns[i - 1]!.matches.length)
+    return isTree ? columns : [{ name: stageName, matches: sorted }]
 }
 
 // ---------- power ranking ----------
