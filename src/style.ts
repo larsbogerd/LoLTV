@@ -216,6 +216,39 @@ details.stage > summary::before { content: "▸"; color: var(--muted); margin-ri
 details.stage[open] > summary::before { content: "▾"; }
 details.stage > summary small { margin-right: auto; color: var(--muted); }
 
+/* ---------- event overview ---------- */
+.einfo { display: flex; flex-wrap: wrap; gap: 8px 40px; background: var(--box); padding: 10px 18px; border-radius: 0 0 var(--radius) var(--radius); margin: 1px 0 16px; }
+.einfo span { display: block; color: var(--muted); font-size: 11px; }
+.einfo b { font-size: 14px; font-weight: 600; text-transform: capitalize; }
+.egrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; align-items: start; }
+details.sub { margin-top: 10px; }
+details.sub > summary { cursor: pointer; color: var(--link); font-size: 12px; margin-bottom: 8px; }
+
+/* Swiss "group play" bracket, after HLTV */
+.swiss-scroll { overflow-x: auto; background: var(--box); border-radius: var(--radius); padding: 14px; }
+.swiss { display: grid; grid-template-columns: repeat(6, minmax(156px, 1fr)); gap: 12px; min-width: 1000px; }
+.sw-col { display: flex; flex-direction: column; justify-content: center; gap: 16px; }
+.sw-col.edge { justify-content: space-between; }
+.sw-pool { display: flex; flex-direction: column; gap: 4px; }
+.sw-rec { font-size: 12px; font-weight: 700; color: var(--dim); }
+.sw-m { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 4px; background: var(--head); border-radius: var(--radius); padding: 6px; font-size: 12px; min-height: 30px; }
+.sw-m:hover { background: var(--box-hover); }
+.sw-m.inProgress { box-shadow: inset 0 0 0 1px var(--live); }
+.sw-t { display: flex; align-items: center; gap: 5px; min-width: 0; }
+.sw-t.r { justify-content: flex-end; }
+.sw-t .tn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.sw-t.lost { opacity: .4; }
+.sw-s { color: var(--muted); font-size: 11px; font-weight: 700; padding: 0 2px; }
+.sw-m.completed .sw-s, .sw-m.inProgress .sw-s { color: var(--text); }
+.sw-q { width: 16px; height: 16px; border-radius: 50%; background: #ffffff14; color: var(--muted); font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.sw-out { border-radius: var(--radius); padding: 6px 6px 8px; }
+.sw-out.q { background: #2e6a2a; }
+.sw-out.x { background: #6c2323; }
+.sw-out .sw-rec { color: #fff; text-align: center; margin-bottom: 6px; }
+.sw-teams { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 4px; }
+.sw-ot { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 36px; font-size: 10px; font-weight: 700; color: #fff; }
+.sw-ot .sw-q { width: 22px; height: 22px; background: #00000033; color: #ffffff80; }
+
 /* ---------- match page ---------- */
 .mhead { background: var(--box); border-radius: var(--radius); overflow: hidden; }
 .mhead-ev { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--head); color: var(--dim); }
@@ -240,7 +273,7 @@ details.stage > summary small { margin-right: auto; color: var(--muted); }
 }
 @media (max-width: 760px) {
   .page { padding: 10px 10px 20px; }
-  .home, .split { grid-template-columns: minmax(0, 1fr); }
+  .home, .split, .egrid { grid-template-columns: minmax(0, 1fr); }
   .home .left { grid-template-columns: minmax(0, 1fr); }
   /* HLTV mobile: today's matches become a horizontal strip at the top */
   .home .today { order: -1; }
@@ -262,7 +295,8 @@ details.stage > summary small { margin-right: auto; color: var(--muted); }
   .banner-title { font-size: 18px; }
   .tabs a { font-size: 13px; }
   .score .big { font-size: 28px; }
-  .nav nav a { padding: 0 12px; font-size: 14px; }
+  .nav nav a { padding: 0 9px; font-size: 14px; }
+  .brand { padding: 0 11px; font-size: 17px; }
 }
 `
 

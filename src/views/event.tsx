@@ -1,9 +1,11 @@
-import { matchUrl, type Event, type Match, type Stage, type SwissRow } from '../data'
-import type { Fmt } from '../format'
+import { matchUrl, type Event, type Match, type Stage, type SwissRow, type Team } from '../data'
+import { dateRange, type Fmt } from '../format'
 import { CompactMatch, EventBanner, Layout, Logo } from './ui'
 
+const STATUS_LABEL = { active: 'In progress', upcoming: 'Upcoming', done: 'Completed' }
+
 export function EventPage(props: { fmt: Fmt; event: Event; matches: Match[]; stages: Stage[] }) {
-    const { fmt, event, matches } = props
+    const { fmt, event, matches, stages } = props
     const live = matches.filter((m) => m.state === 'inProgress')
     const next = matches.filter((m) => m.state === 'unstarted').slice(0, 6)
     const recent = matches
@@ -11,63 +13,71 @@ export function EventPage(props: { fmt: Fmt; event: Event; matches: Match[]; sta
         .reverse()
         .slice(0, 6)
     const stage = (live[0] ?? next[0] ?? recent[0])?.stage
+    const teams = new Set(matches.flatMap((m) => m.teams.filter((t) => !t.tbd).map((t) => t.code)))
+
+    // Stages stay in their natural order (like HLTV); only the one in play is unfolded.
+    // Between stages that's the next one up, and once everything is done, the last one.
+    const anyActive = stages.some((s) => s.status === 'active')
+    const fallback = stages.find((s) => s.status === 'upcoming') ?? stages[stages.length - 1]
+    const isOpen = (s: Stage) => (anyActive ? s.status === 'active' : s === fallback)
 
     return (
         <Layout fmt={fmt} title={event.name} live={live.length > 0} nav="events">
-            <div style="margin-bottom:14px">
-                <EventBanner event={event} fmt={fmt} tab="overview" sub={stage} />
+            <EventBanner event={event} fmt={fmt} tab="overview" sub={stage} />
+            <div class="einfo">
+                <div>
+                    <span>Date</span>
+                    <b>{dateRange(event.startDate, event.endDate)}</b>
+                </div>
+                <div>
+                    <span>Teams</span>
+                    <b>{teams.size || '–'}</b>
+                </div>
+                <div>
+                    <span>Current stage</span>
+                    <b>{stage ?? '–'}</b>
+                </div>
+                <div>
+                    <span>Region</span>
+                    <b>{event.league.region.toLowerCase()}</b>
+                </div>
             </div>
-            <div class="split">
-                <div class="col">
-                    {props.stages.length === 0 && <div class="empty">No stage information yet.</div>}
-                    {/* What's happening now comes first; finished stages fold away at the bottom. */}
-                    {[
-                        ...props.stages.filter((s) => s.status !== 'done'),
-                        ...props.stages.filter((s) => s.status === 'done'),
-                    ].map((s) =>
-                        s.status === 'done' ? (
-                            <details class="stage">
-                                <summary class="h">
-                                    {s.name} <small>Completed</small>
-                                </summary>
-                                <StageBody stage={s} fmt={fmt} />
-                            </details>
-                        ) : (
-                            <section class="stage">
-                                <h2 class="h">
-                                    {s.name} {s.status === 'upcoming' && <small>Upcoming</small>}
-                                </h2>
-                                <StageBody stage={s} fmt={fmt} />
-                            </section>
-                        ),
-                    )}
-                </div>
-                <div class="col today">
-                    {(live.length > 0 || next.length > 0) && (
-                        <section>
-                            <h3 class="label">
-                                Next up <a href={`/matches?event=${event.id}`}>All</a>
-                            </h3>
-                            <div class="list">
-                                {[...live, ...next].map((m) => (
-                                    <MatchWithDate m={m} fmt={fmt} />
-                                ))}
-                            </div>
-                        </section>
-                    )}
-                    {recent.length > 0 && (
-                        <section>
-                            <h3 class="label">
-                                Latest results <a href={`/results?event=${event.id}`}>All</a>
-                            </h3>
-                            <div class="list">
-                                {recent.map((m) => (
-                                    <MatchWithDate m={m} fmt={fmt} />
-                                ))}
-                            </div>
-                        </section>
-                    )}
-                </div>
+
+            {stages.length === 0 && <div class="empty">No stage information yet.</div>}
+            {stages.map((s) => (
+                <details class="stage" open={isOpen(s) || undefined}>
+                    <summary class="h">
+                        {s.name} <small>{STATUS_LABEL[s.status]}</small>
+                    </summary>
+                    <StageBody stage={s} fmt={fmt} />
+                </details>
+            ))}
+
+            <div class="egrid">
+                {(live.length > 0 || next.length > 0) && (
+                    <section class="today">
+                        <h3 class="label">
+                            Next up <a href={`/matches?event=${event.id}`}>All</a>
+                        </h3>
+                        <div class="list">
+                            {[...live, ...next].map((m) => (
+                                <MatchWithDate m={m} fmt={fmt} />
+                            ))}
+                        </div>
+                    </section>
+                )}
+                {recent.length > 0 && (
+                    <section class="today">
+                        <h3 class="label">
+                            Latest results <a href={`/results?event=${event.id}`}>All</a>
+                        </h3>
+                        <div class="list">
+                            {recent.map((m) => (
+                                <MatchWithDate m={m} fmt={fmt} />
+                            ))}
+                        </div>
+                    </section>
+                )}
             </div>
         </Layout>
     )
@@ -75,7 +85,7 @@ export function EventPage(props: { fmt: Fmt; event: Event; matches: Match[]; sta
 
 function StageBody(props: { stage: Stage; fmt: Fmt }) {
     const s = props.stage
-    if (s.kind === 'swiss') return <SwissTable rows={s.swiss ?? []} />
+    if (s.kind === 'swiss') return <SwissStage stage={s} fmt={props.fmt} />
     if (s.kind === 'table') return <RankTable rows={s.table ?? []} />
     return <Bracket columns={s.columns ?? []} fmt={props.fmt} />
 }
@@ -90,6 +100,113 @@ function MatchWithDate(props: { m: Match; fmt: Fmt }) {
             </div>
             <CompactMatch m={m} fmt={fmt} />
         </>
+    )
+}
+
+// ---------- Swiss: HLTV "group play" bracket ----------
+
+function SwissStage(props: { stage: Stage; fmt: Fmt }) {
+    const b = props.stage.swissBracket
+    const table = <SwissTable rows={props.stage.swiss ?? []} />
+    if (!b) return table
+
+    const pool = (wins: number, losses: number) => {
+        const p = b.pools.find((x) => x.wins === wins && x.losses === losses)
+        return p && <SwissPool label={`${wins}:${losses}`} matches={p.matches} fmt={props.fmt} />
+    }
+    const outcome = (wins: number, losses: number) => {
+        const o = b.outcomes.find((x) => x.wins === wins && x.losses === losses)
+        return o && <SwissOutcome label={`${wins}:${losses}`} teams={o.teams} qualified={wins > losses} />
+    }
+
+    return (
+        <>
+            <div class="swiss-scroll">
+                <div class="swiss">
+                    <div class="sw-col">{pool(0, 0)}</div>
+                    <div class="sw-col">
+                        {pool(1, 0)}
+                        {pool(0, 1)}
+                    </div>
+                    <div class="sw-col">
+                        {pool(2, 0)}
+                        {pool(1, 1)}
+                        {pool(0, 2)}
+                    </div>
+                    <div class="sw-col edge">
+                        {outcome(3, 0)}
+                        {pool(2, 1)}
+                        {pool(1, 2)}
+                        {outcome(0, 3)}
+                    </div>
+                    <div class="sw-col edge">
+                        {outcome(3, 1)}
+                        {pool(2, 2)}
+                        {outcome(1, 3)}
+                    </div>
+                    <div class="sw-col edge">
+                        {outcome(3, 2)}
+                        {outcome(2, 3)}
+                    </div>
+                </div>
+            </div>
+            <details class="sub">
+                <summary>Standings table</summary>
+                {table}
+            </details>
+        </>
+    )
+}
+
+function SwissPool(props: { label: string; matches: Match[]; fmt: Fmt }) {
+    const { fmt } = props
+    return (
+        <div class="sw-pool">
+            <div class="sw-rec">{props.label}</div>
+            {props.matches.map((m) => {
+                const [a, b] = m.teams
+                const when = `${fmt.relativeDay(fmt.dayKey(m.start)) ?? fmt.shortDate(m.start)} ${fmt.time(m.start)} · bo${m.bestOf}`
+                return (
+                    <a class={`sw-m ${m.state}`} href={matchUrl(m)} title={when}>
+                        <SwissSide t={a} />
+                        <span class="sw-s">
+                            {m.state === 'unstarted' ? 'vs' : `${a.score ?? 0}:${b.score ?? 0}`}
+                        </span>
+                        <SwissSide t={b} right />
+                    </a>
+                )
+            })}
+        </div>
+    )
+}
+
+function SwissSide(props: { t: Team; right?: boolean }) {
+    const { t } = props
+    const cls = ['sw-t', props.right && 'r', t.won === false && 'lost'].filter(Boolean).join(' ')
+    const logo = t.tbd ? <span class="sw-q">?</span> : <Logo src={t.image} size={16} />
+    const name = <span class="tn">{t.tbd ? '' : t.code}</span>
+    return <span class={cls}>{props.right ? [name, logo] : [logo, name]}</span>
+}
+
+function SwissOutcome(props: { label: string; teams: (Team | null)[]; qualified: boolean }) {
+    return (
+        <div class={`sw-out ${props.qualified ? 'q' : 'x'}`}>
+            <div class="sw-rec">{props.label}</div>
+            <div class="sw-teams">
+                {props.teams.map((t) =>
+                    t ? (
+                        <span class="sw-ot" title={t.name}>
+                            <Logo src={t.image} size={22} />
+                            {t.code}
+                        </span>
+                    ) : (
+                        <span class="sw-ot">
+                            <span class="sw-q">?</span>
+                        </span>
+                    ),
+                )}
+            </div>
+        </div>
     )
 }
 
@@ -130,6 +247,8 @@ function SwissTable(props: { rows: SwissRow[] }) {
         </table>
     )
 }
+
+// ---------- other stage types ----------
 
 function RankTable(props: { rows: NonNullable<Stage['table']> }) {
     return (

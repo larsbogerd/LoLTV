@@ -73,6 +73,14 @@ export function makeFmt(tz: string, now = new Date()): Fmt {
     }
 }
 
+// "2026-10-15", "2026-11-15" -> "Oct 15th - Nov 15th 2026" (calendar dates, no timezone)
+export function dateRange(startDate: string, endDate: string): string {
+    const month = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short' })
+    const s = new Date(`${startDate}T12:00:00Z`)
+    const e = new Date(`${endDate}T12:00:00Z`)
+    return `${month.format(s)} ${ordinal(s.getUTCDate())} - ${month.format(e)} ${ordinal(e.getUTCDate())} ${e.getUTCFullYear()}`
+}
+
 export function slugify(...parts: string[]): string {
     return parts
         .join('-')
