@@ -674,7 +674,6 @@ export interface TeamProfile {
     image: string | null
     league: { name: string; region: string; image: string | null } | null
     starters: Player[] // the five who played the team's latest game, top to support
-    others: Player[] // rest of the roster on lolesports.com (subs, academy)
     ranking: (RankedTeam & { leagueRank: number | null }) | null
     achievements: (Placement & { event: Event | null })[]
     upcoming: Match[]
@@ -762,7 +761,6 @@ export async function getTeamProfile(id: string, now = new Date()): Promise<Team
     // followed events count: at off-season cups (WSCI, KeSPA Cup) teams often field academy players.
     const latest = upcoming.find((m) => m.state === 'inProgress') ?? results[0]
     const starters = latest ? await optional(lineup(raw.id, raw.code, latest.id, players)) : null
-    const starterIds = new Set((starters ?? []).map((p) => p.id))
 
     const rankedTeam = ranking?.teams.find((t) => t.team.id === raw.id)
     const sameLeague = ranking?.teams.filter((t) => t.league && t.league.slug === rankedTeam?.league?.slug)
@@ -776,7 +774,6 @@ export async function getTeamProfile(id: string, now = new Date()): Promise<Team
         image: raw.image || null,
         league: raw.homeLeague ? { ...raw.homeLeague, image: rankedTeam?.league?.image ?? null } : null,
         starters: starters ?? [],
-        others: players.filter((p) => !starterIds.has(p.id)),
         ranking: rankedTeam ? { ...rankedTeam, leagueRank } : null,
         achievements: (rankedTeam?.placements ?? [])
             .map((p) => {

@@ -102,26 +102,6 @@ export function TeamPage(props: { fmt: Fmt; team: TeamProfile }) {
                             </div>
                         </section>
                     )}
-                    {t.others.length > 0 && (
-                        <section>
-                            <h3 class="label">{t.starters.length ? 'Rest of the roster' : 'Roster'}</h3>
-                            <div class="list">
-                                {t.others.map((p) => (
-                                    <div class="li">
-                                        <span class="grow">
-                                            <span class="name">{p.handle}</span>
-                                            <span class="sub">{p.name}</span>
-                                        </span>
-                                        <span class="sub">{ROLE_LABEL[p.role] ?? p.role}</span>
-                                    </div>
-                                ))}
-                            </div>
-                            <p class="note">
-                                lolesports.com lists subs and academy players with the team without saying who
-                                starts. The lineup above is who played the team's latest game.
-                            </p>
-                        </section>
-                    )}
                 </div>
             </div>
         </Layout>
