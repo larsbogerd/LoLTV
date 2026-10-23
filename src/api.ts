@@ -336,8 +336,8 @@ export async function fetchGameMetadata(gameId: string): Promise<RawGameMetadata
     const url = `https://feed.lolesports.com/livestats/v1/window/${gameId}`
     return cached(url, 24 * 3600, async () => {
         const res = await fetch(url)
-        if (res.status === 204 || res.status === 404) return null
-        if (!res.ok) throw new ApiError(`livestats returned ${res.status}`)
+        // 204 = no stats yet (game just started). Throwing keeps that out of the cache.
+        if (!res.ok || res.status === 204) throw new ApiError(`livestats returned ${res.status}`)
         const body = await res.json<{ gameMetadata?: RawGameMetadata }>()
         return body.gameMetadata ?? null
     })
