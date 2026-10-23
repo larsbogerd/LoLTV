@@ -1,6 +1,6 @@
-import { eventUrl, type Event, type MatchDetail, type Team } from '../data'
+import { eventUrl, teamUrl, type Event, type MatchDetail, type Team } from '../data'
 import type { Fmt } from '../format'
-import { Layout, Logo, Tag, TeamName } from './ui'
+import { Layout, Logo, Tag } from './ui'
 
 export function MatchPage(props: { fmt: Fmt; detail: MatchDetail; event: Event | null }) {
     const { fmt, detail, event } = props
@@ -9,6 +9,7 @@ export function MatchPage(props: { fmt: Fmt; detail: MatchDetail; event: Event |
     const teams: Team[] =
         m?.teams ??
         raw.match.teams.map((t) => ({
+            id: t.id,
             name: t.name,
             code: t.code,
             image: t.image,
@@ -33,11 +34,7 @@ export function MatchPage(props: { fmt: Fmt; detail: MatchDetail; event: Event |
                     {m?.stage && <span>· {m.stage}</span>}
                 </div>
                 <div class="score">
-                    <div class={side(a)}>
-                        <Logo src={a.image} size={64} />
-                        <TeamName t={a} />
-                        <Tag t={a} />
-                    </div>
+                    <TeamSide t={a} cls={side(a)} />
                     <div class="mid">
                         {state === 'unstarted' ? (
                             <div class="big">{m ? fmt.time(m.start) : 'TBD'}</div>
@@ -58,11 +55,7 @@ export function MatchPage(props: { fmt: Fmt; detail: MatchDetail; event: Event |
                         </div>
                         <div class="when">Best of {bestOf}</div>
                     </div>
-                    <div class={side(b)}>
-                        <Logo src={b.image} size={64} />
-                        <TeamName t={b} />
-                        <Tag t={b} />
-                    </div>
+                    <TeamSide t={b} cls={side(b)} />
                 </div>
             </div>
 
@@ -127,5 +120,25 @@ function TeamCell(props: { t: Team }) {
             <Logo src={props.t.image} size={18} />
             {props.t.code}
         </span>
+    )
+}
+
+// Logo, name and league as one box that opens the team page.
+function TeamSide(props: { t: Team; cls: string }) {
+    const { t } = props
+    const url = teamUrl(t)
+    const body = (
+        <>
+            <Logo src={t.image} size={64} />
+            <span>{t.name}</span>
+            <Tag t={t} />
+        </>
+    )
+    return url ? (
+        <a class={props.cls} href={url} title={`${t.name} team page`}>
+            {body}
+        </a>
+    ) : (
+        <div class={props.cls}>{body}</div>
     )
 }

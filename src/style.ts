@@ -281,17 +281,17 @@ details.sub > summary { cursor: pointer; color: var(--link); font-size: 12px; ma
 a.tp-event:hover { color: var(--link); }
 .tp-row { display: grid; grid-template-columns: 110px minmax(0, 1fr) 54px minmax(0, 1fr) 56px; align-items: center; gap: 6px; background: var(--box); padding: 6px 10px; min-height: 36px; }
 .tp-row + .tp-row { border-top: 1px solid var(--line); }
+.tp-row:hover { background: var(--box-hover); }
+.tp-row:hover .tp-btn { filter: brightness(1.15); }
 .tp-date { color: var(--muted); font-size: 12px; }
 .tp-side { display: flex; align-items: center; gap: 7px; min-width: 0; }
 .tp-side.us { justify-content: flex-end; }
 .tp-side .tn { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tp-side a.tn:hover { color: var(--link); }
 .tp-side.lost { color: var(--muted); }
 .tp-score { text-align: center; font-weight: 700; white-space: nowrap; }
 .tp-score .w { color: var(--win); }
 .tp-score .l { color: var(--loss); }
 .tp-btn { justify-self: end; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 2px; }
-.tp-btn:hover { filter: brightness(1.15); }
 .tp-row.inProgress .tp-btn { background: var(--live); }
 .place { font-weight: 800; width: 36px; color: var(--dim); }
 .place.p1 { color: var(--gold); }
@@ -304,7 +304,8 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 .mhead-ev { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--head); color: var(--dim); }
 .mhead-ev a { color: var(--link); }
 .score { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 22px 12px; gap: 12px; }
-.score .side { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; font-size: 16px; font-weight: 600; }
+.score .side { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; font-size: 16px; font-weight: 600; justify-self: center; padding: 12px 22px; border-radius: var(--radius); }
+.score a.side:hover { background: var(--box-hover); }
 .score .side.lost { color: var(--dim); font-weight: 400; }
 .score .mid { text-align: center; }
 .score .big { font-size: 34px; font-weight: 800; letter-spacing: 2px; white-space: nowrap; }
