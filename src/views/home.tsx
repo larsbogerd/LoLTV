@@ -26,7 +26,7 @@ export function HomePage(props: {
     const resultsHref = featured ? `/results?event=${featured.id}` : '/results'
 
     return (
-        <Layout fmt={fmt} watch={[...props.schedule, ...fm]} nav="home">
+        <Layout fmt={fmt} title="Home" watch={[...props.schedule, ...fm]} nav="home">
             <div class="home">
                 <div class="col left">
                     {props.ranking && (
