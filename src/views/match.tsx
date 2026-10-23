@@ -1,6 +1,6 @@
 import { eventUrl, type Event, type MatchDetail, type Team } from '../data'
 import type { Fmt } from '../format'
-import { Layout, Logo, Tag } from './ui'
+import { Layout, Logo, Tag, TeamName } from './ui'
 
 export function MatchPage(props: { fmt: Fmt; detail: MatchDetail; event: Event | null }) {
     const { fmt, detail, event } = props
@@ -35,7 +35,7 @@ export function MatchPage(props: { fmt: Fmt; detail: MatchDetail; event: Event |
                 <div class="score">
                     <div class={side(a)}>
                         <Logo src={a.image} size={64} />
-                        {a.name}
+                        <TeamName t={a} />
                         <Tag t={a} />
                     </div>
                     <div class="mid">
@@ -60,7 +60,7 @@ export function MatchPage(props: { fmt: Fmt; detail: MatchDetail; event: Event |
                     </div>
                     <div class={side(b)}>
                         <Logo src={b.image} size={64} />
-                        {b.name}
+                        <TeamName t={b} />
                         <Tag t={b} />
                     </div>
                 </div>

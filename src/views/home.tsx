@@ -1,4 +1,13 @@
-import { activeEvents, eventUrl, isSwiss, swissTable, type Event, type Match, type Ranking } from '../data'
+import {
+    teamUrl,
+    activeEvents,
+    eventUrl,
+    isSwiss,
+    swissTable,
+    type Event,
+    type Match,
+    type Ranking,
+} from '../data'
 import type { Fmt } from '../format'
 import { ByDay, CompactMatch, EventBanner, eventWhen, Layout, Logo, MatchRow, ResultRow } from './ui'
 
@@ -34,7 +43,7 @@ export function HomePage(props: {
                             <h3 class="label">Power ranking</h3>
                             <div class="list mini">
                                 {props.ranking.teams.slice(0, 5).map((t) => (
-                                    <a class="li" href="/ranking">
+                                    <a class="li" href={teamUrl(t.team) ?? '/ranking'}>
                                         <span class="num">{t.rank}.</span>
                                         <Logo src={t.team.image} size={18} />
                                         <span class="grow name">{t.team.code}</span>
