@@ -13,9 +13,12 @@ Where LOLTV is heading and what to keep an eye on. Pick up from here in a new se
 
 ## Later additions
 
-- **Team profiles** (`/team/<id>/<slug>`): roster, upcoming matches, recent results, and the
-  power ranking history. `teamGPRHistory` is already in the ranking response. lolesports.com's
-  GraphQL manifest also has a `GetTeams` query (TeamOverview).
+- **Team profiles, round two:** the pages exist (`/team/<id>/<slug>`). Ideas next:
+    - power ranking history as a small chart; `teamGPRHistory` is in the ranking response
+      but isn't mapped yet
+    - player pages, plus tabs like HLTV's (Matches, Events, Achievements)
+    - not in the API: coach, player ages and nationalities. Those would need Liquipedia,
+      which is rate-limited.
 - **Live match stats**: kills, gold, towers and dragons per game from the live-stats feed
   (`feed.lolesports.com/livestats/v1/window/<gameId>?startingTime=<ISO, rounded to 10s>`).
     - **What it unlocks:** the per-game winners the match page can't show today.
@@ -49,14 +52,20 @@ Where LOLTV is heading and what to keep an eye on. Pick up from here in a new se
 
 ## Fragile points
 
-- **Power ranking query id** (`GPR_QUERY_ID` in `src/api.ts`). If lolesports.com changes the
-  query, the homepage falls back to Swiss standings, `/ranking` shows a notice and the league
-  tags disappear. To find the new id:
+- **GraphQL query ids** (`QUERY_IDS` in `src/api.ts`: `GetTeamGpr` and `GetTeamEvents`).
+  If lolesports.com changes a query, its id stops working.
+    - **`GetTeamGpr` breaks:** the homepage falls back to Swiss standings, `/ranking` shows a
+      notice, and league tags and team links disappear.
+    - **`GetTeamEvents` breaks:** team pages show a notice instead of their matches and lose
+      the lineup.
+
+    To find a new id:
     1. Open lolesports.com/en-US/gpr and find the JS chunk that holds the persisted query
        manifest (search the bundles for `generatePersistedQueryIdsFromManifest`).
-    2. In that manifest, read the `id` of the `GetTeamGpr` operation.
+    2. In that manifest, read the `id` of the operation (`GetTeamGpr`, `GetTeamEvents`).
     3. Requests need these headers: `content-type: application/json`,
        `apollographql-client-name` and `apollographql-client-version`.
+
 - **Swiss bracket** (`swissBracket()` in `src/data.ts`). It assumes the 16-team, 3-wins /
   3-losses format, with rounds taken from chronological chunks of 8/8/8/6/3 matches. A
   different format falls back to the standings table.
