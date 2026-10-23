@@ -23,6 +23,7 @@ export interface Fmt {
     dayHeading(key: string): string // Friday - 2026-10-23   (HLTV matches page)
     resultsHeading(key: string): string // Results for October 23rd 2026   (HLTV results page)
     shortDate(iso: string): string // 23 Oct
+    ordinalDate(iso: string): string // 19th of Oct   (HLTV ranking box)
     relativeDay(key: string): string | null // Today / Tomorrow / Yesterday
 }
 
@@ -43,6 +44,7 @@ export function makeFmt(tz: string, now = new Date()): Fmt {
     // Day keys are calendar dates, so format them back in UTC to avoid shifting.
     const weekday = new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', weekday: 'long' })
     const month = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'long' })
+    const monthShort = new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', month: 'short' })
 
     const dayKey = (d: string | Date) => day.format(typeof d === 'string' ? new Date(d) : d)
     const keyDate = (key: string) => new Date(`${key}T12:00:00Z`)
@@ -63,6 +65,10 @@ export function makeFmt(tz: string, now = new Date()): Fmt {
             return `Results for ${month.format(d)} ${ordinal(d.getUTCDate())} ${d.getUTCFullYear()}`
         },
         shortDate: (iso) => short.format(new Date(iso)),
+        ordinalDate: (iso) => {
+            const d = keyDate(dayKey(iso))
+            return `${ordinal(d.getUTCDate())} of ${monthShort.format(d)}`
+        },
         relativeDay: (key) => rel[key] ?? null,
     }
 }

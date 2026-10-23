@@ -68,6 +68,8 @@ footer a { color: var(--dim); }
 .empty { background: var(--box); padding: 14px; color: var(--muted); border-radius: var(--radius); }
 .more { display: block; text-align: center; background: var(--head); color: var(--link); padding: 8px; margin-top: 1px; border-radius: 0 0 var(--radius) var(--radius); }
 .more:hover { background: var(--box-hover); }
+.more small { display: block; color: var(--muted); font-size: 11px; margin-top: 1px; }
+.note { color: var(--muted); font-size: 11px; margin: 10px 2px 0; }
 .notice { background: #3b2a1e; color: #f1c79b; padding: 8px 12px; margin-bottom: 12px; border-radius: var(--radius); }
 
 /* ---------- logos ---------- */
@@ -84,6 +86,17 @@ a.li:hover { background: var(--box-hover); }
 .li .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
 .li .sub { color: var(--muted); font-size: 11px; }
 .li .num { color: var(--muted); width: 16px; text-align: right; font-size: 12px; }
+
+/* ---------- power ranking ---------- */
+.mv { font-size: 10px; color: var(--muted); min-width: 22px; text-align: right; white-space: nowrap; }
+.mv.up { color: var(--win); }
+.mv.down { color: var(--loss); }
+.li.rk { padding: 8px 12px; gap: 12px; }
+.rk-pos { width: 38px; font-size: 18px; font-weight: 700; color: var(--dim); }
+.rk-name { font-size: 15px; font-weight: 600; }
+.rk-pts { color: var(--dim); white-space: nowrap; }
+.rk-pts small { color: var(--muted); font-size: 11px; }
+.rk .mv { font-size: 12px; min-width: 32px; }
 
 /* ---------- match rows (upcoming / live) ---------- */
 .mrow { display: grid; grid-template-columns: 58px minmax(0, 1fr) minmax(0, 240px); align-items: center; background: var(--box); min-height: 54px; }

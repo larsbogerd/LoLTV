@@ -10,7 +10,7 @@ const TZ_SCRIPT = `(function(){try{var z=Intl.DateTimeFormat().resolvedOptions()
 // Pages with a live match refresh themselves every minute while visible.
 const LIVE_SCRIPT = `(function(){if(!document.body.dataset.live)return;var t=Date.now();function r(){if(document.visibilityState==="visible"&&Date.now()-t>60000)location.reload();}setInterval(r,5000);document.addEventListener("visibilitychange",r);})();`
 
-type NavKey = 'home' | 'matches' | 'results' | 'events'
+type NavKey = 'home' | 'matches' | 'results' | 'events' | 'ranking'
 
 export function Layout(props: { title?: string; fmt: Fmt; live?: boolean; nav?: NavKey; children: Child }) {
     const link = (key: NavKey, href: string, label: string) => (
@@ -41,6 +41,7 @@ export function Layout(props: { title?: string; fmt: Fmt; live?: boolean; nav?: 
                             {link('matches', '/matches', 'Matches')}
                             {link('results', '/results', 'Results')}
                             {link('events', '/events', 'Events')}
+                            {link('ranking', '/ranking', 'Ranking')}
                         </nav>
                     </div>
                 </header>

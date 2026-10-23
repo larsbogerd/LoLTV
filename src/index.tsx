@@ -8,6 +8,7 @@ import {
     getEventMatches,
     getEvents,
     getMatchDetail,
+    getRanking,
     getSchedulePage,
     getStages,
     getUpcoming,
@@ -21,6 +22,7 @@ import { EventPage } from './views/event'
 import { HomePage } from './views/home'
 import { EventsPage, MatchesPage, ResultsPage } from './views/lists'
 import { MatchPage } from './views/match'
+import { RankingPage } from './views/ranking'
 
 const app = new Hono()
 
@@ -52,7 +54,7 @@ app.get('/favicon.svg', (c) =>
 app.get('/favicon.ico', (c) => c.redirect('/favicon.svg', 301))
 
 app.get('/', async (c) => {
-    const [events, page] = await Promise.all([getEvents(), getSchedulePage()])
+    const [events, page, ranking] = await Promise.all([getEvents(), getSchedulePage(), getRanking()])
     const featured = featuredEvent(events)
     const featuredMatches = featured ? await getEventMatches(featured) : []
     return render(
@@ -63,8 +65,15 @@ app.get('/', async (c) => {
             featured={featured}
             featuredMatches={featuredMatches}
             schedule={page.matches}
+            ranking={ranking}
         />,
     )
+})
+
+// HLTV style: /ranking, filterable by home league with ?league=<slug>
+app.get('/ranking', async (c) => {
+    const ranking = await getRanking()
+    return render(c, <RankingPage fmt={fmtFor(c)} ranking={ranking} league={c.req.query('league')} />)
 })
 
 // HLTV style: /matches, /matches?event=<id>

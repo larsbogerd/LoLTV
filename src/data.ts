@@ -5,6 +5,7 @@
 import {
     fetchEventDetails,
     fetchLeagues,
+    fetchPowerRankings,
     fetchSchedule,
     fetchStandings,
     fetchTournaments,
@@ -400,6 +401,51 @@ function columnsByStage(matches: Match[]): { name: string; matches: Match[] }[] 
         cols.set(key, [...(cols.get(key) ?? []), m])
     }
     return [...cols].map(([name, ms]) => ({ name, matches: ms }))
+}
+
+// ---------- power ranking ----------
+
+export interface RankedTeam {
+    rank: number
+    previousRank: number | null
+    points: number
+    team: { name: string; code: string; image: string | null }
+    league: { name: string; slug: string; image: string } | null
+    wins: number // matches this year
+    losses: number
+}
+
+export interface Ranking {
+    updated: string // ISO, when GPR was last calculated
+    teams: RankedTeam[]
+}
+
+let rankingFailedUntil = 0
+
+// Optional data: returns null instead of throwing so pages can fall back to something else.
+// A failure is remembered for a few minutes so a broken endpoint doesn't slow every page.
+export async function getRanking(now = new Date()): Promise<Ranking | null> {
+    if (Date.now() < rankingFailedUntil) return null
+    try {
+        const raw = await fetchPowerRankings(`${now.getUTCFullYear()}-01-01`, now.toISOString().slice(0, 10))
+        const teams = raw
+            .map((r) => ({
+                rank: r.currentTeamGPR.rank,
+                previousRank: r.previousTeamGPR?.rank ?? null,
+                points: Math.round(r.currentTeamGPR.gprScore),
+                team: { name: r.team.name, code: r.team.code, image: r.team.image || null },
+                league: r.team.homeLeague,
+                wins: r.teamMatchRecord?.wins ?? 0,
+                losses: r.teamMatchRecord?.losses ?? 0,
+            }))
+            .sort((a, b) => a.rank - b.rank || b.points - a.points || a.team.name.localeCompare(b.team.name))
+        const updated = raw.map((r) => r.currentTeamGPR.dateCalculated).sort()
+        return { updated: updated[updated.length - 1] ?? now.toISOString(), teams }
+    } catch (err) {
+        console.error('power ranking unavailable:', err)
+        rankingFailedUntil = Date.now() + 5 * 60e3
+        return null
+    }
 }
 
 // ---------- single match ----------
