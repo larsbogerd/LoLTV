@@ -10,7 +10,7 @@ export function safeTimeZone(tz: string | undefined): string {
     }
 }
 
-function ordinal(n: number): string {
+export function ordinal(n: number): string {
     const s = n % 100
     if (s >= 11 && s <= 13) return `${n}th`
     return `${n}${['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'}`

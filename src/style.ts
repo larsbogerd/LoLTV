@@ -253,6 +253,52 @@ details.sub > summary { cursor: pointer; color: var(--link); font-size: 12px; ma
 .sw-ot { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 36px; font-size: 10px; font-weight: 700; color: #fff; }
 .sw-ot .sw-q { width: 22px; height: 22px; background: #00000033; color: #ffffff80; }
 
+/* ---------- team page (after HLTV) ---------- */
+.tprofile { background: var(--box); border-radius: var(--radius); overflow: hidden; }
+.tp-lineup { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; padding: 14px 14px 0; background: linear-gradient(180deg, #14233b, #1c2a3d 70%, var(--box)); }
+.tp-player { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.tp-player img, .tp-nophoto { width: 100%; max-width: 120px; aspect-ratio: 1 / 1; object-fit: cover; object-position: top; }
+.tp-nophoto { background: #ffffff0d; border-radius: 50% 50% 0 0; }
+.tp-name { width: 100%; text-align: center; background: #0b1220d0; padding: 4px 2px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tp-name span { display: block; color: var(--muted); font-size: 10px; text-transform: uppercase; }
+.tp-head { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.tp-head h1 { font-size: 24px; color: #fff; }
+.tp-league { display: flex; align-items: center; gap: 6px; text-transform: capitalize; }
+.tp-stats > div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 16px; }
+.tp-stats > div + div { border-top: 1px solid var(--line); }
+.tp-stats span { color: var(--dim); font-weight: 600; }
+.tp-stats small { color: var(--muted); font-weight: 400; }
+.tp-form { display: grid; grid-template-columns: 1fr 1fr; background: var(--box); border-radius: var(--radius); }
+.tp-form > div { text-align: center; padding: 10px; }
+.tp-form > div + div { border-left: 1px solid var(--line); }
+.tp-form b { display: block; font-size: 18px; }
+.tp-form b.w { color: var(--win); }
+.tp-form b.l { color: var(--loss); }
+.tp-form span { color: var(--muted); font-size: 11px; }
+.tp-matches { border-radius: var(--radius); overflow: hidden; }
+.tp-event { display: block; background: var(--head); text-align: center; padding: 8px; font-weight: 700; color: var(--text); margin-top: 8px; }
+.tp-event:first-child { margin-top: 0; }
+a.tp-event:hover { color: var(--link); }
+.tp-row { display: grid; grid-template-columns: 110px minmax(0, 1fr) 54px minmax(0, 1fr) 56px; align-items: center; gap: 6px; background: var(--box); padding: 6px 10px; min-height: 36px; }
+.tp-row + .tp-row { border-top: 1px solid var(--line); }
+.tp-date { color: var(--muted); font-size: 12px; }
+.tp-side { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.tp-side.us { justify-content: flex-end; }
+.tp-side .tn { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tp-side a.tn:hover { color: var(--link); }
+.tp-side.lost { color: var(--muted); }
+.tp-score { text-align: center; font-weight: 700; white-space: nowrap; }
+.tp-score .w { color: var(--win); }
+.tp-score .l { color: var(--loss); }
+.tp-btn { justify-self: end; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 2px; }
+.tp-btn:hover { filter: brightness(1.15); }
+.tp-row.inProgress .tp-btn { background: var(--live); }
+.place { font-weight: 800; width: 36px; color: var(--dim); }
+.place.p1 { color: var(--gold); }
+.place.p2 { color: #c0c7d1; }
+.place.p3 { color: #c98a5a; }
+a.team-link:hover, a.sw-ot:hover { color: var(--link); }
+
 /* ---------- match page ---------- */
 .mhead { background: var(--box); border-radius: var(--radius); overflow: hidden; }
 .mhead-ev { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--head); color: var(--dim); }
@@ -299,6 +345,10 @@ details.sub > summary { cursor: pointer; color: var(--link); font-size: 12px; ma
   .banner-title { font-size: 18px; }
   .tabs a { font-size: 13px; }
   .score .big { font-size: 28px; }
+  .tp-lineup { gap: 3px; padding: 10px 8px 0; }
+  .tp-name { font-size: 11px; }
+  .tp-row { grid-template-columns: minmax(0, 1fr) 46px minmax(0, 1fr) 48px; }
+  .tp-date { grid-column: 1 / -1; }
   .nav nav a { padding: 0 9px; font-size: 14px; }
   .brand { padding: 0 11px; font-size: 17px; }
 }

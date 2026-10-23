@@ -4,10 +4,13 @@
 
 import {
     fetchEventDetails,
+    fetchGameMetadata,
     fetchLeagues,
     fetchPowerRankings,
     fetchSchedule,
     fetchStandings,
+    fetchTeam,
+    fetchTeamEvents,
     fetchTournaments,
     type RawEventDetails,
     type RawLeague,
@@ -15,6 +18,7 @@ import {
     type RawStage,
     type RawState,
     type RawTeam,
+    type RawTeamEvent,
 } from './api'
 import { slugify } from './format'
 
@@ -47,6 +51,7 @@ export interface Team {
     won: boolean | null
     tbd: boolean
     tag?: string // home league (LEC, LCK...), only set at international events
+    slug?: string // set when known, for links to the team page
 }
 
 export interface Match {
@@ -190,18 +195,36 @@ function toTeam(raw: RawTeam | undefined): Team {
 }
 
 // Schedule entries only carry league name + slug; logos and events come from these lookups.
-// Home leagues come from the power ranking (optional: no ranking means no tags).
+// Schedule teams have no id either. Ids (for team links) and home leagues (for tags) come
+// from the power ranking, keyed by team code; without a ranking there are no tags or links.
 interface Lookups {
     events: Event[]
     leagues: Map<string, League>
     homeLeagues: Map<string, string> // team code -> league name
+    teamRefs: Map<string, { id: string; slug: string }> // team code -> id + slug
 }
 
 async function getLookups(): Promise<Lookups> {
     const [events, leagues, ranking] = await Promise.all([getEvents(), getLeagues(), getRanking()])
     const homeLeagues = new Map<string, string>()
-    for (const t of ranking?.teams ?? []) if (t.league) homeLeagues.set(t.team.code, t.league.name)
-    return { events, leagues: new Map(leagues.map((l) => [l.slug, l])), homeLeagues }
+    const teamRefs = new Map<string, { id: string; slug: string }>()
+    for (const t of ranking?.teams ?? []) {
+        if (t.league) homeLeagues.set(t.team.code, t.league.name)
+        teamRefs.set(t.team.code, { id: t.team.id, slug: t.team.slug })
+    }
+    return { events, leagues: new Map(leagues.map((l) => [l.slug, l])), homeLeagues, teamRefs }
+}
+
+function linkTeam(t: Team, { teamRefs }: Lookups): void {
+    const ref = t.tbd ? undefined : teamRefs.get(t.code)
+    if (ref) {
+        t.id ??= ref.id
+        t.slug ??= ref.slug
+    }
+}
+
+export function teamUrl(t: { id?: string; slug?: string; name: string }): string | null {
+    return t.id ? `/team/${t.id}/${t.slug ?? slugify(t.name)}` : null
 }
 
 // Events where teams from different regions meet, so home-league tags add information.
@@ -209,10 +232,12 @@ export function isInternational(e: Event | null): boolean {
     return !!e && CROSS_REGION.has(e.league.slug)
 }
 
-function toMatch(raw: RawScheduleEvent, { events, leagues, homeLeagues }: Lookups): Match | null {
+function toMatch(raw: RawScheduleEvent, lookups: Lookups): Match | null {
+    const { events, leagues, homeLeagues } = lookups
     if (raw.type !== 'match' || !raw.match || !leagues.has(raw.league.slug)) return null
     const event = eventFor(events, raw.league.slug, raw.startTime)
     const teams: [Team, Team] = [toTeam(raw.match.teams[0]), toTeam(raw.match.teams[1])]
+    for (const t of teams) linkTeam(t, lookups)
     // At international events, show where each team comes from ("G2 · LEC").
     if (isInternational(event)) for (const t of teams) if (!t.tbd) t.tag = homeLeagues.get(t.code)
     return {
@@ -568,14 +593,22 @@ function bracketColumns(stageName: string, matches: Match[]): { name: string; ma
 
 // ---------- power ranking ----------
 
+export interface Placement {
+    tournamentId: string
+    name: string // "LCK Split 3 2026"
+    placement: number
+    end: string // ISO
+}
+
 export interface RankedTeam {
     rank: number
     previousRank: number | null
     points: number
-    team: { name: string; code: string; image: string | null }
+    team: { id: string; slug: string; name: string; code: string; image: string | null }
     league: { name: string; slug: string; image: string } | null
     wins: number // matches this year
     losses: number
+    placements: Placement[] // finished tournaments this year
 }
 
 export interface Ranking {
@@ -596,10 +629,22 @@ export async function getRanking(now = new Date()): Promise<Ranking | null> {
                 rank: r.currentTeamGPR.rank,
                 previousRank: r.previousTeamGPR?.rank ?? null,
                 points: Math.round(r.currentTeamGPR.gprScore),
-                team: { name: r.team.name, code: r.team.code, image: r.team.image || null },
+                team: {
+                    id: r.team.id,
+                    slug: r.team.slug,
+                    name: r.team.name,
+                    code: r.team.code,
+                    image: r.team.image || null,
+                },
                 league: r.team.homeLeague,
                 wins: r.teamMatchRecord?.wins ?? 0,
                 losses: r.teamMatchRecord?.losses ?? 0,
+                placements: (r.tournaments ?? []).flatMap(({ tournament: t }) => {
+                    const placement = t.standings?.find((s) => s.team.id === r.team.id)?.placement
+                    if (!placement) return []
+                    const name = `${t.league?.name ?? ''} ${t.name}`.trim()
+                    return [{ tournamentId: t.id, name, placement, end: t.endTime }]
+                }),
             }))
             .sort((a, b) => a.rank - b.rank || b.points - a.points || a.team.name.localeCompare(b.team.name))
         const updated = raw.map((r) => r.currentTeamGPR.dateCalculated).sort()
@@ -609,6 +654,169 @@ export async function getRanking(now = new Date()): Promise<Ranking | null> {
         rankingFailedUntil = Date.now() + 5 * 60e3
         return null
     }
+}
+
+// ---------- team profile ----------
+
+export interface Player {
+    id: string
+    handle: string
+    name: string // real name
+    image: string | null
+    role: string
+}
+
+export interface TeamProfile {
+    id: string
+    slug: string
+    name: string
+    code: string
+    image: string | null
+    league: { name: string; region: string; image: string | null } | null
+    starters: Player[] // the five who played the team's latest game, top to support
+    others: Player[] // rest of the roster on lolesports.com (subs, academy)
+    ranking: (RankedTeam & { leagueRank: number | null }) | null
+    achievements: (Placement & { event: Event | null })[]
+    upcoming: Match[]
+    results: Match[] // newest first, last 120 days (or this year if that's empty), followed leagues only
+    matchesAvailable: boolean // false when the team-events query failed
+}
+
+const ROLES = ['top', 'jungle', 'mid', 'bottom', 'support']
+const roleIndex = (role: string) => (ROLES.includes(role) ? ROLES.indexOf(role) : ROLES.length)
+
+export async function getTeamProfile(id: string, now = new Date()): Promise<TeamProfile | null> {
+    const raw = await fetchTeam(id)
+    if (!raw) return null
+    const day = 86400e3
+    const iso = (t: number) => new Date(t).toISOString()
+    const optional = <T>(p: Promise<T>) => p.catch((err: unknown) => (console.error(err), null))
+
+    const [lookups, ranking, recentPast, future] = await Promise.all([
+        getLookups(),
+        getRanking(now),
+        optional(fetchTeamEvents(raw.id, ['completed'], iso(now.getTime() - 120 * day), iso(now.getTime()))),
+        optional(
+            fetchTeamEvents(
+                raw.id,
+                ['unstarted', 'inProgress'],
+                iso(now.getTime() - day),
+                iso(now.getTime() + 60 * day),
+                30,
+            ),
+        ),
+    ])
+    // Teams knocked out early haven't played for months: fall back to the whole year.
+    const past =
+        recentPast?.length === 0
+            ? await optional(
+                  fetchTeamEvents(
+                      raw.id,
+                      ['completed'],
+                      `${now.getUTCFullYear()}-01-01T00:00:00Z`,
+                      iso(now.getTime()),
+                  ),
+              )
+            : recentPast
+
+    // GetTeamEvents gives tournament ids, which are our event ids. Matches in leagues we don't
+    // follow are left out, like everywhere else on the site.
+    const toTeamMatch = (e: RawTeamEvent): Match | null => {
+        const event = lookups.events.find((ev) => ev.id === e.tournament?.id)
+        if (!event || !e.match) return null
+        const teams = e.matchTeams.map((t) => ({ ...toTeam(t), id: t.teamId ?? t.id, slug: t.slug }))
+        if (teams.length !== 2) return null
+        if (isInternational(event)) for (const t of teams) if (!t.tbd) t.tag = lookups.homeLeagues.get(t.code)
+        return {
+            id: e.match.id,
+            start: e.startTime,
+            state: e.state,
+            bestOf: 0, // not in this query
+            stage: '',
+            leagueSlug: event.league.slug,
+            leagueName: event.league.name,
+            leagueImage: event.league.image,
+            event,
+            teams: [teams[0]!, teams[1]!],
+        }
+    }
+    const results = (past ?? [])
+        .map(toTeamMatch)
+        .filter((m): m is Match => m !== null)
+        .sort((a, b) => b.start.localeCompare(a.start))
+    const upcoming = (future ?? [])
+        .map(toTeamMatch)
+        .filter((m): m is Match => m !== null)
+        .sort((a, b) => a.start.localeCompare(b.start))
+
+    const players: Player[] = raw.players
+        .map((p) => ({
+            id: p.id,
+            handle: p.summonerName,
+            name: `${p.firstName.trim()} ${p.lastName.trim()}`.trim(),
+            image: p.image || null,
+            role: p.role,
+        }))
+        .sort((a, b) => roleIndex(a.role) - roleIndex(b.role) || a.handle.localeCompare(b.handle))
+    const latest = (past ?? [])
+        .filter((e) => e.match)
+        .sort((a, b) => b.startTime.localeCompare(a.startTime))[0]
+    const starters = latest?.match ? await optional(lineup(raw.id, raw.code, latest.match.id, players)) : null
+    const starterIds = new Set((starters ?? []).map((p) => p.id))
+
+    const rankedTeam = ranking?.teams.find((t) => t.team.id === raw.id)
+    const sameLeague = ranking?.teams.filter((t) => t.league && t.league.slug === rankedTeam?.league?.slug)
+    const leagueRank = rankedTeam && sameLeague ? sameLeague.indexOf(rankedTeam) + 1 : null
+
+    return {
+        id: raw.id,
+        slug: raw.slug,
+        name: raw.name,
+        code: raw.code,
+        image: raw.image || null,
+        league: raw.homeLeague ? { ...raw.homeLeague, image: rankedTeam?.league?.image ?? null } : null,
+        starters: starters ?? [],
+        others: players.filter((p) => !starterIds.has(p.id)),
+        ranking: rankedTeam ? { ...rankedTeam, leagueRank } : null,
+        achievements: (rankedTeam?.placements ?? [])
+            .map((p) => {
+                const event = lookups.events.find((e) => e.id === p.tournamentId) ?? null
+                return { ...p, name: event?.name ?? p.name, event }
+            })
+            .sort((a, b) => b.end.localeCompare(a.end)),
+        upcoming,
+        results,
+        matchesAvailable: past !== null && future !== null,
+    }
+}
+
+// lolesports.com lists everyone attached to a team (subs, academy) without saying who starts.
+// The live-stats metadata of the team's latest game does: the five who actually played.
+async function lineup(
+    teamId: string,
+    code: string,
+    matchId: string,
+    roster: Player[],
+): Promise<Player[] | null> {
+    const details = await fetchEventDetails(matchId)
+    const game = details?.match.games.filter((g) => g.state === 'completed').pop()
+    if (!game) return null
+    const meta = await fetchGameMetadata(game.id)
+    const side = [meta?.blueTeamMetadata, meta?.redTeamMetadata].find((s) => s?.esportsTeamId === teamId)
+    if (!side) return null
+    const byId = new Map(roster.map((p) => [p.id, p]))
+    return side.participantMetadata
+        .map((p) => {
+            const known = byId.get(p.esportsPlayerId)
+            if (known) return { ...known, role: p.role }
+            // A player who isn't on the roster list (e.g. a stand-in): name only.
+            const prefix = `${code} `
+            const handle = p.summonerName.startsWith(prefix)
+                ? p.summonerName.slice(prefix.length)
+                : p.summonerName
+            return { id: p.esportsPlayerId, handle, name: '', image: null, role: p.role }
+        })
+        .sort((a, b) => roleIndex(a.role) - roleIndex(b.role))
 }
 
 // ---------- single match ----------
