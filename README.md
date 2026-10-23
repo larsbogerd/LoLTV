@@ -17,14 +17,34 @@ npm run typecheck
 
 ## Deploy (Cloudflare Workers)
 
+### From the Cloudflare dashboard (deploys on every push to `master`)
+
+1. Go to **Workers & Pages → Create → Import a repository**, connect GitHub and give the
+   Cloudflare app access to the `LoLTV` repo only.
+2. Pick the repo and set it up with:
+    - **Project name:** `loltv`. It must match `name` in `wrangler.jsonc`.
+    - **Build command:** leave empty. Dependencies are installed automatically, and Wrangler
+      bundles the TypeScript itself.
+    - **Deploy command:** `npx wrangler deploy` (the default).
+    - **Path:** `/`.
+    - No variables or secrets are needed.
+3. Click **Deploy**. The site goes live at `https://loltv.<your-subdomain>.workers.dev`.
+4. Under **Settings → Build → Branch control**, check that the production branch is `master`.
+   Other branches only upload preview versions.
+5. For your own domain, go to **Settings → Domains & Routes → Add → Custom domain**, e.g.
+   `loltv.example.com`. The domain must be on the same Cloudflare account; DNS and the
+   certificate are set up automatically. No tunnel is needed for a Worker.
+
+Logs are under the Worker's **Observability** tab. The free plan is plenty: it allows 100k
+requests a day and 10 ms of CPU per request, and a page uses a few ms. If you ever see error
+1102, a request ran out of CPU time.
+
+### From the terminal
+
 ```bash
 npx wrangler login
 npm run deploy     # -> https://loltv.<your-subdomain>.workers.dev
 ```
-
-To serve it on your own domain, add a custom domain to the `loltv` Worker in the Cloudflare
-dashboard (Workers & Pages → loltv → Settings → Domains & Routes), or add a `routes` entry
-to `wrangler.jsonc`. The free plan is plenty.
 
 The code only uses standard `fetch`, so moving to Node/Docker later means adding
 `@hono/node-server` and a Dockerfile; nothing else changes.
