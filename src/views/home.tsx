@@ -1,6 +1,5 @@
 import { activeEvents, eventUrl, isSwiss, swissTable, type Event, type Match, type Ranking } from '../data'
 import type { Fmt } from '../format'
-import { Movement } from './ranking'
 import { ByDay, CompactMatch, EventBanner, eventWhen, Layout, Logo, MatchRow, ResultRow } from './ui'
 
 export function HomePage(props: {
@@ -39,7 +38,6 @@ export function HomePage(props: {
                                         <span class="num">{t.rank}.</span>
                                         <Logo src={t.team.image} size={18} />
                                         <span class="grow name">{t.team.code}</span>
-                                        <Movement t={t} />
                                     </a>
                                 ))}
                             </div>
