@@ -9,6 +9,7 @@ import {
     getEvents,
     getMatchDetail,
     getRanking,
+    getTeamProfile,
     getSchedulePage,
     getStages,
     getUpcoming,
@@ -23,6 +24,7 @@ import { HomePage } from './views/home'
 import { EventsPage, MatchesPage, ResultsPage } from './views/lists'
 import { MatchPage } from './views/match'
 import { RankingPage } from './views/ranking'
+import { TeamPage } from './views/team'
 
 const app = new Hono()
 
@@ -133,6 +135,16 @@ app.get('/matches/:id/:slug?', async (c) => {
     }
     const event = await getEvent(detail.details.tournament.id)
     return render(c, <MatchPage fmt={fmtFor(c)} detail={detail} event={event} />)
+})
+
+// HLTV style: /team/<id>/<slug>
+app.get('/team/:id/:slug?', async (c) => {
+    const id = c.req.param('id')
+    if (!/^\d+$/.test(id)) return notFound(c)
+    const team = await getTeamProfile(id)
+    if (!team) return notFound(c)
+    if (c.req.param('slug') !== team.slug) return c.redirect(`/team/${team.id}/${team.slug}`, 301)
+    return render(c, <TeamPage fmt={fmtFor(c)} team={team} />)
 })
 
 function notFound(c: Context) {

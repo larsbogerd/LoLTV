@@ -167,19 +167,64 @@ export async function fetchEventDetails(matchId: string): Promise<RawEventDetail
     return data.event
 }
 
-// ---------- Global Power Rankings ----------
-// Not part of the API above: GPR lives in lolesports.com's own GraphQL API, which only runs
-// registered ("persisted") queries. This is the id their GPR page uses, taken from the
-// query manifest in their frontend bundle. If Riot changes the query, the id stops working
-// and callers fall back gracefully.
+// ---------- lolesports.com GraphQL ----------
+// Power ranking and team data live in lolesports.com's own GraphQL API, not the API above.
+// It only runs registered ("persisted") queries, sent by id. These ids come from the query
+// manifest in their frontend bundle (see ROADMAP.md). If Riot changes a query, its id stops
+// working and callers fall back gracefully.
 
 const GQL = 'https://lolesports.com/api/gql'
-const GPR_QUERY_ID = '9411e88d02eb7f7ea8516ed9f206cb557d150208d6654c06f044781f8d9789ba'
+const QUERY_IDS = {
+    GetTeamGpr: '9411e88d02eb7f7ea8516ed9f206cb557d150208d6654c06f044781f8d9789ba',
+    GetTeamEvents: '4597f76e634ed6ce19c4c5c2f64213e26742e299f43e5174a7143c04ae780424',
+}
+
+async function persisted<T>(
+    operationName: keyof typeof QUERY_IDS,
+    variables: Record<string, unknown>,
+    ttlSeconds: number,
+): Promise<T> {
+    const qs = new URLSearchParams({
+        operationName,
+        variables: JSON.stringify(variables),
+        extensions: JSON.stringify({ persistedQuery: { version: 1, sha256Hash: QUERY_IDS[operationName] } }),
+    })
+    const url = `${GQL}?${qs.toString()}`
+
+    return cached(url, ttlSeconds, async () => {
+        const res = await fetch(url, {
+            headers: {
+                // Apollo rejects GETs without a non-simple content type (CSRF protection).
+                'content-type': 'application/json',
+                'apollographql-client-name': 'Esports Web',
+                'apollographql-client-version': '1.0.0',
+            },
+        })
+        if (!res.ok) throw new ApiError(`${operationName} returned ${res.status}`)
+        const body = await res.json<{ data?: T }>()
+        if (!body.data) throw new ApiError(`${operationName} returned no data`)
+        return body.data
+    })
+}
 
 export interface RawGpr {
     gprScore: number
     rank: number
     dateCalculated: string
+}
+
+export interface RawGprTournament {
+    tournamentRecord: { wins: number; losses: number } | null
+    tournament: {
+        id: string
+        name: string // e.g. "Split 3 2026", without the league
+        slug: string
+        startTime: string
+        endTime: string
+        state: string
+        league: { id: string; name: string } | null
+        standings: { team: { id: string }; placement: number | null }[] | null
+    }
 }
 
 export interface RawTeamGpr {
@@ -194,29 +239,106 @@ export interface RawTeamGpr {
     currentTeamGPR: RawGpr
     previousTeamGPR: RawGpr | null
     teamMatchRecord: { wins: number; losses: number } | null
+    tournaments: RawGprTournament[] | null
 }
 
 // Rankings are recalculated every few days; `endDate` is today, so the cache key rolls daily.
 export async function fetchPowerRankings(startDate: string, endDate: string): Promise<RawTeamGpr[]> {
-    const qs = new URLSearchParams({
-        operationName: 'GetTeamGpr',
-        variables: JSON.stringify({ hl: 'en-US', step: 10, startDate, endDate, sport: 'lol' }),
-        extensions: JSON.stringify({ persistedQuery: { version: 1, sha256Hash: GPR_QUERY_ID } }),
-    })
-    const url = `${GQL}?${qs.toString()}`
+    const data = await persisted<{ teamGPR?: RawTeamGpr[] }>(
+        'GetTeamGpr',
+        { hl: 'en-US', step: 10, startDate, endDate, sport: 'lol' },
+        3 * 3600,
+    )
+    if (!data.teamGPR?.length) throw new ApiError('GetTeamGpr returned no teams')
+    return data.teamGPR
+}
 
-    return cached(url, 3 * 3600, async () => {
-        const res = await fetch(url, {
-            headers: {
-                // Apollo rejects GETs without a non-simple content type (CSRF protection).
-                'content-type': 'application/json',
-                'apollographql-client-name': 'Esports Web',
-                'apollographql-client-version': '1.0.0',
-            },
-        })
-        if (!res.ok) throw new ApiError(`GetTeamGpr returned ${res.status}`)
-        const body = await res.json<{ data?: { teamGPR?: RawTeamGpr[] } }>()
-        if (!body.data?.teamGPR?.length) throw new ApiError('GetTeamGpr returned no teams')
-        return body.data.teamGPR
+export interface RawTeamEvent {
+    id: string
+    startTime: string
+    state: RawState
+    match: { id: string } | null
+    tournament: { id: string; name: string } | null
+    matchTeams: (RawTeam & { teamId?: string })[]
+}
+
+// One team's matches across all leagues. Results come oldest first and capped at pageSize,
+// so callers keep the date window narrow enough to fit.
+export async function fetchTeamEvents(
+    teamId: string,
+    states: RawState[],
+    from: string,
+    to: string,
+    pageSize = 100,
+): Promise<RawTeamEvent[]> {
+    const data = await persisted<{ esports: { events: RawTeamEvent[] } | null }>(
+        'GetTeamEvents',
+        {
+            hl: 'en-US',
+            sport: ['lol'],
+            teamId: [teamId],
+            eventState: states,
+            eventType: 'match',
+            pageSize,
+            eventDateStart: from,
+            eventDateEnd: to,
+        },
+        60,
+    )
+    return data.esports?.events ?? []
+}
+
+// ---------- teams (REST) ----------
+
+export interface RawPlayer {
+    id: string
+    summonerName: string
+    firstName: string
+    lastName: string
+    image: string
+    role: string // top, jungle, mid, bottom, support (or "none" for staff)
+}
+
+export interface RawTeamDetail {
+    id: string
+    slug: string
+    name: string
+    code: string
+    image: string
+    alternativeImage: string | null
+    backgroundImage: string | null
+    status: string
+    homeLeague: { name: string; region: string } | null
+    players: RawPlayer[]
+}
+
+// Accepts a numeric team id or a slug.
+export async function fetchTeam(idOrSlug: string): Promise<RawTeamDetail | null> {
+    const data = await get<{ teams: RawTeamDetail[] | null }>('getTeams', { id: idOrSlug }, 6 * 3600)
+    return data.teams?.[0] ?? null
+}
+
+// ---------- live stats feed ----------
+
+export interface RawGameMetadata {
+    blueTeamMetadata: RawSideMetadata
+    redTeamMetadata: RawSideMetadata
+}
+
+export interface RawSideMetadata {
+    esportsTeamId: string
+    participantMetadata: { esportsPlayerId: string; summonerName: string; role: string }[]
+}
+
+// Who played a game. The live-stats window starts at the game's first frames, which already
+// carry the full lineup, so no time search is needed. A finished game never changes.
+export async function fetchGameMetadata(gameId: string): Promise<RawGameMetadata | null> {
+    const url = `https://feed.lolesports.com/livestats/v1/window/${gameId}`
+    return cached(url, 24 * 3600, async () => {
+        const res = await fetch(url)
+        if (res.status === 204 || res.status === 404) return null
+        if (!res.ok) throw new ApiError(`livestats returned ${res.status}`)
+        const body = await res.json<{ gameMetadata?: RawGameMetadata }>()
+        return body.gameMetadata ?? null
     })
 }
