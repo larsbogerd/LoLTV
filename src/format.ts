@@ -1,0 +1,89 @@
+// Time formatting in the viewer's timezone (from the `tz` cookie) plus slug helpers.
+
+export function safeTimeZone(tz: string | undefined): string {
+    if (!tz) return 'UTC'
+    try {
+        new Intl.DateTimeFormat('en-GB', { timeZone: tz })
+        return tz
+    } catch {
+        return 'UTC'
+    }
+}
+
+function ordinal(n: number): string {
+    const s = n % 100
+    if (s >= 11 && s <= 13) return `${n}th`
+    return `${n}${['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'}`
+}
+
+export interface Fmt {
+    tz: string
+    time(iso: string): string // 20:00
+    dayKey(iso: string | Date): string // 2026-10-23, in the viewer's timezone
+    dayHeading(key: string): string // Friday - 2026-10-23   (HLTV matches page)
+    resultsHeading(key: string): string // Results for October 23rd 2026   (HLTV results page)
+    shortDate(iso: string): string // 23 Oct
+    relativeDay(key: string): string | null // Today / Tomorrow / Yesterday
+}
+
+export function makeFmt(tz: string, now = new Date()): Fmt {
+    const time = new Intl.DateTimeFormat('en-GB', {
+        timeZone: tz,
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+    })
+    const day = new Intl.DateTimeFormat('en-CA', {
+        timeZone: tz,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    })
+    const short = new Intl.DateTimeFormat('en-GB', { timeZone: tz, day: 'numeric', month: 'short' })
+    // Day keys are calendar dates, so format them back in UTC to avoid shifting.
+    const weekday = new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', weekday: 'long' })
+    const month = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'long' })
+
+    const dayKey = (d: string | Date) => day.format(typeof d === 'string' ? new Date(d) : d)
+    const keyDate = (key: string) => new Date(`${key}T12:00:00Z`)
+    const today = dayKey(now)
+    const rel: Record<string, string> = {
+        [today]: 'Today',
+        [dayKey(new Date(now.getTime() + 86400e3))]: 'Tomorrow',
+        [dayKey(new Date(now.getTime() - 86400e3))]: 'Yesterday',
+    }
+
+    return {
+        tz,
+        time: (iso) => time.format(new Date(iso)),
+        dayKey,
+        dayHeading: (key) => `${weekday.format(keyDate(key))} - ${key}`,
+        resultsHeading: (key) => {
+            const d = keyDate(key)
+            return `Results for ${month.format(d)} ${ordinal(d.getUTCDate())} ${d.getUTCFullYear()}`
+        },
+        shortDate: (iso) => short.format(new Date(iso)),
+        relativeDay: (key) => rel[key] ?? null,
+    }
+}
+
+export function slugify(...parts: string[]): string {
+    return parts
+        .join('-')
+        .normalize('NFKD')
+        .replace(/\p{Diacritic}/gu, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+}
+
+export function daysUntil(dateStr: string, now = new Date()): number {
+    return Math.ceil((new Date(`${dateStr}T00:00:00Z`).getTime() - now.getTime()) / 86400e3)
+}
+
+// Shrinks the huge source PNGs (often 70KB+) through the resizer lolesports.com itself uses.
+export function logoUrl(src: string | undefined | null, px: number): string | null {
+    if (!src) return null
+    const http = src.replace(/^https:/, 'http:')
+    return `https://am-a.akamaihd.net/image?resize=${px}:&f=${encodeURIComponent(http)}`
+}
