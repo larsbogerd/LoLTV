@@ -23,12 +23,11 @@ export function HomePage(props: {
         .slice(0, 8)
     const swiss = swissTable(fm.filter((m) => isSwiss(m.stage)))
     const stage = (live[0] ?? upcoming[0] ?? results[0])?.stage
-    const anyLive = props.schedule.some((m) => m.state === 'inProgress') || live.length > 0
     const matchesHref = featured ? `/matches?event=${featured.id}` : '/matches'
     const resultsHref = featured ? `/results?event=${featured.id}` : '/results'
 
     return (
-        <Layout fmt={fmt} live={anyLive} nav="home">
+        <Layout fmt={fmt} watch={[...props.schedule, ...fm]} nav="home">
             <div class="home">
                 <div class="col left">
                     {props.ranking && (
