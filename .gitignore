@@ -1,0 +1,27 @@
+# --- Dependencies ---
+node_modules
+
+# --- Wrangler / Workers ---
+.wrangler
+.dev.vars
+.dev.vars.*
+
+# --- Logs ---
+*.log
+npm-debug.log*
+
+# --- Tooling caches ---
+.eslintcache
+*.tsbuildinfo
+
+# --- Editors / local tooling ---
+.claude/
+CLAUDE.md
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
+
+# --- OS ---
+.DS_Store
+Thumbs.db
