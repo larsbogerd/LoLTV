@@ -1,5 +1,5 @@
 import type { Child } from 'hono/jsx'
-import { eventStatus, eventUrl, matchUrl, type Event, type Match, type Team } from '../data'
+import { eventStatus, eventUrl, matchUrl, teamUrl, type Event, type Match, type Team } from '../data'
 import { daysUntil, logoUrl, type Fmt } from '../format'
 import { CSS_VERSION } from '../style'
 
@@ -102,6 +102,18 @@ function teamClass(base: string, t: Team) {
 }
 
 // Small grey home-league label after a team name, at international events only.
+// A team name that links to the team page when the team's id is known.
+export function TeamName(props: { t: { id?: string; slug?: string; name: string } }) {
+    const url = teamUrl(props.t)
+    return url ? (
+        <a class="team-link" href={url}>
+            {props.t.name}
+        </a>
+    ) : (
+        <>{props.t.name}</>
+    )
+}
+
 export function Tag(props: { t: Team }) {
     return props.t.tag ? <span class="tag">{props.t.tag}</span> : null
 }

@@ -1,4 +1,4 @@
-import type { Ranking, RankedTeam } from '../data'
+import { teamUrl, type Ranking, type RankedTeam } from '../data'
 import type { Fmt } from '../format'
 import { Layout, Logo } from './ui'
 
@@ -58,7 +58,7 @@ export function RankingPage(props: { fmt: Fmt; ranking: Ranking | null; league?:
 function RankRow(props: { t: RankedTeam }) {
     const { t } = props
     return (
-        <div class="li rk">
+        <a class="li rk" href={teamUrl(t.team) ?? undefined}>
             <span class="rk-pos">#{t.rank}</span>
             <Logo src={t.team.image} size={30} />
             <span class="grow">
@@ -71,7 +71,7 @@ function RankRow(props: { t: RankedTeam }) {
                 {t.points} <small>points</small>
             </span>
             <Movement t={t} />
-        </div>
+        </a>
     )
 }
 

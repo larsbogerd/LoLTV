@@ -1,6 +1,6 @@
-import { matchUrl, type Event, type Match, type Stage, type SwissRow, type Team } from '../data'
+import { matchUrl, teamUrl, type Event, type Match, type Stage, type SwissRow, type Team } from '../data'
 import { dateRange, type Fmt } from '../format'
-import { CompactMatch, EventBanner, Layout, Logo, Tag } from './ui'
+import { CompactMatch, EventBanner, Layout, Logo, Tag, TeamName } from './ui'
 
 const STATUS_LABEL = { active: 'In progress', upcoming: 'Upcoming', done: 'Completed' }
 
@@ -207,10 +207,10 @@ function SwissOutcome(props: { label: string; teams: (Team | null)[]; qualified:
             <div class="sw-teams">
                 {props.teams.map((t) =>
                     t ? (
-                        <span class="sw-ot" title={t.name}>
+                        <a class="sw-ot" title={t.name} href={teamUrl(t) ?? undefined}>
                             <Logo src={t.image} size={22} />
                             {t.code}
-                        </span>
+                        </a>
                     ) : (
                         <span class="sw-ot">
                             <span class="sw-q">?</span>
@@ -243,7 +243,7 @@ function SwissTable(props: { rows: SwissRow[] }) {
                             <td>
                                 <span class="t">
                                     <Logo src={r.team.image} size={20} />
-                                    {r.team.name}
+                                    <TeamName t={r.team} />
                                     <Tag t={r.team} />
                                 </span>
                             </td>
@@ -280,7 +280,7 @@ function RankTable(props: { rows: NonNullable<Stage['tables']>[number]['rows'] }
                         <td>
                             <span class="t">
                                 <Logo src={r.team.image} size={20} />
-                                {r.team.name}
+                                <TeamName t={r.team} />
                             </span>
                         </td>
                         <td class="c rec">
