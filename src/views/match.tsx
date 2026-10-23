@@ -1,6 +1,6 @@
 import { eventUrl, type Event, type MatchDetail, type Team } from '../data'
 import type { Fmt } from '../format'
-import { Layout, Logo } from './ui'
+import { Layout, Logo, Tag } from './ui'
 
 export function MatchPage(props: { fmt: Fmt; detail: MatchDetail; event: Event | null }) {
     const { fmt, detail, event } = props
@@ -36,6 +36,7 @@ export function MatchPage(props: { fmt: Fmt; detail: MatchDetail; event: Event |
                     <div class={side(a)}>
                         <Logo src={a.image} size={64} />
                         {a.name}
+                        <Tag t={a} />
                     </div>
                     <div class="mid">
                         {state === 'unstarted' ? (
@@ -60,6 +61,7 @@ export function MatchPage(props: { fmt: Fmt; detail: MatchDetail; event: Event |
                     <div class={side(b)}>
                         <Logo src={b.image} size={64} />
                         {b.name}
+                        <Tag t={b} />
                     </div>
                 </div>
             </div>

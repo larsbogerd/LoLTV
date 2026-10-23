@@ -1,6 +1,6 @@
 import { matchUrl, type Event, type Match, type Stage, type SwissRow, type Team } from '../data'
 import { dateRange, type Fmt } from '../format'
-import { CompactMatch, EventBanner, Layout, Logo } from './ui'
+import { CompactMatch, EventBanner, Layout, Logo, Tag } from './ui'
 
 const STATUS_LABEL = { active: 'In progress', upcoming: 'Upcoming', done: 'Completed' }
 
@@ -232,6 +232,7 @@ function SwissTable(props: { rows: SwissRow[] }) {
                                 <span class="t">
                                     <Logo src={r.team.image} size={20} />
                                     {r.team.name}
+                                    <Tag t={r.team} />
                                 </span>
                             </td>
                             <td class="c rec">{rec}</td>
@@ -303,6 +304,7 @@ function Bracket(props: { columns: { name: string; matches: Match[] }[]; fmt: Fm
                                 <div class={`bt ${t.won === true ? 'won' : t.won === false ? 'lost' : ''}`}>
                                     <Logo src={t.image} size={16} />
                                     <span class="tn">{t.name}</span>
+                                    <Tag t={t} />
                                     {m.state !== 'unstarted' && <span class="ts">{t.score ?? 0}</span>}
                                 </div>
                             ))}

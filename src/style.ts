@@ -72,6 +72,9 @@ footer a { color: var(--dim); }
 .note { color: var(--muted); font-size: 11px; margin: 10px 2px 0; }
 .notice { background: #3b2a1e; color: #f1c79b; padding: 8px 12px; margin-bottom: 12px; border-radius: var(--radius); }
 
+/* home-league tag after team names at international events */
+.tag { flex: none; color: var(--muted); font-size: 10px; font-weight: 600; letter-spacing: .3px; }
+
 /* ---------- logos ---------- */
 /* a faint halo keeps black logos visible on the dark background */
 .logo { object-fit: contain; flex: none; filter: drop-shadow(0 0 0.6px #ffffffb0) drop-shadow(0 0 1px #ffffff30); }
