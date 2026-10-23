@@ -1,6 +1,6 @@
 # LOLTV
 
-HLTV-style overview of League of Legends esports: live, upcoming and results at a glance.
+HLTV inspired overview of League of Legends esports: live, upcoming and results at a glance.
 Small type, dense rows, no autoplay, no spoiler gates. Personal project.
 
 Server-rendered HTML from a Cloudflare Worker ([Hono](https://hono.dev) + JSX on the server only).
