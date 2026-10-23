@@ -57,6 +57,12 @@ and when the API fails we keep serving the last good copy.
 | `getStandings`                           | stage structure of an event (Swiss / bracket / round-robin tables)    |
 | `getEventDetails`                        | match page: games, sides, VODs, streams                               |
 
+### Which leagues
+
+Only tier 1: Worlds, MSI, First Stand, Esports World Cup and Americas Cup, plus LCK, LPL,
+LEC, LCS, CBLOL and LCP. Everything else the API carries (ERLs, Challengers, promotion
+tournaments, off-season cups) is filtered out; the list is at the top of `src/data.ts`.
+
 ### Global Power Ranking
 
 GPR isn't in that API. It comes from lolesports.com's own GraphQL endpoint
@@ -98,9 +104,6 @@ reference/         HLTV (good) and lolesports.com (bad) screenshots used as desi
 Times are rendered on the server in the viewer's timezone (read from a `tz` cookie that a
 tiny inline script sets on the first visit).
 
-## Ideas / not done yet
+## Roadmap
 
-- Team pages (`/team/<id>/<slug>`): roster, recent results, GPR history
-- Live match stats (kills, gold, towers per game) via the live-stats feed
-  (`feed.lolesports.com/livestats/v1/window/<gameId>`), which would also give per-game winners
-- League filter preferences, HLTV-style match "stars"
+Future work, fragile points and decisions so far are in [ROADMAP.md](ROADMAP.md).
