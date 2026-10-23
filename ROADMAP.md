@@ -31,9 +31,19 @@ Where LOLTV is heading and what to keep an eye on. Pick up from here in a new se
   persisted-query setup as the power ranking. Gives context for cross-region matchups.
 - **Add to home screen**: a web app manifest and icon so it opens like an app on a phone.
 - **HLTV-style match stars** (importance), e.g. from the power ranks of both teams.
-- **Proper double-elimination brackets** for regional playoffs. The API has no bracket
-  structure (`previousMatchIds` is empty), so this would mean inferring it from who
-  advances. For now irregular playoffs are a chronological grid.
+- **Proper double-elimination brackets** for regional playoffs (LEC, LCS, LPL, ...), drawn
+  like Liquipedia: upper bracket on top, lower bracket below, connector lines, grand final on
+  the right. See `reference/good/liquipedia-lec-double-elim-playoffs.webp` and
+  [the LEC 2025 Summer playoffs](https://liquipedia.net/leagueoflegends/LEC/2025/Summer/Playoffs).
+  For now irregular playoffs are a chronological grid (`bracketColumns()` in `src/data.ts`).
+    - **The hard part is the data:** the API has no bracket structure (`previousMatchIds` is
+      empty, and every match is just "Playoffs").
+    - **Finished matches:** the links can be rebuilt by finding each team's previous match in
+      the stage. A team arriving from a win is in the upper bracket, from a loss the lower one.
+    - **Matches still to be played:** these are TBD vs TBD, so placing them needs a template
+      per league format (number of teams, which rounds exist), matched against the schedule.
+    - **Rejected:** Liquipedia's own API is rate-limited, needs attribution, and its data API
+      requires a key, so it isn't a good live source for a Worker.
 - **Docker/Node option**: add `@hono/node-server` and a Dockerfile if it ever moves off
   Workers.
 
