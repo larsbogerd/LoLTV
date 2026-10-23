@@ -51,15 +51,16 @@ The code only uses standard `fetch`, so moving to Node/Docker later means adding
 
 ## URLs (copied from HLTV)
 
-| Page            | URL                                                                   |
-| --------------- | --------------------------------------------------------------------- |
-| Home            | `/`                                                                   |
-| Upcoming + live | `/matches`, `/matches?event=<id>`                                     |
-| Results         | `/results`, `/results?event=<id>`, older: `/results?before=<token>`   |
-| Events          | `/events`                                                             |
-| Event overview  | `/events/<id>/<slug>` (e.g. `/events/115660540725177488/worlds-2026`) |
-| Match           | `/matches/<id>/<team1>-vs-<team2>-<event>`                            |
-| Ranking         | `/ranking`, `/ranking?league=<slug>`                                  |
+| Page            | URL                                                                       |
+| --------------- | ------------------------------------------------------------------------- |
+| Home            | `/`                                                                       |
+| Upcoming + live | `/matches`, `/matches?event=<id>`                                         |
+| Results         | `/results`, `/results?event=<id>`, older: `/results?before=<token>`       |
+| Events          | `/events`                                                                 |
+| Event overview  | `/events/<id>/<slug>` (e.g. `/events/115660540725177488/worlds-2026`)     |
+| Match           | `/matches/<id>/<team1>-vs-<team2>-<event>`                                |
+| Ranking         | `/ranking`, `/ranking?league=<slug>`                                      |
+| Team            | `/team/<id>/<slug>` (e.g. `/team/100205573496804586/hanwha-life-esports`) |
 
 Slugs are cosmetic: a wrong or missing slug redirects to the right one.
 
@@ -76,6 +77,7 @@ and when the API fails we keep serving the last good copy.
 | `getLeagues` + `getTournamentsForLeague` | the event index (one call for all leagues)                            |
 | `getStandings`                           | stage structure of an event (Swiss / bracket / round-robin tables)    |
 | `getEventDetails`                        | match page: games, sides, VODs, streams                               |
+| `getTeams`                               | team page: name, logo, home league, full roster with photos           |
 
 ### Which leagues
 
@@ -87,14 +89,23 @@ tournaments, off-season cups) is filtered out; the list is at the top of `src/da
 
 GPR isn't in that API. It comes from lolesports.com's own GraphQL endpoint
 (`lolesports.com/api/gql`), which only runs _persisted_ queries: requests send the id of a
-query registered by their frontend instead of the query itself. `GPR_QUERY_ID` in
-`src/api.ts` is the id their GPR page uses, found in the query manifest chunk of their JS
-bundle. If Riot changes that query the id stops working: the homepage panel then falls back
-to the Swiss table, `/ranking` shows a notice and the league tags disappear. To fix it,
-look up the new `GetTeamGpr` id in their manifest. The ranking is cached for 3 hours.
+query registered by their frontend instead of the query itself. The ids their
+frontend uses are in `QUERY_IDS` in `src/api.ts`, found in the query manifest chunk of their JS
+bundle. If Riot changes that query the id stops working: the
+homepage panel then falls back to the Swiss table, `/ranking` shows a notice and the league
+tags and team links disappear. To fix it, look up the new `GetTeamGpr` id in their manifest.
+The ranking is cached for 3 hours.
 
-The ranking also provides each team's home league, used for the grey `LEC` / `LCK` tags
-next to team names at international events.
+The ranking also provides each team's id and home league, used for team links and the grey
+`LEC` / `LCK` tags next to team names at international events.
+
+### Team pages
+
+A team page combines four sources: `getTeams` (REST) for the team and its roster, the
+`GetTeamEvents` GraphQL query for its matches across all leagues, the power ranking for rank
+and this year's placements, and the live-stats feed for the lineup. lolesports.com lists
+subs and academy players with a team without saying who starts, so the starting five are
+read from the metadata of the team's latest game (`lineup()` in `src/data.ts`).
 
 ### Events and stages
 
