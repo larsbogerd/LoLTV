@@ -65,6 +65,7 @@ export function MatchPage(props: {
                     </div>
                     <TeamSide t={b} cls={side(b)} />
                 </div>
+                {detail.stakes && <div class="mstakes">{detail.stakes}</div>}
             </div>
 
             <div class="split" style="margin-top:16px">

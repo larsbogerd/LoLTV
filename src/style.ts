@@ -349,6 +349,7 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 .mhead { background: var(--box); border-radius: var(--radius); overflow: hidden; }
 .mhead-ev { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--head); color: var(--dim); }
 .mhead-ev a { color: var(--link); }
+.mstakes { text-align: center; padding: 8px 12px; border-top: 1px solid var(--line); color: var(--gold); font-weight: 600; font-size: 13px; }
 .score { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 22px 12px; gap: 12px; }
 .score .side { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; font-size: 16px; font-weight: 600; justify-self: center; padding: 12px 22px; border-radius: var(--radius); }
 .score a.side:hover { background: var(--box-hover); }

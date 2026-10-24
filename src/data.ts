@@ -489,6 +489,29 @@ export function swissBracket(matches: Match[]): SwissBracket | null {
     return { pools, outcomes }
 }
 
+// What a match decides, for upcoming and live matches. Swiss pools come from swissBracket();
+// knockout rounds from their stage name. Regional playoffs (often double elimination) have no
+// bracket structure in the API, so they get nothing rather than a wrong claim.
+export function matchStakes(m: Match, eventMatches: Match[]): string | null {
+    if (m.state === 'completed' || m.teams.some((t) => t.tbd)) return null
+    if (isSwiss(m.stage)) {
+        const pool = swissBracket(eventMatches.filter((x) => isSwiss(x.stage)))?.pools.find((p) =>
+            p.matches.some((x) => x.id === m.id),
+        )
+        if (!pool) return null
+        const record = `${pool.wins}:${pool.losses}`
+        if (pool.wins === 2 && pool.losses === 2)
+            return `Swiss ${record} decider: the winner advances, the loser is out`
+        if (pool.wins === 2) return `Swiss ${record} pool: the winner advances to the knockouts`
+        if (pool.losses === 2) return `Swiss ${record} pool: the loser is eliminated`
+        return `Swiss ${record} pool: the winner goes to ${pool.wins + 1}:${pool.losses}, the loser to ${pool.wins}:${pool.losses + 1}`
+    }
+    if (/^finals?$/i.test(m.stage)) return 'Final: the winner takes the title'
+    if (/^(quarter|semi)finals?$/i.test(m.stage))
+        return `${m.stage.replace(/s$/, '')}: the loser is eliminated`
+    return null
+}
+
 export interface Stage {
     name: string
     status: 'done' | 'active' | 'upcoming'
@@ -833,6 +856,7 @@ export interface MatchDetail {
     details: RawEventDetails
     games: Game[]
     streams: { label: string; url: string }[]
+    stakes: string | null // e.g. "Swiss 1:2 pool: the loser is eliminated" (upcoming/live only)
 }
 
 function mediaUrl(provider: string, parameter: string): string | null {
@@ -847,7 +871,8 @@ export async function getMatchDetail(id: string): Promise<MatchDetail | null> {
     if (!details?.match) return null
 
     const event = await getEvent(details.tournament.id)
-    const match = event ? ((await getEventMatches(event)).find((m) => m.id === id) ?? null) : null
+    const eventMatches = event ? await getEventMatches(event) : []
+    const match = eventMatches.find((m) => m.id === id) ?? null
 
     const teamsById = new Map(details.match.teams.map((t) => [t.id, toTeam(t)]))
     const games: Game[] = details.match.games
@@ -875,5 +900,5 @@ export async function getMatchDetail(id: string): Promise<MatchDetail | null> {
         })
         .filter((s): s is { label: string; url: string } => s !== null)
 
-    return { match, details, games, streams }
+    return { match, details, games, streams, stakes: match ? matchStakes(match, eventMatches) : null }
 }
