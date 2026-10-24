@@ -330,14 +330,15 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 .gb-p.r { grid-template-columns: 52px 62px 130px minmax(0, 1fr) 28px; }
 .gb-p.r .gb-cs { order: 2; }
 .gb-p.r .gb-kda { order: 3; }
-.gb-p.r .gb-items { order: 4; flex-direction: row-reverse; }
+.gb-p.r .gb-items { order: 4; }
 .gb-p.r .gb-pname { order: 6; text-align: right; }
 .gb-p.r .gb-champ, .gb-p.r .gb-champ-ph { order: 7; }
 .gb-champ-ph { width: 28px; }
 .gb-cols { padding-top: 3px; padding-bottom: 3px; }
 .gb-cols span { color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
 .gb-items { display: flex; gap: 2px; }
-.gb-items img { width: 20px; height: 20px; border-radius: 2px; }
+.gb-items img, .gb-slot { width: 20px; height: 20px; border-radius: 2px; flex: none; }
+.gb-slot { background: #00000040; box-shadow: inset 0 0 0 1px #ffffff10; }
 .gb-champ { position: relative; width: 28px; height: 28px; border-radius: 3px; overflow: hidden; background: #ffffff10; }
 .gb-champ img { width: 28px; height: 28px; }
 .gb-champ i { position: absolute; right: 0; bottom: 0; background: #000000c0; color: #fff; font-style: normal; font-size: 9px; font-weight: 700; padding: 0 2px; line-height: 12px; }

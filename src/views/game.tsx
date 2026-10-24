@@ -137,16 +137,23 @@ function Player(props: { p: PlayerLine; version: string; side: 'l' | 'r' }) {
             </span>
             <span class="gb-pname">{p.name}</span>
             <span class="gb-items">
-                {p.items.map((id) => (
-                    <img
-                        src={logoUrl(itemIcon(props.version, id), 40) ?? ''}
-                        width={20}
-                        height={20}
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                    />
-                ))}
+                {/* Always six slots, so short builds line up with full ones. */}
+                {Array.from({ length: 6 }, (_, i) => {
+                    const id = p.items[i]
+
+                    return id === undefined ? (
+                        <span class="gb-slot" />
+                    ) : (
+                        <img
+                            src={logoUrl(itemIcon(props.version, id), 40) ?? ''}
+                            width={20}
+                            height={20}
+                            alt=""
+                            loading="lazy"
+                            decoding="async"
+                        />
+                    )
+                })}
             </span>
             <span class="gb-kda">
                 {p.kills}/{p.deaths}/{p.assists}
