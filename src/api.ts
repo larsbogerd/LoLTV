@@ -106,7 +106,11 @@ const MAX_ENTRIES = 300
 export async function cached<T>(key: string, ttlSeconds: number, load: () => Promise<T>): Promise<T> {
     const hit = cache.get(key)
 
-    if (hit && hit.expires > Date.now()) return hit.value as T
+    if (hit && hit.expires > Date.now()) {
+        // SAFETY: every cache key (a request URL or a fixed name) is only ever loaded by one
+        // call site with one result type, so the stored value has type T.
+        return hit.value as T
+    }
 
     try {
         const value = await load()
@@ -116,7 +120,11 @@ export async function cached<T>(key: string, ttlSeconds: number, load: () => Pro
 
         return value
     } catch (err) {
-        if (hit) return hit.value as T // stale beats nothing
+        if (hit) {
+            // SAFETY: same invariant as above (one key, one loader, one type). Stale beats nothing.
+            return hit.value as T
+        }
+
         throw err instanceof ApiError ? err : new ApiError(`${key} failed: ${String(err)}`)
     }
 }
@@ -193,9 +201,12 @@ const QUERY_IDS = {
     GetTeamEvents: '4597f76e634ed6ce19c4c5c2f64213e26742e299f43e5174a7143c04ae780424',
 }
 
+// Variables our queries send: ids, dates, locale and paging, alone or in lists.
+type GqlVariables = Record<string, string | number | string[]>
+
 async function persisted<T>(
     operationName: keyof typeof QUERY_IDS,
-    variables: Record<string, unknown>,
+    variables: GqlVariables,
     ttlSeconds: number,
 ): Promise<T> {
     const qs = new URLSearchParams({

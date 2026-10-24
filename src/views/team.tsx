@@ -2,13 +2,14 @@ import { eventUrl, matchUrl, type Match, type Player, type Team, type TeamProfil
 import { logoUrl, ordinal, type Fmt } from '../format'
 import { Layout, Logo, Tag } from './ui'
 
-const ROLE_LABEL: Record<string, string> = {
-    top: 'Top',
-    jungle: 'Jungle',
-    mid: 'Mid',
-    bottom: 'Bot',
-    support: 'Support',
-}
+// Full words on the player cards (the shared roleLabel() is the short form).
+const ROLE_NAME = new Map([
+    ['top', 'Top'],
+    ['jungle', 'Jungle'],
+    ['mid', 'Mid'],
+    ['bottom', 'Bot'],
+    ['support', 'Support'],
+])
 
 export function TeamPage(props: { fmt: Fmt; team: TeamProfile }) {
     const { fmt, team: t } = props
@@ -117,7 +118,7 @@ function PlayerCard(props: { p: Player }) {
             {photo ? <img src={photo} alt="" loading="lazy" decoding="async" /> : <div class="tp-nophoto" />}
             <div class="tp-name">
                 <b>{p.handle}</b>
-                <span>{ROLE_LABEL[p.role] ?? p.role}</span>
+                <span>{ROLE_NAME.get(p.role) ?? p.role}</span>
             </div>
         </div>
     )

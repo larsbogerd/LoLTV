@@ -13,7 +13,7 @@ const REFRESH_SCRIPT = `(function(){var d=document.body.dataset,t=Date.now(),due
 
 // A match counts as live from its scheduled start: the API often flips to inProgress a few
 // minutes late. Matches that are hours overdue are ignored (postponed or stale data).
-function refreshHints(matches: Match[], now = Date.now()): { live: boolean; next: string | null } {
+function refreshHints(matches: Match[], now = Date.now()) {
     let live = false
     let next: string | null = null
 
@@ -107,6 +107,19 @@ function teamClass(base: string, t: Team) {
     return [base, t.won === true && 'won', t.won === false && 'lost', t.tbd && 'tbd']
         .filter(Boolean)
         .join(' ')
+}
+
+const ROLE_SHORT = new Map([
+    ['top', 'TOP'],
+    ['jungle', 'JGL'],
+    ['mid', 'MID'],
+    ['bottom', 'BOT'],
+    ['support', 'SUP'],
+])
+
+// TOP / JGL / MID / BOT / SUP, as on the scoreboard and lineups.
+export function roleLabel(role: string): string {
+    return ROLE_SHORT.get(role) ?? role
 }
 
 // Small grey home-league label after a team name, at international events only.

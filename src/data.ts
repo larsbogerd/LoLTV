@@ -335,14 +335,14 @@ export async function getEventMatches(event: Event): Promise<Match[]> {
         }
     }
 
-    const out = raws
-        .filter((r) => {
-            const day = r.startTime.slice(0, 10)
+    const out = raws.flatMap((r) => {
+        const day = r.startTime.slice(0, 10)
 
-            return day >= from && day <= to
-        })
-        .map((r) => toMatch(r, lookups))
-        .filter((m): m is Match => m !== null)
+        if (day < from || day > to) return []
+        const m = toMatch(r, lookups)
+
+        return m ? [m] : []
+    })
 
     return dedupe(out).sort((a, b) => a.start.localeCompare(b.start))
 }
@@ -489,11 +489,11 @@ export function swissBracket(matches: Match[]): SwissBracket | null {
         const roundMatches = sorted.slice(next, next + size)
         next += size
 
-        const roundPools = round.map(([wins, losses, count]) => ({
+        const roundPools = round.map(([wins, losses, count]): SwissPool & { count: number } => ({
             wins,
             losses,
             count,
-            matches: [] as Match[],
+            matches: [],
         }))
 
         const hasRoom = (p: (typeof roundPools)[number]) => p.matches.length < p.count
@@ -793,7 +793,8 @@ export async function getTeamProfile(id: string, now = new Date()): Promise<Team
     if (!raw) return null
     const day = 86400e3
     const iso = (t: number) => new Date(t).toISOString()
-    const optional = <T>(p: Promise<T>) => p.catch((err: unknown) => (console.error(err), null))
+    // Everything thrown here is an Error: ApiError from the clients, or a runtime error.
+    const optional = <T>(p: Promise<T>) => p.catch((err: Error) => (console.error(err), null))
 
     const [lookups, ranking, recentPast, future] = await Promise.all([
         getLookups(),

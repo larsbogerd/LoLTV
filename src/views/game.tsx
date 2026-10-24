@@ -1,18 +1,10 @@
 import { championIcon, itemIcon, type GameStats, type PlayerLine } from '../live'
 import { logoUrl } from '../format'
-import { Logo } from './ui'
+import { Logo, roleLabel } from './ui'
 
 export interface BoardTeam {
     code: string
     image: string | null
-}
-
-const ROLE_LABEL: Record<string, string> = {
-    top: 'TOP',
-    jungle: 'JGL',
-    mid: 'MID',
-    bottom: 'BOT',
-    support: 'SUP',
 }
 
 const k = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n))
@@ -81,7 +73,7 @@ export function GameBoard(props: {
                 return (
                     <div class="gb-row">
                         <Player p={b} version={props.version} side="l" />
-                        <div class="gb-role">{ROLE_LABEL[b.role] ?? b.role}</div>
+                        <div class="gb-role">{roleLabel(b.role)}</div>
                         {r ? <Player p={r} version={props.version} side="r" /> : <div />}
                     </div>
                 )

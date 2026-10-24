@@ -155,7 +155,7 @@ export function HomePage(props: {
 // HLTV's right-hand "Today's matches" column, across all leagues.
 function TodayBox(props: { fmt: Fmt; matches: Match[] }) {
     const { fmt } = props
-    const today = fmt.dayKey(new Date())
+    const today = fmt.dayKey(new Date().toISOString())
     const isToday = (m: Match) => fmt.dayKey(m.start) === today
     const live = props.matches.filter((m) => m.state === 'inProgress')
     const later = props.matches.filter((m) => m.state === 'unstarted' && isToday(m))

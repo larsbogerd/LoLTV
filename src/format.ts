@@ -23,7 +23,7 @@ export function ordinal(n: number): string {
 export interface Fmt {
     tz: string
     time(iso: string): string // 20:00
-    dayKey(iso: string | Date): string // 2026-10-23, in the viewer's timezone
+    dayKey(iso: string): string // 2026-10-23, in the viewer's timezone
     dayHeading(key: string): string // Friday - 2026-10-23   (HLTV matches page)
     resultsHeading(key: string): string // Results for October 23rd 2026   (HLTV results page)
     shortDate(iso: string): string // 23 Oct
@@ -53,15 +53,15 @@ export function makeFmt(tz: string, now = new Date()): Fmt {
     const month = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'long' })
     const monthShort = new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', month: 'short' })
 
-    const dayKey = (d: string | Date) => day.format(typeof d === 'string' ? new Date(d) : d)
+    const dayKey = (iso: string) => day.format(new Date(iso))
     const keyDate = (key: string) => new Date(`${key}T12:00:00Z`)
-    const today = dayKey(now)
+    const today = day.format(now)
 
-    const rel: Record<string, string> = {
-        [today]: 'Today',
-        [dayKey(new Date(now.getTime() + 86400e3))]: 'Tomorrow',
-        [dayKey(new Date(now.getTime() - 86400e3))]: 'Yesterday',
-    }
+    const rel = new Map([
+        [today, 'Today'],
+        [day.format(new Date(now.getTime() + 86400e3)), 'Tomorrow'],
+        [day.format(new Date(now.getTime() - 86400e3)), 'Yesterday'],
+    ])
 
     return {
         tz,
@@ -84,7 +84,7 @@ export function makeFmt(tz: string, now = new Date()): Fmt {
 
             return `${ordinal(d.getUTCDate())} of ${monthShort.format(d)}`
         },
-        relativeDay: (key) => rel[key] ?? null,
+        relativeDay: (key) => rel.get(key) ?? null,
     }
 }
 

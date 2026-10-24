@@ -12,7 +12,7 @@ import { logoUrl } from '../format'
 import type { Fmt } from '../format'
 import type { GameStats } from '../live'
 import { GameBoard, type BoardTeam } from './game'
-import { Layout, Logo, Tag } from './ui'
+import { Layout, Logo, roleLabel, Tag } from './ui'
 
 export function MatchPage(props: {
     fmt: Fmt
@@ -223,14 +223,6 @@ function GameBoards(props: {
     )
 }
 
-const ROLE_LABEL: Record<string, string> = {
-    top: 'TOP',
-    jungle: 'JGL',
-    mid: 'MID',
-    bottom: 'BOT',
-    support: 'SUP',
-}
-
 // Only shown before a match starts. Desktop: each team's five in a row under their side, both
 // in lane order (top to support). Phones: compact rows, role by role.
 function Lineups(props: { lineups: [Player[], Player[]] }) {
@@ -250,7 +242,7 @@ function Lineups(props: { lineups: [Player[], Player[]] }) {
                     return (
                         <div class="lu-row">
                             <LineupPlayer p={p} side="l" />
-                            <span class="lu-role">{ROLE_LABEL[p.role] ?? p.role}</span>
+                            <span class="lu-role">{roleLabel(p.role)}</span>
                             {q ? <LineupPlayer p={q} side="r" /> : <span />}
                         </div>
                     )
@@ -277,7 +269,7 @@ function LineupGroup(props: { players: Player[] }) {
                         )}
                         <figcaption>
                             <b>{p.handle}</b>
-                            <span>{ROLE_LABEL[p.role] ?? p.role}</span>
+                            <span>{roleLabel(p.role)}</span>
                         </figcaption>
                     </figure>
                 )
