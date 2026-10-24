@@ -201,15 +201,18 @@ const ROLE_LABEL: Record<string, string> = {
     support: 'SUP',
 }
 
-// Compact, role by role, like the scoreboard rows. Only shown before a match starts.
+// Only shown before a match starts. Desktop: a team-photo style group per team, mid in front,
+// lanes mirrored so both top laners sit on the outside. Phones: compact rows, role by role.
 function Lineups(props: { lineups: [Player[], Player[]] }) {
     const [a, b] = props.lineups
     return (
         <section class="lineups">
-            <h2 class="h">
-                Expected lineups <small>from each team's latest game</small>
-            </h2>
-            <div class="list">
+            <div class="lu-desk">
+                <LineupGroup players={a} />
+                <span class="lu-vs">vs</span>
+                <LineupGroup players={[...b].reverse()} />
+            </div>
+            <div class="list lu-rows">
                 {a.map((p, i) => {
                     const q = b[i]
                     return (
@@ -222,6 +225,32 @@ function Lineups(props: { lineups: [Player[], Player[]] }) {
                 })}
             </div>
         </section>
+    )
+}
+
+function LineupGroup(props: { players: Player[] }) {
+    const mid = Math.floor(props.players.length / 2)
+    return (
+        <div class="lu-group">
+            {props.players.map((p, i) => {
+                const photo = logoUrl(p.image, 240)
+                // The closer to the centre, the further in front.
+                const depth = mid - Math.abs(i - mid)
+                return (
+                    <figure class={`lu-fig ${i === mid ? 'centre' : ''}`} style={`z-index:${depth + 1}`}>
+                        {photo ? (
+                            <img src={photo} alt="" loading="lazy" decoding="async" />
+                        ) : (
+                            <div class="lu-blank" />
+                        )}
+                        <figcaption>
+                            <b>{p.handle}</b>
+                            <span>{ROLE_LABEL[p.role] ?? p.role}</span>
+                        </figcaption>
+                    </figure>
+                )
+            })}
+        </div>
     )
 }
 

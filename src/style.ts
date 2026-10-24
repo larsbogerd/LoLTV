@@ -349,7 +349,19 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 .mhead { background: var(--box); border-radius: var(--radius); overflow: hidden; }
 .mhead-ev { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--head); color: var(--dim); }
 .mhead-ev a { color: var(--link); }
-.lineups { max-width: 560px; margin: 16px auto 0; }
+.lineups { margin-top: 1px; }
+.lu-desk { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: end; padding: 18px 12px 12px; background: linear-gradient(180deg, var(--box), #14233b); border-radius: 0 0 var(--radius) var(--radius); }
+.lu-vs { color: var(--muted); font-size: 12px; font-weight: 700; padding: 0 12px 40px; }
+.lu-group { display: flex; justify-content: center; align-items: flex-end; }
+.lu-fig { position: relative; margin: 0 0 0 -40px; width: 128px; text-align: center; }
+.lu-fig:first-child { margin-left: 0; }
+.lu-fig img, .lu-blank { display: block; width: 128px; height: 104px; object-fit: cover; object-position: top; }
+.lu-fig.centre img, .lu-fig.centre .lu-blank { width: 144px; height: 117px; margin: 0 -8px; }
+.lu-blank { background: #ffffff0a; border-radius: 50% 50% 0 0; }
+.lu-fig figcaption { position: relative; margin-top: 4px; line-height: 1.15; text-shadow: 0 1px 3px #000; }
+.lu-fig figcaption b { display: block; font-size: 13px; white-space: nowrap; }
+.lu-fig figcaption span { color: var(--muted); font-size: 10px; font-weight: 700; }
+.lu-rows { display: none; margin-top: 12px; }
 .lu-row { display: grid; grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr); align-items: center; padding: 5px 12px; }
 .lu-role { text-align: center; color: var(--muted); font-size: 11px; font-weight: 700; }
 .lu-p { display: flex; align-items: center; gap: 8px; min-width: 0; }
@@ -410,6 +422,8 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
   .tp-row { grid-template-columns: minmax(0, 1fr) 46px minmax(0, 1fr) 48px; }
   .tp-date { grid-column: 1 / -1; }
   .gb-teams, .gb-row { padding-left: 6px; padding-right: 6px; }
+  .lu-desk { display: none; }
+  .lu-rows { display: block; }
   .gb-teams { gap: 10px; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
   .gb-gold { display: none; }
   .gb-row { grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); }
