@@ -8,6 +8,8 @@
 // - Every response carries gameMetadata: patch, and per player the champion and role.
 // - Asking for a moment after the game ended returns the final frames (gameState "finished"),
 //   so a finished game needs no end time: ask for start + 3h (capped at now).
+// - /details/<gameId>?startingTime=... has the same timing, per player only: items, damage
+//   share, kill participation, wards, runes, skill order (~57 KB per window). We use items.
 // - There is no winner field.
 
 import { ApiError, cached } from './api'
@@ -61,6 +63,13 @@ interface RawWindow {
     frames: RawFrame[]
 }
 
+interface RawDetails {
+    frames: {
+        rfc460Timestamp: string
+        participants: { participantId: number; items: number[] }[]
+    }[]
+}
+
 const FEED = 'https://feed.lolesports.com/livestats/v1'
 
 async function fetchWindow(
@@ -75,6 +84,17 @@ async function fetchWindow(
         if (!res.ok || res.status === 204) throw new ApiError(`livestats returned ${res.status}`)
         const body = await res.json<RawWindow>()
         if (!body.frames?.length) throw new ApiError('livestats returned no frames')
+        return body
+    })
+}
+
+async function fetchDetails(gameId: string, startingTime: string, ttlSeconds: number): Promise<RawDetails> {
+    const url = `${FEED}/details/${gameId}?startingTime=${startingTime}`
+    return cached(url, ttlSeconds, async () => {
+        const res = await fetch(url)
+        if (!res.ok || res.status === 204) throw new ApiError(`livestats details returned ${res.status}`)
+        const body = await res.json<RawDetails>()
+        if (!body.frames?.length) throw new ApiError('livestats details returned no frames')
         return body
     })
 }
@@ -100,7 +120,8 @@ export interface PlayerLine {
     deaths: number
     assists: number
     cs: number
-    gold: number
+    gold: number // not shown, but drives the lane gold difference
+    items: number[] // finished items first; no trinkets, wards or potions
 }
 
 export interface SideStats {
@@ -140,14 +161,23 @@ export async function getGameStats(
     const meta = start.gameMetadata
     const startMs = Date.parse(start.frames[0]!.rfc460Timestamp)
     const at = live ? now - 60e3 : Math.min(startMs + 3 * 3600e3, now - 60e3)
-    const window = await fetchWindow(gameId, feedTime(at), live ? 10 : 24 * 3600)
+    const ttl = live ? 10 : 24 * 3600
+    const [window, details] = await Promise.all([
+        fetchWindow(gameId, feedTime(at), ttl),
+        // Optional: without it the board just has no items.
+        fetchDetails(gameId, feedTime(at), ttl).catch(() => null),
+    ])
     const frame = window.frames[window.frames.length - 1]!
+    const extra = new Map(
+        details?.frames[details.frames.length - 1]?.participants.map((p) => [p.participantId, p]),
+    )
 
     const side = (sideMeta: RawSideMetadata, team: RawFrameTeam): SideStats => {
         const byId = new Map(team.participants.map((p) => [p.participantId, p]))
         const players = sideMeta.participantMetadata
             .map((m) => {
                 const p = byId.get(m.participantId)
+                const x = extra.get(m.participantId)
                 return {
                     name: m.summonerName.replace(/^\S+\s+/, ''), // "HLE Zeus" -> "Zeus"
                     champion: m.championId,
@@ -158,6 +188,7 @@ export async function getGameStats(
                     assists: p?.assists ?? 0,
                     cs: p?.creepScore ?? 0,
                     gold: p?.totalGold ?? 0,
+                    items: x ? cleanItems(x.items) : [],
                 }
             })
             .sort((a, b) => ROLES.indexOf(a.role) - ROLES.indexOf(b.role))
@@ -193,7 +224,18 @@ function guessWinner(blue: SideStats, red: SideStats): 'blue' | 'red' {
     return blue.gold >= red.gold ? 'blue' : 'red'
 }
 
-// ---------- champion icons (Data Dragon) ----------
+// Trinkets, wards, potions, elixirs and other consumables add noise to a scoreboard.
+const NOT_SHOWN = new Set([
+    3340, 3363, 3364, 3330, 3513, 2055, 2003, 2010, 2031, 2033, 2138, 2139, 2140, 2150, 2151, 2152,
+])
+
+// The feed lists items in no particular order: finished items (ids from 3000 up) go first.
+function cleanItems(items: number[]): number[] {
+    const kept = items.filter((id) => !NOT_SHOWN.has(id))
+    return [...kept.filter((id) => id >= 3000), ...kept.filter((id) => id < 3000)].slice(0, 6)
+}
+
+// ---------- icons (Data Dragon) ----------
 
 // Data Dragon versions look like "16.20.1"; the feed's patch is "16.20". Fall back to latest.
 export async function ddragonVersion(patch: string): Promise<string> {
@@ -207,4 +249,8 @@ export async function ddragonVersion(patch: string): Promise<string> {
 
 export function championIcon(version: string, champion: string): string {
     return `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${champion}.png`
+}
+
+export function itemIcon(version: string, item: number): string {
+    return `https://ddragon.leagueoflegends.com/cdn/${version}/img/item/${item}.png`
 }

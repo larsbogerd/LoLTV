@@ -1,4 +1,4 @@
-import { championIcon, type GameStats, type PlayerLine, type SideStats } from '../live'
+import { championIcon, itemIcon, type GameStats, type PlayerLine, type SideStats } from '../live'
 import { logoUrl } from '../format'
 import { Logo } from './ui'
 
@@ -57,6 +57,11 @@ export function GameBoard(props: {
                 <span class="gb-vs">vs</span>
                 <TeamTotals s={g.red} team={teams.get(g.red.teamId)} won={winner === 'red'} side="r" />
             </div>
+            <div class="gb-row gb-cols">
+                <ColumnLabels side="l" />
+                <div />
+                <ColumnLabels side="r" />
+            </div>
             {g.blue.players.map((b, i) => {
                 const r = g.red.players[i]
                 const diff = r ? b.gold - r.gold : 0
@@ -81,7 +86,6 @@ export function GameBoard(props: {
 
 function TeamTotals(props: { s: SideStats; team?: BoardTeam; won: boolean; side: 'l' | 'r' }) {
     const { s, team } = props
-    const dragons = s.dragons.length ? s.dragons.join(', ') : 'none'
     return (
         <div class={`gb-team ${props.side}`}>
             <span class="gb-name">
@@ -89,23 +93,22 @@ function TeamTotals(props: { s: SideStats; team?: BoardTeam; won: boolean; side:
                 <b>{team?.code ?? '?'}</b>
                 {props.won && <span class="gb-win">WIN</span>}
             </span>
-            <span class="gb-totals">
-                <span title="Team gold">
-                    <b>{k(s.gold)}</b> gold
-                </span>
-                <span title="Kills">
-                    <b>{s.kills}</b> K
-                </span>
-                <span title="Towers destroyed">
-                    <b>{s.towers}</b> T
-                </span>
-                <span title={`Dragons: ${dragons}`}>
-                    <b>{s.dragons.length}</b> D
-                </span>
-                <span title="Barons">
-                    <b>{s.barons}</b> B
-                </span>
+            <span class="gb-totals" title="Team gold">
+                <b>{k(s.gold)}</b> gold
             </span>
+        </div>
+    )
+}
+
+// Column headings, laid out on the same grid as the player rows (hidden on phones).
+function ColumnLabels(props: { side: 'l' | 'r' }) {
+    return (
+        <div class={`gb-p ${props.side}`}>
+            <span class="gb-champ-ph" />
+            <span class="gb-pname" />
+            <span class="gb-items" />
+            <span class="gb-kda">K/D/A</span>
+            <span class="gb-cs">CS</span>
         </div>
     )
 }
@@ -122,14 +125,23 @@ function Player(props: { p: PlayerLine; version: string; side: 'l' | 'r' }) {
                 <i>{p.level}</i>
             </span>
             <span class="gb-pname">{p.name}</span>
+            <span class="gb-items">
+                {p.items.map((id) => (
+                    <img
+                        src={logoUrl(itemIcon(props.version, id), 40) ?? ''}
+                        width={20}
+                        height={20}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                    />
+                ))}
+            </span>
             <span class="gb-kda">
-                {p.kills}/<em>{p.deaths}</em>/{p.assists}
+                {p.kills}/{p.deaths}/{p.assists}
             </span>
             <span class="gb-cs" title="Creep score">
                 {p.cs}
-            </span>
-            <span class="gb-gold" title="Gold">
-                {k(p.gold)}
             </span>
         </div>
     )
