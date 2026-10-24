@@ -21,8 +21,8 @@ Where LOLTV is heading and what to keep an eye on. Pick up from here in a new se
       which is rate-limited.
 - **Live match stats, round two.** The first version, a scoreboard per game on the match page,
   lives in `src/live.ts` and `src/views/game.tsx`. Ideas next:
-    - items, and maybe runes. The feed's `/details` endpoint has them, plus damage share,
-      wards and skill order.
+    - item names on hover (needs Data Dragon's item.json). Runes and skill order are also in
+      the `/details` endpoint, but were left out to keep the board lean.
     - a gold-lead graph over the game, by fetching several windows
     - refreshing just the scoreboard every 10–15s while live, instead of the whole-page reload
       every minute
