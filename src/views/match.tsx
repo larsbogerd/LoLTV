@@ -1,8 +1,16 @@
 import { eventUrl, teamUrl, type Event, type MatchDetail, type Team } from '../data'
 import type { Fmt } from '../format'
+import type { GameStats } from '../live'
+import { GameBoard, type BoardTeam } from './game'
 import { Layout, Logo, Tag } from './ui'
 
-export function MatchPage(props: { fmt: Fmt; detail: MatchDetail; event: Event | null }) {
+export function MatchPage(props: {
+    fmt: Fmt
+    detail: MatchDetail
+    event: Event | null
+    boards: { number: number; stats: GameStats }[]
+    version: string
+}) {
     const { fmt, detail, event } = props
     const m = detail.match
     const raw = detail.details
@@ -110,6 +118,13 @@ export function MatchPage(props: { fmt: Fmt; detail: MatchDetail; event: Event |
                     </section>
                 )}
             </div>
+            <GameBoards
+                boards={props.boards}
+                detail={detail}
+                version={props.version}
+                // In a Bo1 the match result is the game result, so no guessing needed.
+                winnerId={bestOf === 1 && state === 'completed' ? teams.find((t) => t.won)?.id : undefined}
+            />
         </Layout>
     )
 }
@@ -140,5 +155,36 @@ function TeamSide(props: { t: Team; cls: string }) {
         </a>
     ) : (
         <div class={props.cls}>{body}</div>
+    )
+}
+
+// One scoreboard per started game: the live one open, else the latest finished one.
+function GameBoards(props: {
+    boards: { number: number; stats: GameStats }[]
+    detail: MatchDetail
+    version: string
+    winnerId?: string
+}) {
+    if (!props.boards.length) return null
+    const teams = new Map<string, BoardTeam>(
+        props.detail.details.match.teams.flatMap((t) =>
+            t.id ? [[t.id, { code: t.code, image: t.image }]] : [],
+        ),
+    )
+    const live = props.boards.find((b) => b.stats.state !== 'finished')
+    const openNumber = (live ?? props.boards[props.boards.length - 1])!.number
+    return (
+        <div class="gboards">
+            {props.boards.map((b) => (
+                <GameBoard
+                    number={b.number}
+                    stats={b.stats}
+                    teams={teams}
+                    version={props.version}
+                    winnerId={props.boards.length === 1 ? props.winnerId : undefined}
+                    open={b.number === openNumber}
+                />
+            ))}
+        </div>
     )
 }

@@ -17,6 +17,7 @@ import {
     eventUrl,
 } from './data'
 import { makeFmt, safeTimeZone, type Fmt } from './format'
+import { ddragonVersion, getGameStats } from './live'
 import { CSS } from './style'
 import { ErrorPage } from './views/error'
 import { EventPage } from './views/event'
@@ -133,8 +134,19 @@ app.get('/matches/:id/:slug?', async (c) => {
     if (detail.match && c.req.param('slug') !== matchSlug(detail.match)) {
         return c.redirect(`/matches/${id}/${matchSlug(detail.match)}`, 301)
     }
-    const event = await getEvent(detail.details.tournament.id)
-    return render(c, <MatchPage fmt={fmtFor(c)} detail={detail} event={event} />)
+    // Stats for every game that has started. Optional: a game without stats just has no board.
+    const played = detail.games.filter((g) => g.state === 'completed' || g.state === 'inProgress')
+    const [event, ...stats] = await Promise.all([
+        getEvent(detail.details.tournament.id),
+        ...played.map((g) => getGameStats(g.id, g.state === 'inProgress').catch(() => null)),
+    ])
+    const boards = played.flatMap((g, i) => (stats[i] ? [{ number: g.number, stats: stats[i] }] : []))
+    const patch = boards[0]?.stats.patch
+    const version = patch ? await ddragonVersion(patch).catch(() => '') : ''
+    return render(
+        c,
+        <MatchPage fmt={fmtFor(c)} detail={detail} event={event} boards={boards} version={version} />,
+    )
 })
 
 // HLTV style: /team/<id>/<slug>

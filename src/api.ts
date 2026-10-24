@@ -102,7 +102,7 @@ export class ApiError extends Error {}
 const cache = new Map<string, { expires: number; value: unknown }>()
 const MAX_ENTRIES = 300
 
-async function cached<T>(key: string, ttlSeconds: number, load: () => Promise<T>): Promise<T> {
+export async function cached<T>(key: string, ttlSeconds: number, load: () => Promise<T>): Promise<T> {
     const hit = cache.get(key)
     if (hit && hit.expires > Date.now()) return hit.value as T
 
@@ -316,29 +316,4 @@ export interface RawTeamDetail {
 export async function fetchTeam(idOrSlug: string): Promise<RawTeamDetail | null> {
     const data = await get<{ teams: RawTeamDetail[] | null }>('getTeams', { id: idOrSlug }, 6 * 3600)
     return data.teams?.[0] ?? null
-}
-
-// ---------- live stats feed ----------
-
-export interface RawGameMetadata {
-    blueTeamMetadata: RawSideMetadata
-    redTeamMetadata: RawSideMetadata
-}
-
-export interface RawSideMetadata {
-    esportsTeamId: string
-    participantMetadata: { esportsPlayerId: string; summonerName: string; role: string }[]
-}
-
-// Who played a game. The live-stats window starts at the game's first frames, which already
-// carry the full lineup, so no time search is needed. A finished game never changes.
-export async function fetchGameMetadata(gameId: string): Promise<RawGameMetadata | null> {
-    const url = `https://feed.lolesports.com/livestats/v1/window/${gameId}`
-    return cached(url, 24 * 3600, async () => {
-        const res = await fetch(url)
-        // 204 = no stats yet (game just started). Throwing keeps that out of the cache.
-        if (!res.ok || res.status === 204) throw new ApiError(`livestats returned ${res.status}`)
-        const body = await res.json<{ gameMetadata?: RawGameMetadata }>()
-        return body.gameMetadata ?? null
-    })
 }

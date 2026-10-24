@@ -299,6 +299,47 @@ a.tp-event:hover { color: var(--link); }
 .place.p3 { color: #c98a5a; }
 a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 
+/* ---------- game scoreboards (match page) ---------- */
+.gboards { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; max-width: 920px; }
+.gb { background: var(--box); border-radius: var(--radius); overflow: hidden; }
+.gb-sum { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: var(--head); cursor: pointer; list-style: none; }
+.gb-sum::-webkit-details-marker { display: none; }
+.gb-sum::before { content: "▸"; color: var(--muted); }
+.gb[open] > .gb-sum::before { content: "▾"; }
+.gb-sum .sub { margin-left: auto; }
+.gb-final { color: var(--dim); }
+.gb-sum .gb-win { margin-left: -4px; }
+.gb-teams { display: grid; grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr); align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+.gb-vs { text-align: center; color: var(--muted); font-size: 11px; }
+.gb-team { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
+.gb-team.r { flex-direction: row-reverse; }
+.gb-name { display: flex; align-items: center; gap: 7px; }
+.gb-team.r .gb-name { flex-direction: row-reverse; }
+.gb-win { background: #2e6a2a; color: #c8f0c3; font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 2px; }
+.gb-totals { display: flex; gap: 10px; color: var(--muted); font-size: 11px; white-space: nowrap; }
+.gb-team.r .gb-totals { flex-direction: row-reverse; }
+.gb-totals b { color: var(--text); font-size: 13px; }
+.gb-row { display: grid; grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr); align-items: center; padding: 4px 12px; }
+.gb-row + .gb-row { border-top: 1px solid var(--line); }
+.gb-role { text-align: center; font-size: 11px; font-weight: 700; color: var(--muted); line-height: 1.2; }
+.gb-role small { display: block; font-weight: 600; font-size: 10px; }
+.gb-role .lead-l, .gb-role .lead-r { color: var(--gold); }
+.gb-p { display: grid; align-items: center; gap: 8px; min-width: 0; }
+.gb-p.l { grid-template-columns: 28px minmax(0, 1fr) 62px 34px 40px; }
+.gb-p.r { grid-template-columns: 40px 34px 62px minmax(0, 1fr) 28px; }
+.gb-p.r .gb-gold { order: 1; }
+.gb-p.r .gb-cs { order: 2; }
+.gb-p.r .gb-kda { order: 3; }
+.gb-p.r .gb-pname { order: 4; text-align: right; }
+.gb-p.r .gb-champ { order: 5; }
+.gb-champ { position: relative; width: 28px; height: 28px; border-radius: 3px; overflow: hidden; background: #ffffff10; }
+.gb-champ img { width: 28px; height: 28px; }
+.gb-champ i { position: absolute; right: 0; bottom: 0; background: #000000c0; color: #fff; font-style: normal; font-size: 9px; font-weight: 700; padding: 0 2px; line-height: 12px; }
+.gb-pname { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+.gb-kda { text-align: center; white-space: nowrap; font-weight: 600; }
+.gb-kda em { font-style: normal; color: var(--loss); }
+.gb-cs, .gb-gold { text-align: center; color: var(--dim); font-size: 12px; }
+
 /* ---------- match page ---------- */
 .mhead { background: var(--box); border-radius: var(--radius); overflow: hidden; }
 .mhead-ev { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--head); color: var(--dim); }
@@ -350,6 +391,15 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
   .tp-name { font-size: 11px; }
   .tp-row { grid-template-columns: minmax(0, 1fr) 46px minmax(0, 1fr) 48px; }
   .tp-date { grid-column: 1 / -1; }
+  .gb-teams, .gb-row { padding-left: 6px; padding-right: 6px; }
+  .gb-row { grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); }
+  .gb-p { gap: 5px; }
+  .gb-p.l { grid-template-columns: 28px minmax(0, 1fr) 52px; }
+  .gb-p.r { grid-template-columns: 52px minmax(0, 1fr) 28px; }
+  .gb-cs, .gb-gold { display: none; }
+  .gb-team { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .gb-team.r { flex-direction: column; align-items: flex-end; }
+  .gb-totals { gap: 7px; }
   .nav nav a { padding: 0 9px; font-size: 14px; }
   .brand { padding: 0 11px; font-size: 17px; }
 }

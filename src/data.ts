@@ -4,7 +4,6 @@
 
 import {
     fetchEventDetails,
-    fetchGameMetadata,
     fetchLeagues,
     fetchPowerRankings,
     fetchSchedule,
@@ -21,6 +20,7 @@ import {
     type RawTeamEvent,
 } from './api'
 import { slugify } from './format'
+import { fetchGameMetadata } from './live'
 
 export type State = RawState
 
@@ -820,6 +820,7 @@ async function lineup(
 // ---------- single match ----------
 
 export interface Game {
+    id: string
     number: number
     state: string
     blue: Team | null
@@ -855,6 +856,7 @@ export async function getMatchDetail(id: string): Promise<MatchDetail | null> {
             const side = (s: 'blue' | 'red') => teamsById.get(g.teams.find((t) => t.side === s)?.id) ?? null
             const vod = g.vods.find((v) => v.locale.startsWith('en')) ?? g.vods[0]
             return {
+                id: g.id,
                 number: g.number,
                 state: g.state,
                 blue: side('blue'),
