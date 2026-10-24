@@ -9,7 +9,12 @@ const TZ_SCRIPT = `(function(){try{var z=Intl.DateTimeFormat().resolvedOptions()
 
 // Keeps pages current without polling all day: reload every minute while something is live
 // (data-live), or once when the next match is due to start (data-next). Only while visible.
-const REFRESH_SCRIPT = `(function(){var d=document.body.dataset,t=Date.now(),due=d.next?Date.parse(d.next)+30000:0;if(!d.live&&!due)return;function r(){if(document.visibilityState!=="visible")return;var n=Date.now();if(d.live?n-t>60000:n>=due)location.reload();}setInterval(r,5000);document.addEventListener("visibilitychange",r);})();`
+const REFRESH_SCRIPT = `(function(){var d=document.body.dataset,t=Date.now(),due=d.next?Date.parse(d.next)+30000:0;if(!d.live&&!due)return;function r(){if(document.visibilityState!=="visible")return;var n=Date.now();if(d.live?n-t>60000:n>=due){try{sessionStorage.setItem("auto","1")}catch(e){}location.reload();}}setInterval(r,5000);document.addEventListener("visibilitychange",r);})();`
+
+// Live game clocks count up every second. The feed's clock only arrives with a page load, so
+// after one of our own auto-refreshes the running clock stays canon (no jumps); a refresh by
+// the user takes the feed's clock again. Clocks of paused games don't run.
+const CLOCK_SCRIPT = `(function(){var els=document.querySelectorAll("[data-clock]");if(!els.length)return;var auto=false,t0=Date.now();try{auto=sessionStorage.getItem("auto")==="1";sessionStorage.removeItem("auto")}catch(e){}els.forEach(function(el){var base=+el.dataset.clock,key="clock-"+el.dataset.game,run=!!el.dataset.running;try{var s=JSON.parse(sessionStorage.getItem(key)||"null");if(auto&&run&&s&&s.r)base=s.c+(t0-s.t)/1000;sessionStorage.setItem(key,JSON.stringify({c:base,t:t0,r:run}))}catch(e){}el.base=base});function fmt(s){s=Math.max(0,Math.floor(s));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}function tick(){var dt=(Date.now()-t0)/1000;els.forEach(function(el){el.textContent=fmt(el.dataset.running?el.base+dt:el.base)})}tick();setInterval(tick,1000)})();`
 
 // A match counts as live from its scheduled start: the API often flips to inProgress a few
 // minutes late. Matches that are hours overdue are ignored (postponed or stale data).
@@ -79,6 +84,7 @@ export function Layout(props: { title?: string; fmt: Fmt; watch?: Match[]; nav?:
                         <span>Refreshes when the next match starts ({props.fmt.time(next)})</span>
                     )}
                 </footer>
+                <script dangerouslySetInnerHTML={{ __html: CLOCK_SCRIPT }} />
                 <script dangerouslySetInnerHTML={{ __html: REFRESH_SCRIPT }} />
             </body>
         </html>

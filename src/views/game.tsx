@@ -12,6 +12,7 @@ const clock = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2,
 
 // One game, mirrored: blue side left, red side right, one row per role.
 export function GameBoard(props: {
+    id: string
     number: number
     stats: GameStats
     teams: Map<string, BoardTeam>
@@ -34,7 +35,15 @@ export function GameBoard(props: {
             <span class="gb-final">Final {clock(g.clock)}</span>
         ) : (
             <>
-                <span class="live">{g.state === 'paused' ? 'PAUSED' : 'LIVE'}</span> {clock(g.clock)}
+                <span class="live">{g.state === 'paused' ? 'PAUSED' : 'LIVE'}</span>{' '}
+                {/* Counts up in the browser between refreshes; see CLOCK_SCRIPT in ui.tsx. */}
+                <span
+                    data-clock={g.clock}
+                    data-game={props.id}
+                    data-running={g.state === 'in_game' ? '1' : undefined}
+                >
+                    {clock(g.clock)}
+                </span>
             </>
         )
 

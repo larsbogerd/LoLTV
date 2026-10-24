@@ -163,7 +163,9 @@ app.get('/matches/:id/:slug?', async (c) => {
         ...played.map((g) => getGameStats(g.id, g.state === 'inProgress').catch(() => null)),
     ])
 
-    const boards = played.flatMap((g, i) => (stats[i] ? [{ number: g.number, stats: stats[i] }] : []))
+    const boards = played.flatMap((g, i) =>
+        stats[i] ? [{ id: g.id, number: g.number, stats: stats[i] }] : [],
+    )
     const patch = boards[0]?.stats.patch
     const version = patch ? await ddragonVersion(patch).catch(() => '') : ''
 

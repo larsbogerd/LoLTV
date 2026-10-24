@@ -18,7 +18,7 @@ export function MatchPage(props: {
     fmt: Fmt
     detail: MatchDetail
     event: Event | null
-    boards: { number: number; stats: GameStats }[]
+    boards: { id: string; number: number; stats: GameStats }[]
     version: string
     profiles: [TeamProfile, TeamProfile] | null
 }) {
@@ -191,7 +191,7 @@ function TeamSide(props: { t: Team; cls: string }) {
 
 // One scoreboard per started game: the live one open, else the latest finished one.
 function GameBoards(props: {
-    boards: { number: number; stats: GameStats }[]
+    boards: { id: string; number: number; stats: GameStats }[]
     detail: MatchDetail
     version: string
     winnerId?: string
@@ -211,6 +211,7 @@ function GameBoards(props: {
         <div class="gboards">
             {props.boards.map((b) => (
                 <GameBoard
+                    id={b.id}
                     number={b.number}
                     stats={b.stats}
                     teams={teams}
