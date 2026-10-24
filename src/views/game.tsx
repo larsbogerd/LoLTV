@@ -54,7 +54,7 @@ export function GameBoard(props: {
             </summary>
             {/* Like the in-game scoreboard: kills in the centre, team gold beside them. */}
             <div class="gb-teams">
-                <TeamHead team={teams.get(g.blue.teamId)} won={winner === 'blue'} side="blue" />
+                <TeamHead team={teams.get(g.blue.teamId)} side="blue" />
                 <span class="gb-gold" title="Team gold">
                     <b>{k(g.blue.gold)}</b> gold
                 </span>
@@ -66,7 +66,7 @@ export function GameBoard(props: {
                 <span class="gb-gold" title="Team gold">
                     <b>{k(g.red.gold)}</b> gold
                 </span>
-                <TeamHead team={teams.get(g.red.teamId)} won={winner === 'red'} side="red" />
+                <TeamHead team={teams.get(g.red.teamId)} side="red" />
             </div>
             <div class="gb-row gb-cols">
                 <ColumnLabels side="l" />
@@ -87,7 +87,7 @@ export function GameBoard(props: {
     )
 }
 
-function TeamHead(props: { team?: BoardTeam; won: boolean; side: 'blue' | 'red' }) {
+function TeamHead(props: { team?: BoardTeam; side: 'blue' | 'red' }) {
     const { team, side } = props
     return (
         <span class={`gb-team ${side}`}>
@@ -96,7 +96,6 @@ function TeamHead(props: { team?: BoardTeam; won: boolean; side: 'blue' | 'red' 
             <span class={`gb-side ${side}`} title={side === 'blue' ? 'Blue side' : 'Red side'}>
                 {side}
             </span>
-            {props.won && <span class="gb-win">WIN</span>}
         </span>
     )
 }
