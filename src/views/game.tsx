@@ -24,7 +24,6 @@ export function GameBoard(props: {
     stats: GameStats
     teams: Map<string, BoardTeam>
     version: string // Data Dragon version for champion and item icons
-    runes: Map<number, string> // rune id -> icon
     winnerId?: string // the real result when known (Bo1); otherwise the stats' best guess is used
     open: boolean
 }) {
@@ -67,9 +66,9 @@ export function GameBoard(props: {
                 const r = g.red.players[i]
                 return (
                     <div class="gb-row">
-                        <Player p={b} version={props.version} runes={props.runes} side="l" />
+                        <Player p={b} version={props.version} side="l" />
                         <div class="gb-role">{ROLE_LABEL[b.role] ?? b.role}</div>
-                        {r ? <Player p={r} version={props.version} runes={props.runes} side="r" /> : <div />}
+                        {r ? <Player p={r} version={props.version} side="r" /> : <div />}
                     </div>
                 )
             })}
@@ -99,7 +98,6 @@ function ColumnLabels(props: { side: 'l' | 'r' }) {
         <div class={`gb-p ${props.side}`}>
             <span class="gb-champ-ph" />
             <span class="gb-pname" />
-            <span class="gb-runes" />
             <span class="gb-items" />
             <span class="gb-kda">K/D/A</span>
             <span class="gb-cs">CS</span>
@@ -107,7 +105,7 @@ function ColumnLabels(props: { side: 'l' | 'r' }) {
     )
 }
 
-function Player(props: { p: PlayerLine; version: string; runes: Map<number, string>; side: 'l' | 'r' }) {
+function Player(props: { p: PlayerLine; version: string; side: 'l' | 'r' }) {
     const { p } = props
     const icon = logoUrl(championIcon(props.version, p.champion), 56)
     return (
@@ -119,7 +117,6 @@ function Player(props: { p: PlayerLine; version: string; runes: Map<number, stri
                 <i>{p.level}</i>
             </span>
             <span class="gb-pname">{p.name}</span>
-            <Runes p={p} icons={props.runes} />
             <span class="gb-items">
                 {p.items.map((id) => (
                     <img
@@ -139,19 +136,5 @@ function Player(props: { p: PlayerLine; version: string; runes: Map<number, stri
                 {p.cs}
             </span>
         </div>
-    )
-}
-
-// Keystone and secondary tree side by side, like the in-game scoreboard. (Summoner spells
-// aren't in the feed.)
-function Runes(props: { p: PlayerLine; icons: Map<number, string> }) {
-    const r = props.p.runes
-    const keystone = r ? logoUrl(props.icons.get(r.keystone), 44) : null
-    const secondary = r ? logoUrl(props.icons.get(r.secondary), 32) : null
-    return (
-        <span class="gb-runes">
-            {keystone && <img class="key" src={keystone} width={22} height={22} alt="" loading="lazy" />}
-            {secondary && <img class="sec" src={secondary} width={16} height={16} alt="" loading="lazy" />}
-        </span>
     )
 }

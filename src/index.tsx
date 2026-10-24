@@ -17,7 +17,7 @@ import {
     eventUrl,
 } from './data'
 import { makeFmt, safeTimeZone, type Fmt } from './format'
-import { ddragonVersion, getGameStats, runeIcons } from './live'
+import { ddragonVersion, getGameStats } from './live'
 import { CSS } from './style'
 import { ErrorPage } from './views/error'
 import { EventPage } from './views/event'
@@ -143,19 +143,9 @@ app.get('/matches/:id/:slug?', async (c) => {
     const boards = played.flatMap((g, i) => (stats[i] ? [{ number: g.number, stats: stats[i] }] : []))
     const patch = boards[0]?.stats.patch
     const version = patch ? await ddragonVersion(patch).catch(() => '') : ''
-    const runes = version
-        ? await runeIcons(version).catch(() => new Map<number, string>())
-        : new Map<number, string>()
     return render(
         c,
-        <MatchPage
-            fmt={fmtFor(c)}
-            detail={detail}
-            event={event}
-            boards={boards}
-            version={version}
-            runes={runes}
-        />,
+        <MatchPage fmt={fmtFor(c)} detail={detail} event={event} boards={boards} version={version} />,
     )
 })
 

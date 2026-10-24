@@ -9,8 +9,8 @@
 // - Asking for a moment after the game ended returns the final frames (gameState "finished"),
 //   so a finished game needs no end time: ask for start + 3h (capped at now).
 // - /details/<gameId>?startingTime=... has the same timing, per player only: items, damage
-//   share, kill participation, wards, runes, skill order (~57 KB per window). We use items
-//   and runes. Summoner spells are in neither endpoint.
+//   share, kill participation, wards, runes, skill order (~57 KB per window). We use items.
+//   Summoner spells are in neither endpoint.
 // - There is no winner field.
 
 import { ApiError, cached } from './api'
@@ -70,7 +70,6 @@ interface RawDetails {
         participants: {
             participantId: number
             items: number[]
-            perkMetadata?: { styleId: number; subStyleId: number; perks: number[] }
         }[]
     }[]
 }
@@ -126,7 +125,6 @@ export interface PlayerLine {
     assists: number
     cs: number
     items: number[] // finished items first; no trinkets, wards or potions
-    runes: { keystone: number; secondary: number } | null // rune id, secondary tree id
 }
 
 export interface SideStats {
@@ -193,10 +191,6 @@ export async function getGameStats(
                     assists: p?.assists ?? 0,
                     cs: p?.creepScore ?? 0,
                     items: x ? cleanItems(x.items) : [],
-                    runes:
-                        x?.perkMetadata?.perks[0] !== undefined
-                            ? { keystone: x.perkMetadata.perks[0], secondary: x.perkMetadata.subStyleId }
-                            : null,
                 }
             })
             .sort((a, b) => ROLES.indexOf(a.role) - ROLES.indexOf(b.role))
@@ -261,28 +255,4 @@ export function championIcon(version: string, champion: string): string {
 
 export function itemIcon(version: string, item: number): string {
     return `https://ddragon.leagueoflegends.com/cdn/${version}/img/item/${item}.png`
-}
-
-interface RawRuneStyle {
-    id: number
-    icon: string
-    slots: { runes: { id: number; icon: string }[] }[]
-}
-
-// Rune and rune-tree id -> icon URL, from Data Dragon's rune list (~30 KB, cached a day).
-export async function runeIcons(version: string): Promise<Map<number, string>> {
-    const styles = await cached(`ddragon-runes-${version}`, 24 * 3600, async () => {
-        const res = await fetch(
-            `https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/runesReforged.json`,
-        )
-        if (!res.ok) throw new ApiError(`ddragon runes returned ${res.status}`)
-        return res.json<RawRuneStyle[]>()
-    })
-    const icons = new Map<number, string>()
-    const url = (path: string) => `https://ddragon.leagueoflegends.com/cdn/img/${path}`
-    for (const style of styles) {
-        icons.set(style.id, url(style.icon))
-        for (const slot of style.slots) for (const rune of slot.runes) icons.set(rune.id, url(rune.icon))
-    }
-    return icons
 }
