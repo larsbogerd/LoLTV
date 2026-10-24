@@ -348,8 +348,7 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 
 /* ---------- match page ---------- */
 .mhead { background: var(--box); border-radius: var(--radius); overflow: hidden; }
-.mev { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 4px 0 2px; }
-.mev { color: var(--link); }
+.mhead-ev { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 4px 0 2px; color: var(--link); }
 .mlive { margin-top: 6px; }
 .lineups { margin-top: 1px; }
 .lu-desk { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: end; padding: 18px 12px 12px; background: linear-gradient(180deg, var(--box), #14233b); border-radius: 0 0 var(--radius) var(--radius); }
@@ -426,7 +425,7 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
   .score .side { padding: 8px 2px; font-size: 14px; max-width: 100%; }
   .score .side .logo { width: 48px; height: 48px; }
   .score .mid { max-width: 150px; }
-  .mev { flex-wrap: wrap; font-size: 12px; }
+  .mhead-ev { flex-wrap: wrap; font-size: 12px; }
   .tp-lineup { gap: 3px; padding: 10px 8px 0; }
   .tp-name { font-size: 11px; }
   .tp-row { grid-template-columns: minmax(0, 1fr) 46px minmax(0, 1fr) 48px; }

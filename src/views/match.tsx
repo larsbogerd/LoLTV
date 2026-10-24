@@ -65,7 +65,7 @@ export function MatchPage(props: {
                         )}
                         {/* HLTV's centre stack: date, event, format, live state. */}
                         {m && <div class="when">{fmt.longDate(m.start)}</div>}
-                        <a class="mev" href={event ? eventUrl(event) : undefined}>
+                        <a class="mhead-ev" href={event ? eventUrl(event) : undefined}>
                             <Logo src={raw.league.image} size={16} />
                             {event?.name ?? raw.league.name}
                             {m?.stage && ` · ${m.stage}`}
