@@ -33,6 +33,9 @@ body {
 a { color: inherit; text-decoration: none; }
 img { display: block; }
 h1, h2, h3 { margin: 0; font-weight: 600; }
+/* equal-width digits so times, scores and stats line up in columns */
+.mt, .tl .ts, .rs, .tm-team .ts, .tm-time, .bm .bt .ts, .rk-pts, .stand .rec, .mini .rec, .sw-s,
+.tp-score, .score .big, .gb-gold, .gb-kills, .gb-kda, .gb-cs, .gb-final { font-variant-numeric: tabular-nums; }
 
 /* ---------- top bar ---------- */
 .nav { background: var(--nav); position: sticky; top: 0; z-index: 10; box-shadow: 0 1px 0 #00000066; }
