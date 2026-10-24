@@ -223,8 +223,8 @@ const ROLE_LABEL: Record<string, string> = {
     support: 'SUP',
 }
 
-// Only shown before a match starts. Desktop: each team's five in a row under their side, lanes
-// mirrored so both top laners sit on the outside. Phones: compact rows, role by role.
+// Only shown before a match starts. Desktop: each team's five in a row under their side, both
+// in lane order (top to support). Phones: compact rows, role by role.
 function Lineups(props: { lineups: [Player[], Player[]] }) {
     const [a, b] = props.lineups
     return (
@@ -232,7 +232,7 @@ function Lineups(props: { lineups: [Player[], Player[]] }) {
             <div class="lu-desk">
                 <LineupGroup players={a} />
                 <span class="lu-vs">vs</span>
-                <LineupGroup players={[...b].reverse()} />
+                <LineupGroup players={b} />
             </div>
             <div class="list lu-rows">
                 {a.map((p, i) => {
