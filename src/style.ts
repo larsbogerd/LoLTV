@@ -321,20 +321,22 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 .gb-row { display: grid; grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr); align-items: center; padding: 4px 12px; }
 .gb-row + .gb-row { border-top: 1px solid var(--line); }
 .gb-role { text-align: center; font-size: 11px; font-weight: 700; color: var(--muted); line-height: 1.2; }
-.gb-role small { display: block; font-weight: 600; font-size: 10px; }
-.gb-role .lead-l, .gb-role .lead-r { color: var(--gold); }
 .gb-p { display: grid; align-items: center; gap: 8px; min-width: 0; }
-.gb-p.l { grid-template-columns: 28px minmax(0, 1fr) 130px 62px 52px; }
-.gb-p.r { grid-template-columns: 52px 62px 130px minmax(0, 1fr) 28px; }
+.gb-p.l { grid-template-columns: 28px minmax(0, 1fr) 44px 130px 62px 52px; }
+.gb-p.r { grid-template-columns: 52px 62px 130px 44px minmax(0, 1fr) 28px; }
 .gb-p.r .gb-cs { order: 2; }
 .gb-p.r .gb-kda { order: 3; }
 .gb-p.r .gb-items { order: 4; flex-direction: row-reverse; }
-.gb-p.r .gb-pname { order: 5; text-align: right; }
-.gb-p.r .gb-champ, .gb-p.r .gb-champ-ph { order: 6; }
+.gb-p.r .gb-runes { order: 5; flex-direction: row-reverse; }
+.gb-p.r .gb-pname { order: 6; text-align: right; }
+.gb-p.r .gb-champ, .gb-p.r .gb-champ-ph { order: 7; }
 .gb-champ-ph { width: 28px; }
 .gb-cols { padding-top: 3px; padding-bottom: 3px; }
 .gb-cols span { color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
 .gb-items { display: flex; gap: 2px; }
+.gb-runes { display: flex; align-items: center; gap: 4px; }
+.gb-runes .key { width: 22px; height: 22px; }
+.gb-runes .sec { width: 16px; height: 16px; opacity: .85; }
 .gb-items img { width: 20px; height: 20px; border-radius: 2px; }
 .gb-champ { position: relative; width: 28px; height: 28px; border-radius: 3px; overflow: hidden; background: #ffffff10; }
 .gb-champ img { width: 28px; height: 28px; }
@@ -367,7 +369,7 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
   .home .left { grid-column: 1 / -1; order: 3; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 }
 @media (max-width: 1000px) {
-  .gb-items { display: none !important; }
+  .gb-items, .gb-runes { display: none !important; }
   .gb-p.l { grid-template-columns: 28px minmax(0, 1fr) 62px 52px; }
   .gb-p.r { grid-template-columns: 52px 62px minmax(0, 1fr) 28px; }
 }
