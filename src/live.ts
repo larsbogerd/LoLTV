@@ -82,23 +82,31 @@ async function fetchWindow(
     ttlSeconds: number,
 ): Promise<RawWindow> {
     const url = `${FEED}/window/${gameId}${startingTime ? `?startingTime=${startingTime}` : ''}`
+
     return cached(url, ttlSeconds, async () => {
         const res = await fetch(url)
+
         // 204 = no stats yet (game just started). Throwing keeps that out of the cache.
         if (!res.ok || res.status === 204) throw new ApiError(`livestats returned ${res.status}`)
         const body = await res.json<RawWindow>()
+
         if (!body.frames?.length) throw new ApiError('livestats returned no frames')
+
         return body
     })
 }
 
 async function fetchDetails(gameId: string, startingTime: string, ttlSeconds: number): Promise<RawDetails> {
     const url = `${FEED}/details/${gameId}?startingTime=${startingTime}`
+
     return cached(url, ttlSeconds, async () => {
         const res = await fetch(url)
+
         if (!res.ok || res.status === 204) throw new ApiError(`livestats details returned ${res.status}`)
         const body = await res.json<RawDetails>()
+
         if (!body.frames?.length) throw new ApiError('livestats details returned no frames')
+
         return body
     })
 }
@@ -165,22 +173,27 @@ export async function getGameStats(
     const startMs = Date.parse(start.frames[0]!.rfc460Timestamp)
     const at = live ? now - 60e3 : Math.min(startMs + 3 * 3600e3, now - 60e3)
     const ttl = live ? 10 : 24 * 3600
+
     const [window, details] = await Promise.all([
         fetchWindow(gameId, feedTime(at), ttl),
         // Optional: without it the board just has no items.
         fetchDetails(gameId, feedTime(at), ttl).catch(() => null),
     ])
+
     const frame = window.frames[window.frames.length - 1]!
+
     const extra = new Map(
         details?.frames[details.frames.length - 1]?.participants.map((p) => [p.participantId, p]),
     )
 
     const side = (sideMeta: RawSideMetadata, team: RawFrameTeam): SideStats => {
         const byId = new Map(team.participants.map((p) => [p.participantId, p]))
+
         const players = sideMeta.participantMetadata
             .map((m) => {
                 const p = byId.get(m.participantId)
                 const x = extra.get(m.participantId)
+
                 return {
                     name: m.summonerName.replace(/^\S+\s+/, ''), // "HLE Zeus" -> "Zeus"
                     champion: m.championId,
@@ -194,6 +207,7 @@ export async function getGameStats(
                 }
             })
             .sort((a, b) => ROLES.indexOf(a.role) - ROLES.indexOf(b.role))
+
         return {
             teamId: sideMeta.esportsTeamId,
             gold: team.totalGold,
@@ -208,6 +222,7 @@ export async function getGameStats(
 
     const blue = side(meta.blueTeamMetadata, frame.blueTeam)
     const red = side(meta.redTeamMetadata, frame.redTeam)
+
     return {
         state: frame.gameState,
         clock: Math.max(0, Math.round((Date.parse(frame.rfc460Timestamp) - startMs) / 1000)),
@@ -223,6 +238,7 @@ export async function getGameStats(
 // even could fool this, so callers prefer the real result when they know it (Bo1s).
 function guessWinner(blue: SideStats, red: SideStats): 'blue' | 'red' {
     if (blue.towers !== red.towers) return blue.towers > red.towers ? 'blue' : 'red'
+
     return blue.gold >= red.gold ? 'blue' : 'red'
 }
 
@@ -234,6 +250,7 @@ const NOT_SHOWN = new Set([
 // The feed lists items in no particular order: finished items (ids from 3000 up) go first.
 function cleanItems(items: number[]): number[] {
     const kept = items.filter((id) => !NOT_SHOWN.has(id))
+
     return [...kept.filter((id) => id >= 3000), ...kept.filter((id) => id < 3000)].slice(0, 6)
 }
 
@@ -243,9 +260,12 @@ function cleanItems(items: number[]): number[] {
 export async function ddragonVersion(patch: string): Promise<string> {
     const versions = await cached('ddragon-versions', 24 * 3600, async () => {
         const res = await fetch('https://ddragon.leagueoflegends.com/api/versions.json')
+
         if (!res.ok) throw new ApiError(`ddragon versions returned ${res.status}`)
+
         return res.json<string[]>()
     })
+
     return versions.find((v) => v.startsWith(`${patch}.`)) ?? versions[0] ?? '16.20.1'
 }
 

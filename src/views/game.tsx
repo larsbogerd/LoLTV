@@ -28,6 +28,7 @@ export function GameBoard(props: {
     open: boolean
 }) {
     const { stats: g, teams } = props
+
     const winner = props.winnerId
         ? props.winnerId === g.blue.teamId
             ? 'blue'
@@ -35,6 +36,7 @@ export function GameBoard(props: {
               ? 'red'
               : g.winner
         : g.winner
+
     const state =
         g.state === 'finished' ? (
             <span class="gb-final">Final {clock(g.clock)}</span>
@@ -75,6 +77,7 @@ export function GameBoard(props: {
             </div>
             {g.blue.players.map((b, i) => {
                 const r = g.red.players[i]
+
                 return (
                     <div class="gb-row">
                         <Player p={b} version={props.version} side="l" />
@@ -89,6 +92,7 @@ export function GameBoard(props: {
 
 function TeamHead(props: { team?: BoardTeam; side: 'blue' | 'red' }) {
     const { team, side } = props
+
     return (
         <span class={`gb-team ${side}`}>
             <Logo src={team?.image} size={20} />
@@ -130,6 +134,7 @@ function ColumnLabels(props: { side: 'l' | 'r' }) {
 function Player(props: { p: PlayerLine; version: string; side: 'l' | 'r' }) {
     const { p } = props
     const icon = logoUrl(championIcon(props.version, p.champion), 56)
+
     return (
         <div class={`gb-p ${props.side}`}>
             <span class="gb-champ" title={p.champion}>

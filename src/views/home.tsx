@@ -25,10 +25,12 @@ export function HomePage(props: {
     const centre = featured ? fm : props.schedule
     const live = centre.filter((m) => m.state === 'inProgress')
     const upcoming = centre.filter((m) => m.state === 'unstarted').slice(0, 8)
+
     const results = centre
         .filter((m) => m.state === 'completed')
         .reverse()
         .slice(0, 8)
+
     const swiss = swissTable(fm.filter((m) => isSwiss(m.stage)))
     const stage = (live[0] ?? upcoming[0] ?? results[0])?.stage
     const matchesHref = featured ? `/matches?event=${featured.id}` : '/matches'
@@ -160,6 +162,7 @@ function TodayBox(props: { fmt: Fmt; matches: Match[] }) {
     const done = props.matches.filter((m) => m.state === 'completed' && isToday(m)).reverse()
     // Nothing left today: show the next day that has matches.
     const nextDay = props.matches.find((m) => m.state === 'unstarted' && fmt.dayKey(m.start) > today)
+
     const next =
         later.length === 0 && nextDay
             ? props.matches.filter(

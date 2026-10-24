@@ -6,6 +6,7 @@ export function MatchesPage(props: { fmt: Fmt; event: Event | null; matches: Mat
     const { fmt, event } = props
     const live = props.matches.filter((m) => m.state === 'inProgress')
     const upcoming = props.matches.filter((m) => m.state === 'unstarted')
+
     return (
         <Layout
             fmt={fmt}
@@ -54,6 +55,7 @@ export function ResultsPage(props: {
 }) {
     const { fmt, event } = props
     const results = props.matches.filter((m) => m.state === 'completed').reverse()
+
     return (
         <Layout fmt={fmt} title={event ? `${event.name} results` : 'Results'} nav="results">
             {event ? (
@@ -93,13 +95,18 @@ export function ResultsPage(props: {
 export function EventsPage(props: { fmt: Fmt; events: Event[] }) {
     const { fmt } = props
     const now = new Date()
+
     const byTier = (a: Event, b: Event) =>
         a.league.tier - b.league.tier || a.startDate.localeCompare(b.startDate)
+
     const ongoing = props.events.filter((e) => eventStatus(e, now) === 'ongoing').sort(byTier)
+
     const upcoming = props.events
         .filter((e) => eventStatus(e, now) === 'upcoming')
         .sort((a, b) => a.startDate.localeCompare(b.startDate))
+
     const cutoff = new Date(now.getTime() - 60 * 86400e3).toISOString().slice(0, 10)
+
     const recent = props.events
         .filter((e) => eventStatus(e, now) === 'finished' && e.endDate >= cutoff)
         .sort((a, b) => b.endDate.localeCompare(a.endDate))

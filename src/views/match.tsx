@@ -25,6 +25,7 @@ export function MatchPage(props: {
     const { fmt, detail, event } = props
     const m = detail.match
     const raw = detail.details
+
     const teams: Team[] =
         m?.teams ??
         raw.match.teams.map((t) => ({
@@ -36,9 +37,12 @@ export function MatchPage(props: {
             won: null,
             tbd: t.code === 'TBD',
         }))
+
     const [a, b] = [teams[0]!, teams[1]!]
+
     const state =
         m?.state ?? (raw.match.games.some((g) => g.state === 'inProgress') ? 'inProgress' : 'unstarted')
+
     const bestOf = m?.bestOf ?? raw.match.strategy.count
     const live = state === 'inProgress'
     const title = `${a.name} vs. ${b.name}${event ? ` at ${event.name}` : ''}`
@@ -167,6 +171,7 @@ function TeamCell(props: { t: Team }) {
 function TeamSide(props: { t: Team; cls: string }) {
     const { t } = props
     const url = teamUrl(t)
+
     const body = (
         <>
             <Logo src={t.image} size={64} />
@@ -174,6 +179,7 @@ function TeamSide(props: { t: Team; cls: string }) {
             <Tag t={t} />
         </>
     )
+
     return url ? (
         <a class={props.cls} href={url} title={`${t.name} team page`}>
             {body}
@@ -191,13 +197,16 @@ function GameBoards(props: {
     winnerId?: string
 }) {
     if (!props.boards.length) return null
+
     const teams = new Map<string, BoardTeam>(
         props.detail.details.match.teams.flatMap((t) =>
             t.id ? [[t.id, { code: t.code, image: t.image }]] : [],
         ),
     )
+
     const live = props.boards.find((b) => b.stats.state !== 'finished')
     const openNumber = (live ?? props.boards[props.boards.length - 1])!.number
+
     return (
         <div class="gboards">
             {props.boards.map((b) => (
@@ -226,6 +235,7 @@ const ROLE_LABEL: Record<string, string> = {
 // in lane order (top to support). Phones: compact rows, role by role.
 function Lineups(props: { lineups: [Player[], Player[]] }) {
     const [a, b] = props.lineups
+
     return (
         <section class="lineups">
             <div class="lu-desk">
@@ -236,6 +246,7 @@ function Lineups(props: { lineups: [Player[], Player[]] }) {
             <div class="list lu-rows">
                 {a.map((p, i) => {
                     const q = b[i]
+
                     return (
                         <div class="lu-row">
                             <LineupPlayer p={p} side="l" />
@@ -256,6 +267,7 @@ function LineupGroup(props: { players: Player[] }) {
         <div class="lu-group">
             {props.players.map((p) => {
                 const photo = logoUrl(p.image, 200)
+
                 return (
                     <figure class="lu-fig">
                         {photo ? (
@@ -276,6 +288,7 @@ function LineupGroup(props: { players: Player[] }) {
 
 function LineupPlayer(props: { p: Player; side: 'l' | 'r' }) {
     const photo = logoUrl(props.p.image, 48)
+
     return (
         <span class={`lu-p ${props.side}`}>
             {photo ? (
@@ -296,6 +309,7 @@ function own(m: Match, t: TeamProfile): Team | undefined {
 
 function Form(props: { profiles: [TeamProfile, TeamProfile]; matchId: string; fmt: Fmt }) {
     const others = (t: TeamProfile) => t.results.filter((m) => m.id !== props.matchId)
+
     return (
         <section>
             <h2 class="h">Recent form</h2>
@@ -311,6 +325,7 @@ function Form(props: { profiles: [TeamProfile, TeamProfile]; matchId: string; fm
                                     const us = own(m, t)
                                     const them = m.teams.find((x) => x !== us)
                                     const label = `${us?.won ? 'Win' : 'Loss'} vs ${them?.code ?? '?'} ${us?.score ?? 0}-${them?.score ?? 0}, ${props.fmt.shortDate(m.start)}`
+
                                     return (
                                         <span class={us?.won ? 'w' : 'l'} title={label}>
                                             {us?.won ? 'W' : 'L'}

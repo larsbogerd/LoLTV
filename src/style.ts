@@ -450,6 +450,8 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 // Cache-busting version for /style.css
 export const CSS_VERSION = (() => {
     let h = 5381
+
     for (let i = 0; i < CSS.length; i++) h = ((h << 5) + h + CSS.charCodeAt(i)) | 0
+
     return (h >>> 0).toString(36)
 })()

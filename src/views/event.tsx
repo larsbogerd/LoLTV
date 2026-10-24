@@ -8,10 +8,12 @@ export function EventPage(props: { fmt: Fmt; event: Event; matches: Match[]; sta
     const { fmt, event, matches, stages } = props
     const live = matches.filter((m) => m.state === 'inProgress')
     const next = matches.filter((m) => m.state === 'unstarted').slice(0, 6)
+
     const recent = matches
         .filter((m) => m.state === 'completed')
         .reverse()
         .slice(0, 6)
+
     const stage = (live[0] ?? next[0] ?? recent[0])?.stage
     const teams = new Set(matches.flatMap((m) => m.teams.filter((t) => !t.tbd).map((t) => t.code)))
 
@@ -85,9 +87,12 @@ export function EventPage(props: { fmt: Fmt; event: Event; matches: Match[]; sta
 
 function StageBody(props: { stage: Stage; fmt: Fmt }) {
     const s = props.stage
+
     if (s.kind === 'swiss') return <SwissStage stage={s} fmt={props.fmt} />
+
     if (s.kind === 'table') {
         const tables = s.tables ?? []
+
         return (
             <div class="tables">
                 {tables.map((t) => (
@@ -99,12 +104,14 @@ function StageBody(props: { stage: Stage; fmt: Fmt }) {
             </div>
         )
     }
+
     return <Bracket columns={s.columns ?? []} fmt={props.fmt} />
 }
 
 function MatchWithDate(props: { m: Match; fmt: Fmt }) {
     const { m, fmt } = props
     const rel = fmt.relativeDay(fmt.dayKey(m.start))
+
     return (
         <>
             <div class="li tm-label">
@@ -120,14 +127,18 @@ function MatchWithDate(props: { m: Match; fmt: Fmt }) {
 function SwissStage(props: { stage: Stage; fmt: Fmt }) {
     const b = props.stage.swissBracket
     const table = <SwissTable rows={props.stage.swiss ?? []} />
+
     if (!b) return table
 
     const pool = (wins: number, losses: number) => {
         const p = b.pools.find((x) => x.wins === wins && x.losses === losses)
+
         return p && <SwissPool label={`${wins}:${losses}`} matches={p.matches} fmt={props.fmt} />
     }
+
     const outcome = (wins: number, losses: number) => {
         const o = b.outcomes.find((x) => x.wins === wins && x.losses === losses)
+
         return o && <SwissOutcome label={`${wins}:${losses}`} teams={o.teams} qualified={wins > losses} />
     }
 
@@ -172,12 +183,14 @@ function SwissStage(props: { stage: Stage; fmt: Fmt }) {
 
 function SwissPool(props: { label: string; matches: Match[]; fmt: Fmt }) {
     const { fmt } = props
+
     return (
         <div class="sw-pool">
             <div class="sw-rec">{props.label}</div>
             {props.matches.map((m) => {
                 const [a, b] = m.teams
                 const when = `${fmt.relativeDay(fmt.dayKey(m.start)) ?? fmt.shortDate(m.start)} ${fmt.time(m.start)} · bo${m.bestOf}`
+
                 return (
                     <a class={`sw-m ${m.state}`} href={matchUrl(m)} title={when}>
                         <SwissSide t={a} />
@@ -197,6 +210,7 @@ function SwissSide(props: { t: Team; right?: boolean }) {
     const cls = ['sw-t', props.right && 'r', t.won === false && 'lost'].filter(Boolean).join(' ')
     const logo = t.tbd ? <span class="sw-q">?</span> : <Logo src={t.image} size={16} />
     const name = <span class="tn">{t.tbd ? '' : t.code}</span>
+
     return <span class={cls}>{props.right ? [name, logo] : [logo, name]}</span>
 }
 
@@ -224,6 +238,7 @@ function SwissOutcome(props: { label: string; teams: (Team | null)[]; qualified:
 
 function SwissTable(props: { rows: SwissRow[] }) {
     let prev = ''
+
     return (
         <table class="stand">
             <thead>
@@ -238,6 +253,7 @@ function SwissTable(props: { rows: SwissRow[] }) {
                     const rec = `${r.wins}-${r.losses}`
                     const gap = prev !== '' && prev !== rec
                     prev = rec
+
                     return (
                         <tr class={`${r.status} ${gap ? 'gap' : ''}`}>
                             <td>
@@ -295,6 +311,7 @@ function RankTable(props: { rows: NonNullable<Stage['tables']>[number]['rows'] }
 
 function Bracket(props: { columns: { name: string; matches: Match[] }[]; fmt: Fmt }) {
     const { fmt } = props
+
     return (
         <div class={`bracket ${props.columns.length === 1 ? 'single' : ''}`}>
             {props.columns.map((col) => (

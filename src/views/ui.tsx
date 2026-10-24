@@ -16,13 +16,17 @@ const REFRESH_SCRIPT = `(function(){var d=document.body.dataset,t=Date.now(),due
 function refreshHints(matches: Match[], now = Date.now()): { live: boolean; next: string | null } {
     let live = false
     let next: string | null = null
+
     for (const m of matches) {
         if (m.state === 'inProgress') live = true
+
         if (m.state !== 'unstarted') continue
         const start = Date.parse(m.start)
+
         if (start <= now && now - start < 3 * 3600e3) live = true
         else if (start > now && start - now < 12 * 3600e3 && (!next || m.start < next)) next = m.start
     }
+
     return { live, next }
 }
 
@@ -30,11 +34,13 @@ type NavKey = 'home' | 'matches' | 'results' | 'events' | 'ranking'
 
 export function Layout(props: { title?: string; fmt: Fmt; watch?: Match[]; nav?: NavKey; children: Child }) {
     const { live, next } = refreshHints(props.watch ?? [])
+
     const link = (key: NavKey, href: string, label: string) => (
         <a href={href} class={props.nav === key ? 'on' : undefined}>
             {label}
         </a>
     )
+
     return (
         <html lang="en">
             <head>
@@ -81,7 +87,9 @@ export function Layout(props: { title?: string; fmt: Fmt; watch?: Match[]; nav?:
 
 export function Logo(props: { src: string | null | undefined; size: number }) {
     const url = logoUrl(props.src, props.size * 2)
+
     if (!url) return <span class="logo-ph" style={`width:${props.size}px;height:${props.size}px`} />
+
     return (
         <img
             class="logo"
@@ -105,6 +113,7 @@ function teamClass(base: string, t: Team) {
 // A team name that links to the team page when the team's id is known.
 export function TeamName(props: { t: { id?: string; slug?: string; name: string } }) {
     const url = teamUrl(props.t)
+
     return url ? (
         <a class="team-link" href={url}>
             {props.t.name}
@@ -127,6 +136,7 @@ function eventLabel(m: Match) {
 export function MatchRow(props: { m: Match; fmt: Fmt; showEvent?: boolean }) {
     const { m, fmt } = props
     const live = m.state === 'inProgress'
+
     return (
         <a class={`mrow ${m.state} ${props.showEvent === false ? 'noev' : ''}`} href={matchUrl(m)}>
             <div class="mt">
@@ -159,6 +169,7 @@ export function MatchRow(props: { m: Match; fmt: Fmt; showEvent?: boolean }) {
 export function ResultRow(props: { m: Match; showEvent?: boolean }) {
     const { m } = props
     const [a, b] = m.teams
+
     return (
         <a class="rrow" href={matchUrl(m)}>
             <div class={teamClass('rt r1', a)}>
@@ -194,14 +205,17 @@ export function ByDay(props: {
     row: (m: Match) => Child
 }) {
     const groups = new Map<string, Match[]>()
+
     for (const m of props.matches) {
         const key = props.fmt.dayKey(m.start)
         groups.set(key, [...(groups.get(key) ?? []), m])
     }
+
     return (
         <>
             {[...groups].map(([key, ms]) => {
                 const rel = props.fmt.relativeDay(key)
+
                 return (
                     <>
                         <h3 class="day">
@@ -223,6 +237,7 @@ export function ByDay(props: {
 export function CompactMatch(props: { m: Match; fmt: Fmt }) {
     const { m, fmt } = props
     const showScore = m.state !== 'unstarted'
+
     return (
         <a class={`tm ${m.state}`} href={matchUrl(m)} title={`${eventLabel(m)} · ${m.stage}`}>
             <div class="tm-teams">
@@ -258,11 +273,13 @@ export function EventBanner(props: {
     const { event: e, fmt } = props
     const status = eventStatus(e)
     const dates = `${fmt.shortDate(`${e.startDate}T12:00:00Z`)} – ${fmt.shortDate(`${e.endDate}T12:00:00Z`)}`
+
     const tab = (key: string, href: string, label: string) => (
         <a href={href} class={props.tab === key ? 'on' : undefined}>
             {label}
         </a>
     )
+
     return (
         <div class="banner">
             <div class="banner-main">
@@ -290,9 +307,12 @@ export function EventBanner(props: {
 // Event filter chips for the global matches/results pages.
 export function EventChips(props: { matches: Match[]; base: string; current?: string }) {
     const seen = new Map<string, Event>()
+
     for (const m of props.matches) if (m.event && !seen.has(m.event.id)) seen.set(m.event.id, m.event)
+
     if (seen.size < 2) return null
     const events = [...seen.values()].sort((a, b) => a.league.tier - b.league.tier)
+
     return (
         <div class="chips">
             <a class={`chip ${props.current ? '' : 'on'}`} href={props.base}>
@@ -310,8 +330,11 @@ export function EventChips(props: { matches: Match[]; base: string; current?: st
 
 export function eventWhen(e: Event, fmt: Fmt, now = new Date()): string {
     const status = eventStatus(e, now)
+
     if (status === 'ongoing') return 'Ongoing'
+
     if (status === 'finished') return `Ended ${fmt.shortDate(`${e.endDate}T12:00:00Z`)}`
     const days = daysUntil(e.startDate, now)
+
     return days <= 1 ? 'Starts tomorrow' : `In ${days} days`
 }

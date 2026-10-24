@@ -2,8 +2,10 @@
 
 export function safeTimeZone(tz: string | undefined): string {
     if (!tz) return 'UTC'
+
     try {
         new Intl.DateTimeFormat('en-GB', { timeZone: tz })
+
         return tz
     } catch {
         return 'UTC'
@@ -12,7 +14,9 @@ export function safeTimeZone(tz: string | undefined): string {
 
 export function ordinal(n: number): string {
     const s = n % 100
+
     if (s >= 11 && s <= 13) return `${n}th`
+
     return `${n}${['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'}`
 }
 
@@ -35,12 +39,14 @@ export function makeFmt(tz: string, now = new Date()): Fmt {
         minute: '2-digit',
         hourCycle: 'h23',
     })
+
     const day = new Intl.DateTimeFormat('en-CA', {
         timeZone: tz,
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
     })
+
     const short = new Intl.DateTimeFormat('en-GB', { timeZone: tz, day: 'numeric', month: 'short' })
     // Day keys are calendar dates, so format them back in UTC to avoid shifting.
     const weekday = new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', weekday: 'long' })
@@ -50,6 +56,7 @@ export function makeFmt(tz: string, now = new Date()): Fmt {
     const dayKey = (d: string | Date) => day.format(typeof d === 'string' ? new Date(d) : d)
     const keyDate = (key: string) => new Date(`${key}T12:00:00Z`)
     const today = dayKey(now)
+
     const rel: Record<string, string> = {
         [today]: 'Today',
         [dayKey(new Date(now.getTime() + 86400e3))]: 'Tomorrow',
@@ -63,15 +70,18 @@ export function makeFmt(tz: string, now = new Date()): Fmt {
         dayHeading: (key) => `${weekday.format(keyDate(key))} - ${key}`,
         resultsHeading: (key) => {
             const d = keyDate(key)
+
             return `Results for ${month.format(d)} ${ordinal(d.getUTCDate())} ${d.getUTCFullYear()}`
         },
         shortDate: (iso) => short.format(new Date(iso)),
         longDate: (iso) => {
             const d = keyDate(dayKey(iso))
+
             return `${ordinal(d.getUTCDate())} of ${month.format(d)} ${d.getUTCFullYear()}`
         },
         ordinalDate: (iso) => {
             const d = keyDate(dayKey(iso))
+
             return `${ordinal(d.getUTCDate())} of ${monthShort.format(d)}`
         },
         relativeDay: (key) => rel[key] ?? null,
@@ -83,6 +93,7 @@ export function dateRange(startDate: string, endDate: string): string {
     const month = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short' })
     const s = new Date(`${startDate}T12:00:00Z`)
     const e = new Date(`${endDate}T12:00:00Z`)
+
     return `${month.format(s)} ${ordinal(s.getUTCDate())} - ${month.format(e)} ${ordinal(e.getUTCDate())} ${e.getUTCFullYear()}`
 }
 
@@ -104,5 +115,6 @@ export function daysUntil(dateStr: string, now = new Date()): number {
 export function logoUrl(src: string | undefined | null, px: number): string | null {
     if (!src) return null
     const http = src.replace(/^https:/, 'http:')
+
     return `https://am-a.akamaihd.net/image?resize=${px}:&f=${encodeURIComponent(http)}`
 }
