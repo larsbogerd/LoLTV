@@ -24,6 +24,7 @@ export interface Fmt {
     resultsHeading(key: string): string // Results for October 23rd 2026   (HLTV results page)
     shortDate(iso: string): string // 23 Oct
     ordinalDate(iso: string): string // 19th of Oct   (HLTV ranking box)
+    longDate(iso: string): string // 24th of October 2026   (HLTV match page)
     relativeDay(key: string): string | null // Today / Tomorrow / Yesterday
 }
 
@@ -65,6 +66,10 @@ export function makeFmt(tz: string, now = new Date()): Fmt {
             return `Results for ${month.format(d)} ${ordinal(d.getUTCDate())} ${d.getUTCFullYear()}`
         },
         shortDate: (iso) => short.format(new Date(iso)),
+        longDate: (iso) => {
+            const d = keyDate(dayKey(iso))
+            return `${ordinal(d.getUTCDate())} of ${month.format(d)} ${d.getUTCFullYear()}`
+        },
         ordinalDate: (iso) => {
             const d = keyDate(dayKey(iso))
             return `${ordinal(d.getUTCDate())} of ${monthShort.format(d)}`

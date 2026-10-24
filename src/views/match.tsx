@@ -38,11 +38,6 @@ export function MatchPage(props: {
     return (
         <Layout fmt={fmt} title={title} watch={m ? [m] : []} nav="matches">
             <div class="mhead">
-                <div class="mhead-ev">
-                    <Logo src={raw.league.image} size={18} />
-                    {event ? <a href={eventUrl(event)}>{event.name}</a> : <span>{raw.league.name}</span>}
-                    {m?.stage && <span>· {m.stage}</span>}
-                </div>
                 <div class="score">
                     <TeamSide t={a} cls={side(a)} />
                     <div class="mid">
@@ -55,15 +50,19 @@ export function MatchPage(props: {
                                 <span class={b.won ? 'w' : live ? '' : 'l'}>{b.score ?? 0}</span>
                             </div>
                         )}
-                        <div class="when">
-                            {live ? (
-                                <span class="live">LIVE</span>
+                        {/* HLTV's centre stack: date, event, format, live state. */}
+                        {m && <div class="when">{fmt.longDate(m.start)}</div>}
+                        <div class="mev">
+                            <Logo src={raw.league.image} size={16} />
+                            {event ? (
+                                <a href={eventUrl(event)}>{event.name}</a>
                             ) : (
-                                m &&
-                                `${fmt.relativeDay(fmt.dayKey(m.start)) ?? ''} ${fmt.shortDate(m.start)}`.trim()
+                                <span>{raw.league.name}</span>
                             )}
+                            {m?.stage && <span class="sub">· {m.stage}</span>}
                         </div>
                         <div class="when">Best of {bestOf}</div>
+                        {live && <span class="live mlive">LIVE</span>}
                     </div>
                     <TeamSide t={b} cls={side(b)} />
                 </div>
@@ -201,8 +200,8 @@ const ROLE_LABEL: Record<string, string> = {
     support: 'SUP',
 }
 
-// Only shown before a match starts. Desktop: a team-photo style group per team, mid in front,
-// lanes mirrored so both top laners sit on the outside. Phones: compact rows, role by role.
+// Only shown before a match starts. Desktop: each team's five in a row under their side, lanes
+// mirrored so both top laners sit on the outside. Phones: compact rows, role by role.
 function Lineups(props: { lineups: [Player[], Player[]] }) {
     const [a, b] = props.lineups
     return (
@@ -228,16 +227,15 @@ function Lineups(props: { lineups: [Player[], Player[]] }) {
     )
 }
 
+// Same size side by side: every league crops its headshots differently, so overlapping or
+// scaling them makes some heads look huge.
 function LineupGroup(props: { players: Player[] }) {
-    const mid = Math.floor(props.players.length / 2)
     return (
         <div class="lu-group">
-            {props.players.map((p, i) => {
-                const photo = logoUrl(p.image, 240)
-                // The closer to the centre, the further in front.
-                const depth = mid - Math.abs(i - mid)
+            {props.players.map((p) => {
+                const photo = logoUrl(p.image, 200)
                 return (
-                    <figure class={`lu-fig ${i === mid ? 'centre' : ''}`} style={`z-index:${depth + 1}`}>
+                    <figure class="lu-fig">
                         {photo ? (
                             <img src={photo} alt="" loading="lazy" decoding="async" />
                         ) : (

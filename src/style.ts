@@ -347,18 +347,17 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 
 /* ---------- match page ---------- */
 .mhead { background: var(--box); border-radius: var(--radius); overflow: hidden; }
-.mhead-ev { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--head); color: var(--dim); }
-.mhead-ev a { color: var(--link); }
+.mev { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 4px 0 2px; }
+.mev a { color: var(--link); }
+.mlive { margin-top: 6px; }
 .lineups { margin-top: 1px; }
 .lu-desk { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: end; padding: 18px 12px 12px; background: linear-gradient(180deg, var(--box), #14233b); border-radius: 0 0 var(--radius) var(--radius); }
 .lu-vs { color: var(--muted); font-size: 12px; font-weight: 700; padding: 0 12px 40px; }
-.lu-group { display: flex; justify-content: center; align-items: flex-end; }
-.lu-fig { position: relative; margin: 0 0 0 -40px; width: 128px; text-align: center; }
-.lu-fig:first-child { margin-left: 0; }
-.lu-fig img, .lu-blank { display: block; width: 128px; height: 104px; object-fit: cover; object-position: top; }
-.lu-fig.centre img, .lu-fig.centre .lu-blank { width: 144px; height: 117px; margin: 0 -8px; }
+.lu-group { display: flex; justify-content: center; align-items: flex-end; gap: 6px; }
+.lu-fig { margin: 0; width: 96px; text-align: center; }
+.lu-fig img, .lu-blank { display: block; width: 96px; height: 78px; object-fit: cover; object-position: top; }
 .lu-blank { background: #ffffff0a; border-radius: 50% 50% 0 0; }
-.lu-fig figcaption { position: relative; margin-top: 4px; line-height: 1.15; text-shadow: 0 1px 3px #000; }
+.lu-fig figcaption { margin-top: 4px; line-height: 1.15; }
 .lu-fig figcaption b { display: block; font-size: 13px; white-space: nowrap; }
 .lu-fig figcaption span { color: var(--muted); font-size: 10px; font-weight: 700; }
 .lu-rows { display: none; margin-top: 12px; }
@@ -369,7 +368,7 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 .lu-p b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lu-p img, .lu-nophoto { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; object-position: top; background: #ffffff10; flex: none; }
 .mstakes { text-align: center; padding: 8px 12px; border-top: 1px solid var(--line); color: var(--gold); font-weight: 600; font-size: 13px; }
-.score { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 22px 12px; gap: 12px; }
+.score { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; padding: 22px 12px; gap: 12px; }
 .score .side { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; font-size: 16px; font-weight: 600; justify-self: center; padding: 12px 22px; border-radius: var(--radius); }
 .score a.side:hover { background: var(--box-hover); }
 .score .side.lost { color: var(--dim); font-weight: 400; }
@@ -417,6 +416,11 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
   .banner-title { font-size: 18px; }
   .tabs a { font-size: 13px; }
   .score .big { font-size: 28px; }
+  .score { gap: 4px; padding: 16px 4px; }
+  .score .side { padding: 8px 2px; font-size: 14px; max-width: 100%; }
+  .score .side .logo { width: 48px; height: 48px; }
+  .score .mid { max-width: 150px; }
+  .mev { flex-wrap: wrap; font-size: 12px; }
   .tp-lineup { gap: 3px; padding: 10px 8px 0; }
   .tp-name { font-size: 11px; }
   .tp-row { grid-template-columns: minmax(0, 1fr) 46px minmax(0, 1fr) 48px; }
