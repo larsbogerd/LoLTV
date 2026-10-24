@@ -349,7 +349,6 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 .mhead { background: var(--box); border-radius: var(--radius); overflow: hidden; }
 .mev { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 4px 0 2px; }
 .mev { color: var(--link); }
-a.mev:hover { filter: brightness(1.2); }
 .mlive { margin-top: 6px; }
 .lineups { margin-top: 1px; }
 .lu-desk { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: end; padding: 18px 12px 12px; background: linear-gradient(180deg, var(--box), #14233b); border-radius: 0 0 var(--radius) var(--radius); }
@@ -373,9 +372,6 @@ a.mev:hover { filter: brightness(1.2); }
 .form span { width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; border-radius: 2px; }
 .form .w { background: #2e6a2a; color: #c8f0c3; }
 .form .l { background: #6c2323; color: #f0b3b3; }
-.h2h { justify-content: center; gap: 14px; }
-.h2h-score { font-size: 16px; font-weight: 700; }
-.h2h-m { font-size: 12px; }
 .mstakes { text-align: center; padding: 8px 12px; border-top: 1px solid var(--line); color: var(--gold); font-weight: 600; font-size: 13px; }
 .score { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; padding: 22px 12px; gap: 12px; }
 .score .side { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; font-size: 16px; font-weight: 600; justify-self: center; padding: 12px 22px; border-radius: var(--radius); }

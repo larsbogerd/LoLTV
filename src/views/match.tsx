@@ -1,6 +1,5 @@
 import {
     eventUrl,
-    matchUrl,
     teamUrl,
     type Event,
     type Match,
@@ -289,75 +288,39 @@ function LineupPlayer(props: { p: Player; side: 'l' | 'r' }) {
     )
 }
 
-// ---------- recent form and head-to-head (sidebar) ----------
+// ---------- recent form (sidebar) ----------
 
 function own(m: Match, t: TeamProfile): Team | undefined {
     return m.teams.find((x) => x.id === t.id || x.code === t.code)
 }
 
 function Form(props: { profiles: [TeamProfile, TeamProfile]; matchId: string; fmt: Fmt }) {
-    const [a, b] = props.profiles
     const others = (t: TeamProfile) => t.results.filter((m) => m.id !== props.matchId)
-    const meetings = others(a).filter((m) => m.teams.some((x) => x.id === b.id || x.code === b.code))
-    const aWins = meetings.filter((m) => own(m, a)?.won).length
     return (
-        <>
-            <section>
-                <h3 class="label">Recent form</h3>
-                <div class="list">
-                    {props.profiles.map((t) => (
-                        <a class="li" href={teamUrl(t) ?? undefined}>
-                            <Logo src={t.image} size={18} />
-                            <b class="grow">{t.code}</b>
-                            <span class="form">
-                                {others(t)
-                                    .slice(0, 5)
-                                    .map((m) => {
-                                        const us = own(m, t)
-                                        const them = m.teams.find((x) => x !== us)
-                                        const label = `${us?.won ? 'Win' : 'Loss'} vs ${them?.code ?? '?'} ${us?.score ?? 0}-${them?.score ?? 0}, ${props.fmt.shortDate(m.start)}`
-                                        return (
-                                            <span class={us?.won ? 'w' : 'l'} title={label}>
-                                                {us?.won ? 'W' : 'L'}
-                                            </span>
-                                        )
-                                    })}
-                            </span>
-                        </a>
-                    ))}
-                </div>
-            </section>
-            <section>
-                <h3 class="label">Head to head</h3>
-                <div class="list">
-                    {meetings.length ? (
-                        <>
-                            <div class="li h2h">
-                                <b>{a.code}</b>
-                                <span class="h2h-score">
-                                    {aWins} - {meetings.length - aWins}
-                                </span>
-                                <b>{b.code}</b>
-                            </div>
-                            {meetings.slice(0, 3).map((m) => {
-                                const us = own(m, a)
-                                const them = m.teams.find((x) => x !== us)
-                                return (
-                                    <a class="li h2h-m" href={matchUrl(m)}>
-                                        <span class="sub">{props.fmt.shortDate(m.start)}</span>
-                                        <span class="grow name">{m.event?.name ?? m.leagueName}</span>
-                                        <span>
-                                            {us?.score ?? 0}-{them?.score ?? 0}
+        <section>
+            <h2 class="h">Recent form</h2>
+            <div class="list">
+                {props.profiles.map((t) => (
+                    <a class="li" href={teamUrl(t) ?? undefined}>
+                        <Logo src={t.image} size={18} />
+                        <b class="grow">{t.code}</b>
+                        <span class="form">
+                            {others(t)
+                                .slice(0, 5)
+                                .map((m) => {
+                                    const us = own(m, t)
+                                    const them = m.teams.find((x) => x !== us)
+                                    const label = `${us?.won ? 'Win' : 'Loss'} vs ${them?.code ?? '?'} ${us?.score ?? 0}-${them?.score ?? 0}, ${props.fmt.shortDate(m.start)}`
+                                    return (
+                                        <span class={us?.won ? 'w' : 'l'} title={label}>
+                                            {us?.won ? 'W' : 'L'}
                                         </span>
-                                    </a>
-                                )
-                            })}
-                        </>
-                    ) : (
-                        <div class="li sub">No meetings in recent months.</div>
-                    )}
-                </div>
-            </section>
-        </>
+                                    )
+                                })}
+                        </span>
+                    </a>
+                ))}
+            </div>
+        </section>
     )
 }
