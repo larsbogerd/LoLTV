@@ -124,7 +124,6 @@ a.li:hover { background: var(--box-hover); }
 .mev .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mev small { display: block; color: var(--muted); font-size: 11px; }
 .live { display: inline-block; background: var(--live); color: #fff; font-size: 10px; font-weight: 800; padding: 1px 5px; border-radius: 2px; letter-spacing: .5px; }
-.mrow.inProgress .mt { box-shadow: inset 3px 0 0 var(--live); }
 
 /* ---------- result rows (HLTV results page) ---------- */
 .rrow { display: grid; grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr) minmax(0, 210px) 34px; align-items: center; background: var(--box); min-height: 36px; padding: 0 4px; }
@@ -154,7 +153,6 @@ a.li:hover { background: var(--box-hover); }
 .tm-team.lost { color: var(--dim); }
 .tm-team.lost .ts { color: var(--loss); }
 .tm-time { width: 42px; text-align: right; color: var(--dim); font-size: 12px; }
-.tm.inProgress { box-shadow: inset 3px 0 0 var(--live); }
 .tm.completed .tm-time { color: var(--muted); font-size: 11px; }
 
 /* ---------- event banner + tabs ---------- */
@@ -213,7 +211,6 @@ a.li:hover { background: var(--box-hover); }
 .bm .bt.lost { color: var(--dim); }
 .bm .bt.lost .ts { color: var(--loss); }
 .bm .bd { font-size: 10px; color: var(--muted); padding: 3px 8px 0; display: flex; justify-content: space-between; }
-.bm.inProgress { box-shadow: inset 3px 0 0 var(--live); }
 .bracket.single .bcol { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
 .stage + .stage { margin-top: 18px; }
 details.stage > summary { cursor: pointer; list-style: none; }
