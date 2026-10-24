@@ -79,6 +79,9 @@ and when the API fails we keep serving the last good copy.
 | `getEventDetails`                        | match page: games, sides, VODs, streams                               |
 | `getTeams`                               | team page: name, logo, home league, full roster with photos           |
 
+Game scoreboards come from the live-stats feed (`feed.lolesports.com/livestats/v1/window`),
+kept separate in `src/live.ts`; champion icons come from Data Dragon.
+
 ### Which leagues
 
 Only tier 1: Worlds, MSI, First Stand, Esports World Cup and Americas Cup, plus LCK, LPL,

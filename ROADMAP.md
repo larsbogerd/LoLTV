@@ -19,11 +19,16 @@ Where LOLTV is heading and what to keep an eye on. Pick up from here in a new se
     - player pages, plus tabs like HLTV's (Matches, Events, Achievements)
     - not in the API: coach, player ages and nationalities. Those would need Liquipedia,
       which is rate-limited.
-- **Live match stats**: kills, gold, towers and dragons per game from the live-stats feed
-  (`feed.lolesports.com/livestats/v1/window/<gameId>?startingTime=<ISO, rounded to 10s>`).
-    - **What it unlocks:** the per-game winners the match page can't show today.
-    - **The catch:** without `startingTime` it returns the start of the game, so finished games
-      need a time search to reach the final frame.
+- **Live match stats, round two.** The first version, a scoreboard per game on the match page,
+  lives in `src/live.ts` and `src/views/game.tsx`. Ideas next:
+    - items, and maybe runes. The feed's `/details` endpoint has them, plus damage share,
+      wards and skill order.
+    - a gold-lead graph over the game, by fetching several windows
+    - refreshing just the scoreboard every 10–15s while live, instead of the whole-page reload
+      every minute
+    - a winner in the Games table. The feed has no winner field: Bo1s use the match result,
+      other games guess from towers destroyed (gold on a tie). Check this against real
+      results.
 - **Power rank in match rows and on the match page**, e.g. "#1 HLE vs #13 TES". The data is
   already loaded for the league tags.
 - **Calendar subscription (.ics)** per event or team, so matches appear in a phone calendar in
