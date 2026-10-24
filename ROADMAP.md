@@ -39,6 +39,11 @@ Where LOLTV is going and what to watch. Continue from here in a new session.
 - **Region strength** from lolesports.com's `GetLeagueElo` GraphQL query, which uses the same
   persisted-query setup as the power ranking. It gives context for cross-region matchups.
 - **Add to home screen**: a web app manifest and icon so it opens like an app on a phone.
+- **Own typeface**: replace the system font stack with one semi-condensed family, e.g. Barlow
+  Semi Condensed. It fits more team names per row and gives the site its own voice. Serve a
+  subset woff2 (about 20 KB) from the Worker, so the page still loads no third-party assets.
+- **Visible keyboard focus**: a 2px gold `:focus-visible` outline on links and rows. Today only
+  hover states exist, so keyboard users can't see where they are.
 - **HLTV-style match stars** (importance), e.g. from the power ranks of both teams.
 - **Proper double-elimination brackets** for regional playoffs (LEC, LCS, LPL, ...). Draw them
   like Liquipedia: upper bracket on top, lower bracket below, connector lines, grand final on
