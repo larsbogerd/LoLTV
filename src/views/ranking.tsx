@@ -4,6 +4,7 @@ import { Layout, Logo } from './ui'
 
 export function RankingPage(props: { fmt: Fmt; ranking: Ranking | null; league?: string }) {
     const { fmt, ranking } = props
+
     if (!ranking) {
         return (
             <Layout fmt={fmt} title="Ranking" nav="ranking">
@@ -17,11 +18,13 @@ export function RankingPage(props: { fmt: Fmt; ranking: Ranking | null; league?:
 
     // League filter chips, biggest leagues first (by how many ranked teams they have).
     const counts = new Map<string, { name: string; image: string; n: number }>()
+
     for (const t of ranking.teams) {
         if (!t.league) continue
         const c = counts.get(t.league.slug) ?? { name: t.league.name, image: t.league.image, n: 0 }
         counts.set(t.league.slug, { ...c, n: c.n + 1 })
     }
+
     const leagues = [...counts].sort((a, b) => b[1].n - a[1].n)
     const teams = props.league ? ranking.teams.filter((t) => t.league?.slug === props.league) : ranking.teams
 
@@ -49,7 +52,7 @@ export function RankingPage(props: { fmt: Fmt; ranking: Ranking | null; league?:
             </div>
             <p class="note">
                 Riot's Global Power Ranking (GPR): team strength in tier 1 play, from domestic and
-                international results this year. Record is matches played this year.
+                international results this year. The record covers matches played this year.
             </p>
         </Layout>
     )
@@ -57,6 +60,7 @@ export function RankingPage(props: { fmt: Fmt; ranking: Ranking | null; league?:
 
 function RankRow(props: { t: RankedTeam }) {
     const { t } = props
+
     return (
         <a class="li rk" href={teamUrl(t.team) ?? undefined}>
             <span class="rk-pos">#{t.rank}</span>
@@ -77,8 +81,10 @@ function RankRow(props: { t: RankedTeam }) {
 
 export function Movement(props: { t: RankedTeam }) {
     const { rank, previousRank } = props.t
+
     if (previousRank === null || previousRank === rank) return <span class="mv">–</span>
     const up = previousRank > rank
+
     return (
         <span class={`mv ${up ? 'up' : 'down'}`} title={`Previously #${previousRank}`}>
             {up ? '▲' : '▼'}

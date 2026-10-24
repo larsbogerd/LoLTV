@@ -1,11 +1,11 @@
 # LOLTV
 
-HLTV inspired overview of League of Legends esports: live, upcoming and results at a glance.
-Small type, dense rows, no autoplay, no spoiler gates. Personal project.
+HLTV-inspired overview of League of Legends esports: live and upcoming matches and results at a
+glance. Small type, dense rows, no autoplay, no spoiler gates. Personal project.
 
-Server-rendered HTML from a Cloudflare Worker ([Hono](https://hono.dev) + JSX on the server only).
-The browser gets plain HTML + one CSS file; the only JS is a timezone cookie and an
-auto-refresh (every minute while a match is live, or once when the next match is due).
+A Cloudflare Worker renders the HTML on the server, with [Hono](https://hono.dev) and server-only
+JSX. The browser gets plain HTML and one CSS file. The only JS sets a timezone cookie and reloads
+the page. It reloads every minute while a match is live, or once when the next match is due.
 
 ## Run locally
 
@@ -19,25 +19,25 @@ npm run typecheck
 
 ### From the Cloudflare dashboard (deploys on every push to `master`)
 
-1. Go to **Workers & Pages → Create → Import a repository**, connect GitHub and give the
-   Cloudflare app access to the `LoLTV` repo only.
-2. Pick the repo and set it up with:
+1. Go to **Workers & Pages → Create → Import a repository**. Connect GitHub. Give the Cloudflare
+   app access to the `LoLTV` repo only.
+2. Select the repo and use these settings:
     - **Project name:** `loltv`. It must match `name` in `wrangler.jsonc`.
-    - **Build command:** leave empty. Dependencies are installed automatically, and Wrangler
-      bundles the TypeScript itself.
+    - **Build command:** leave it empty. The build installs the dependencies automatically, and
+      Wrangler bundles the TypeScript itself.
     - **Deploy command:** `npx wrangler deploy` (the default).
     - **Path:** `/`.
-    - No variables or secrets are needed.
+    - The Worker needs no variables or secrets.
 3. Click **Deploy**. The site goes live at `https://loltv.<your-subdomain>.workers.dev`.
 4. Under **Settings → Build → Branch control**, check that the production branch is `master`.
-   Other branches only upload preview versions.
-5. For your own domain, go to **Settings → Domains & Routes → Add → Custom domain**, e.g.
-   `loltv.example.com`. The domain must be on the same Cloudflare account; DNS and the
-   certificate are set up automatically. No tunnel is needed for a Worker.
+   Pushes to other branches upload only preview versions.
+5. To use your own domain, go to **Settings → Domains & Routes → Add → Custom domain** and add
+   it, e.g. `loltv.example.com`. The domain must be on the same Cloudflare account. Cloudflare
+   configures DNS and the certificate automatically. A Worker needs no tunnel.
 
-Logs are under the Worker's **Observability** tab. The free plan is plenty: it allows 100k
-requests a day and 10 ms of CPU per request, and a page uses a few ms. If you ever see error
-1102, a request ran out of CPU time.
+The Worker's logs are in its **Observability** tab. The free plan is enough. It allows 100k
+requests a day and 10 ms of CPU time per request. A page uses a few ms. Error 1102 means
+that a request exceeded the CPU time limit.
 
 ### From the terminal
 
@@ -46,8 +46,8 @@ npx wrangler login
 npm run deploy     # -> https://loltv.<your-subdomain>.workers.dev
 ```
 
-The code only uses standard `fetch`, so moving to Node/Docker later means adding
-`@hono/node-server` and a Dockerfile; nothing else changes.
+The code uses only standard `fetch`. A later move to Node/Docker needs `@hono/node-server` and a
+Dockerfile, and nothing else changes.
 
 ## URLs (copied from HLTV)
 
@@ -62,14 +62,14 @@ The code only uses standard `fetch`, so moving to Node/Docker later means adding
 | Ranking         | `/ranking`, `/ranking?league=<slug>`                                      |
 | Team            | `/team/<id>/<slug>` (e.g. `/team/100205573496804586/hanwha-life-esports`) |
 
-Slugs are cosmetic: a wrong or missing slug redirects to the right one.
+Slugs are cosmetic: a wrong or missing slug redirects to the correct one.
 
 ## Data
 
-Everything comes from the **unofficial** API that lolesports.com itself uses
-(`esports-api.lolesports.com/persisted/gw/*`, public key from their frontend). It can change
-without notice. Responses are cached in memory (60s for schedules, 6h for leagues/tournaments),
-and when the API fails we keep serving the last good copy.
+All data comes from the **unofficial** API that lolesports.com itself uses
+(`esports-api.lolesports.com/persisted/gw/*`, with the public key from their frontend). The API
+can change without notice. The Worker caches responses in memory: 60s for schedules, 6h for
+leagues and tournaments. When the API fails, the Worker continues to serve the last good copy.
 
 | Endpoint                                 | Used for                                                              |
 | ---------------------------------------- | --------------------------------------------------------------------- |
@@ -79,44 +79,55 @@ and when the API fails we keep serving the last good copy.
 | `getEventDetails`                        | match page: games, sides, VODs, streams                               |
 | `getTeams`                               | team page: name, logo, home league, full roster with photos           |
 
+Game scoreboards come from the live-stats feed (`feed.lolesports.com/livestats/v1/window`).
+`src/live.ts` holds that code, separate from the other API calls. Champion icons come from Data
+Dragon.
+
 ### Which leagues
 
-Only tier 1: Worlds, MSI, First Stand, Esports World Cup and Americas Cup, plus LCK, LPL,
-LEC, LCS, CBLOL and LCP. Everything else the API carries (ERLs, Challengers, promotion
-tournaments, off-season cups) is filtered out; the list is at the top of `src/data.ts`.
+The site shows tier 1 only: Worlds, MSI, First Stand, Esports World Cup and Americas Cup, plus
+LCK, LPL, LEC, LCS, CBLOL and LCP. It excludes everything else that the API carries (ERLs,
+Challengers, promotion tournaments, off-season cups). The list is at the top of `src/data.ts`.
 
 ### Global Power Ranking
 
-GPR isn't in that API. It comes from lolesports.com's own GraphQL endpoint
-(`lolesports.com/api/gql`), which only runs _persisted_ queries: requests send the id of a
-query registered by their frontend instead of the query itself. The ids their
-frontend uses are in `QUERY_IDS` in `src/api.ts`, found in the query manifest chunk of their JS
-bundle. If Riot changes that query the id stops working: the
-homepage panel then falls back to the Swiss table, `/ranking` shows a notice and the league
-tags and team links disappear. To fix it, look up the new `GetTeamGpr` id in their manifest.
-The ranking is cached for 3 hours.
+The Global Power Ranking (GPR) isn't in that API. It comes from lolesports.com's own GraphQL
+endpoint (`lolesports.com/api/gql`). That endpoint runs only _persisted_ queries: a request
+sends the id of a query that their frontend registered, not the query itself. `QUERY_IDS` in
+`src/api.ts` holds the ids that their frontend uses. The ids come from the query manifest chunk
+in their JS bundle.
 
-The ranking also provides each team's id and home league, used for team links and the grey
-`LEC` / `LCK` tags next to team names at international events.
+If Riot changes that query, the id stops working. Then the homepage panel shows the Swiss table
+instead, `/ranking` shows a notice, and the league tags and team links disappear. To fix it,
+find the new `GetTeamGpr` id in their manifest. The Worker caches the ranking for 3 hours.
+
+The ranking also gives each team's id and home league. The site uses them for team links and
+for the grey `LEC` / `LCK` tags next to team names at international events.
 
 ### Team pages
 
-A team page combines four sources: `getTeams` (REST) for the team and its roster, the
-`GetTeamEvents` GraphQL query for its matches across all leagues, the power ranking for rank
-and this year's placements, and the live-stats feed for the lineup. lolesports.com lists
-subs and academy players with a team without saying who starts, so the starting five are
-read from the metadata of the team's latest game (`lineup()` in `src/data.ts`).
+A team page combines four sources:
+
+- `getTeams` (REST): the team and its roster
+- the `GetTeamEvents` GraphQL query: its matches across all leagues
+- the power ranking: rank and this year's placements
+- the live-stats feed: the lineup
+
+lolesports.com lists subs and academy players with a team, and doesn't say who starts. So
+`lineup()` in `src/data.ts` reads the starting five from the metadata of the team's latest game.
 
 ### Events and stages
 
-In the API, an "event" (HLTV's word) is a _tournament_ inside a _league_: Worlds 2026 is
-tournament `worlds_2026` in league `worlds`. Swiss records aren't provided, so they're counted
-from the match results in `swissTable()`. The HLTV-style Swiss bracket (`swissBracket()`)
-replays the results round by round to put each match in its record pool; it assumes the
-16-team, 3-wins/3-losses format used at Worlds and MSI, and falls back to the table otherwise.
+What HLTV calls an "event" is a _tournament_ inside a _league_ in the API. For example, Worlds
+2026 is tournament `worlds_2026` in league `worlds`. The API doesn't give Swiss records, so
+`swissTable()` counts them from the match results.
 
-The homepage features the ongoing international event (Worlds / MSI / First Stand), or
-the next one coming up. See `featuredEvent()` in `src/data.ts`.
+The HLTV-style Swiss bracket (`swissBracket()`) replays the results round by round to put each
+match in its record pool. It assumes the 16-team, 3-wins/3-losses format that Worlds and MSI
+use. For other formats it shows the table instead.
+
+The homepage features the ongoing international event (Worlds / MSI / First Stand), or else the
+next one. See `featuredEvent()` in `src/data.ts`.
 
 ## Layout
 
@@ -132,8 +143,8 @@ src/
 reference/         HLTV (good) and lolesports.com (bad) screenshots used as design reference
 ```
 
-Times are rendered on the server in the viewer's timezone (read from a `tz` cookie that a
-tiny inline script sets on the first visit).
+The server renders times in the viewer's timezone. It reads the timezone from a `tz` cookie that
+a small inline script sets on the first visit.
 
 ## Roadmap
 

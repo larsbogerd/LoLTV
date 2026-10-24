@@ -2,13 +2,14 @@ import { eventUrl, matchUrl, type Match, type Player, type Team, type TeamProfil
 import { logoUrl, ordinal, type Fmt } from '../format'
 import { Layout, Logo, Tag } from './ui'
 
-const ROLE_LABEL: Record<string, string> = {
-    top: 'Top',
-    jungle: 'Jungle',
-    mid: 'Mid',
-    bottom: 'Bot',
-    support: 'Support',
-}
+// Full words on the player cards (the shared roleLabel() is the short form).
+const ROLE_NAME = new Map([
+    ['top', 'Top'],
+    ['jungle', 'Jungle'],
+    ['mid', 'Mid'],
+    ['bottom', 'Bot'],
+    ['support', 'Support'],
+])
 
 export function TeamPage(props: { fmt: Fmt; team: TeamProfile }) {
     const { fmt, team: t } = props
@@ -111,12 +112,13 @@ export function TeamPage(props: { fmt: Fmt; team: TeamProfile }) {
 function PlayerCard(props: { p: Player }) {
     const { p } = props
     const photo = logoUrl(p.image, 200)
+
     return (
         <div class="tp-player">
             {photo ? <img src={photo} alt="" loading="lazy" decoding="async" /> : <div class="tp-nophoto" />}
             <div class="tp-name">
                 <b>{p.handle}</b>
-                <span>{ROLE_LABEL[p.role] ?? p.role}</span>
+                <span>{ROLE_NAME.get(p.role) ?? p.role}</span>
             </div>
         </div>
     )
@@ -125,17 +127,21 @@ function PlayerCard(props: { p: Player }) {
 // HLTV's "Match stats" box: current streak and win rate over the last three months.
 function Form(props: { team: TeamProfile }) {
     const results = props.team.results
+
     if (!results.length) return null
     const won = (m: Match) => own(m, props.team).won === true
     const first = won(results[0]!)
     let streak = 0
+
     for (const m of results) {
         if (won(m) !== first) break
         streak++
     }
+
     const cutoff = Date.now() - 90 * 86400e3
     const recent = results.filter((m) => Date.parse(m.start) >= cutoff)
     const wins = recent.filter(won).length
+
     return (
         <div class="tp-form">
             <div>
@@ -163,17 +169,21 @@ function own(m: Match, t: TeamProfile): Team {
 // team's placement ("LCK Split 3 2026 - 2nd").
 function ByEvent(props: { matches: Match[]; team: TeamProfile; fmt: Fmt; placements: Map<string, number> }) {
     const groups: { key: string; matches: Match[] }[] = []
+
     for (const m of props.matches) {
         const key = m.event?.id ?? m.leagueSlug
         const last = groups[groups.length - 1]
+
         if (last?.key === key) last.matches.push(m)
         else groups.push({ key, matches: [m] })
     }
+
     return (
         <div class="tp-matches">
             {groups.map((g) => {
                 const e = g.matches[0]!.event
                 const place = e ? props.placements.get(e.id) : undefined
+
                 return (
                     <>
                         <a class="tp-event" href={e ? eventUrl(e) : undefined}>
@@ -195,6 +205,7 @@ function TeamMatchRow(props: { m: Match; team: TeamProfile; fmt: Fmt }) {
     const us = own(m, props.team)
     const them = m.teams.find((x) => x !== us) ?? m.teams[1]
     const date = fmt.dayKey(m.start).split('-').reverse().join('/')
+
     // The whole row links to the match (like match rows elsewhere), so no nested team link.
     return (
         <a class={`tp-row ${m.state}`} href={matchUrl(m)}>

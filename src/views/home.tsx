@@ -25,10 +25,12 @@ export function HomePage(props: {
     const centre = featured ? fm : props.schedule
     const live = centre.filter((m) => m.state === 'inProgress')
     const upcoming = centre.filter((m) => m.state === 'unstarted').slice(0, 8)
+
     const results = centre
         .filter((m) => m.state === 'completed')
         .reverse()
         .slice(0, 8)
+
     const swiss = swissTable(fm.filter((m) => isSwiss(m.stage)))
     const stage = (live[0] ?? upcoming[0] ?? results[0])?.stage
     const matchesHref = featured ? `/matches?event=${featured.id}` : '/matches'
@@ -112,13 +114,12 @@ export function HomePage(props: {
                     )}
                     <section>
                         <h2 class="h">
-                            Upcoming <a href={matchesHref}>All matches →</a>
+                            Upcoming <a href={matchesHref}>All matches</a>
                         </h2>
                         {upcoming.length ? (
                             <ByDay
                                 matches={upcoming}
                                 fmt={fmt}
-                                heading="matches"
                                 row={(m) => <MatchRow m={m} fmt={fmt} showEvent={!featured} />}
                             />
                         ) : (
@@ -127,13 +128,12 @@ export function HomePage(props: {
                     </section>
                     <section>
                         <h2 class="h">
-                            Latest results <a href={resultsHref}>All results →</a>
+                            Latest results <a href={resultsHref}>All results</a>
                         </h2>
                         {results.length ? (
                             <ByDay
                                 matches={results}
                                 fmt={fmt}
-                                heading="results"
                                 row={(m) => <ResultRow m={m} showEvent={!featured} />}
                             />
                         ) : (
@@ -153,13 +153,14 @@ export function HomePage(props: {
 // HLTV's right-hand "Today's matches" column, across all leagues.
 function TodayBox(props: { fmt: Fmt; matches: Match[] }) {
     const { fmt } = props
-    const today = fmt.dayKey(new Date())
+    const today = fmt.dayKey(new Date().toISOString())
     const isToday = (m: Match) => fmt.dayKey(m.start) === today
     const live = props.matches.filter((m) => m.state === 'inProgress')
     const later = props.matches.filter((m) => m.state === 'unstarted' && isToday(m))
     const done = props.matches.filter((m) => m.state === 'completed' && isToday(m)).reverse()
     // Nothing left today: show the next day that has matches.
     const nextDay = props.matches.find((m) => m.state === 'unstarted' && fmt.dayKey(m.start) > today)
+
     const next =
         later.length === 0 && nextDay
             ? props.matches.filter(

@@ -2,6 +2,7 @@
 // Responses are cached in memory per isolate; on upstream failure we serve stale data.
 
 const BASE = 'https://esports-api.lolesports.com/persisted/gw'
+
 // Public key shipped in the lolesports.com frontend bundle — not a secret.
 const API_KEY = '0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z'
 
@@ -102,17 +103,28 @@ export class ApiError extends Error {}
 const cache = new Map<string, { expires: number; value: unknown }>()
 const MAX_ENTRIES = 300
 
-async function cached<T>(key: string, ttlSeconds: number, load: () => Promise<T>): Promise<T> {
+export async function cached<T>(key: string, ttlSeconds: number, load: () => Promise<T>): Promise<T> {
     const hit = cache.get(key)
-    if (hit && hit.expires > Date.now()) return hit.value as T
+
+    if (hit && hit.expires > Date.now()) {
+        // SAFETY: every cache key (a request URL or a fixed name) is only ever loaded by one
+        // call site with one result type, so the stored value has type T.
+        return hit.value as T
+    }
 
     try {
         const value = await load()
+
         if (cache.size >= MAX_ENTRIES) cache.delete(cache.keys().next().value!)
         cache.set(key, { expires: Date.now() + ttlSeconds * 1000, value })
+
         return value
     } catch (err) {
-        if (hit) return hit.value as T // stale beats nothing
+        if (hit) {
+            // SAFETY: same invariant as above (one key, one loader, one type). Stale beats nothing.
+            return hit.value as T
+        }
+
         throw err instanceof ApiError ? err : new ApiError(`${key} failed: ${String(err)}`)
     }
 }
@@ -123,14 +135,18 @@ async function get<T>(
     ttlSeconds: number,
 ): Promise<T> {
     const qs = new URLSearchParams({ hl: 'en-US' })
+
     for (const [k, v] of Object.entries(params)) if (v) qs.set(k, v)
     const url = `${BASE}/${path}?${qs.toString()}`
 
     return cached(url, ttlSeconds, async () => {
         const res = await fetch(url, { headers: { 'x-api-key': API_KEY } })
+
         if (!res.ok) throw new ApiError(`${path} returned ${res.status}`)
         const body = await res.json<{ data?: T }>()
+
         if (!body.data) throw new ApiError(`${path} returned no data`)
+
         return body.data
     })
 }
@@ -139,11 +155,13 @@ export async function fetchSchedule(
     opts: { leagueId?: string; pageToken?: string } = {},
 ): Promise<RawSchedule> {
     const data = await get<{ schedule: RawSchedule }>('getSchedule', opts, 60)
+
     return data.schedule
 }
 
 export async function fetchLeagues(): Promise<RawLeague[]> {
     const data = await get<{ leagues: RawLeague[] }>('getLeagues', {}, 6 * 3600)
+
     return data.leagues
 }
 
@@ -154,16 +172,19 @@ export async function fetchTournaments(leagueIds: string[]): Promise<RawTourname
         { leagueId: leagueIds.join(',') },
         6 * 3600,
     )
+
     return data.leagues.map((l) => l.tournaments)
 }
 
 export async function fetchStandings(tournamentId: string): Promise<RawStage[]> {
     const data = await get<{ standings: { stages: RawStage[] }[] }>('getStandings', { tournamentId }, 60)
+
     return data.standings[0]?.stages ?? []
 }
 
 export async function fetchEventDetails(matchId: string): Promise<RawEventDetails | null> {
     const data = await get<{ event: RawEventDetails | null }>('getEventDetails', { id: matchId }, 30)
+
     return data.event
 }
 
@@ -174,14 +195,18 @@ export async function fetchEventDetails(matchId: string): Promise<RawEventDetail
 // working and callers fall back gracefully.
 
 const GQL = 'https://lolesports.com/api/gql'
+
 const QUERY_IDS = {
     GetTeamGpr: '9411e88d02eb7f7ea8516ed9f206cb557d150208d6654c06f044781f8d9789ba',
     GetTeamEvents: '4597f76e634ed6ce19c4c5c2f64213e26742e299f43e5174a7143c04ae780424',
 }
 
+// Variables our queries send: ids, dates, locale and paging, alone or in lists.
+type GqlVariables = Record<string, string | number | string[]>
+
 async function persisted<T>(
     operationName: keyof typeof QUERY_IDS,
-    variables: Record<string, unknown>,
+    variables: GqlVariables,
     ttlSeconds: number,
 ): Promise<T> {
     const qs = new URLSearchParams({
@@ -189,6 +214,7 @@ async function persisted<T>(
         variables: JSON.stringify(variables),
         extensions: JSON.stringify({ persistedQuery: { version: 1, sha256Hash: QUERY_IDS[operationName] } }),
     })
+
     const url = `${GQL}?${qs.toString()}`
 
     return cached(url, ttlSeconds, async () => {
@@ -200,9 +226,12 @@ async function persisted<T>(
                 'apollographql-client-version': '1.0.0',
             },
         })
+
         if (!res.ok) throw new ApiError(`${operationName} returned ${res.status}`)
         const body = await res.json<{ data?: T }>()
+
         if (!body.data) throw new ApiError(`${operationName} returned no data`)
+
         return body.data
     })
 }
@@ -249,7 +278,9 @@ export async function fetchPowerRankings(startDate: string, endDate: string): Pr
         { hl: 'en-US', step: 10, startDate, endDate, sport: 'lol' },
         3 * 3600,
     )
+
     if (!data.teamGPR?.length) throw new ApiError('GetTeamGpr returned no teams')
+
     return data.teamGPR
 }
 
@@ -285,6 +316,7 @@ export async function fetchTeamEvents(
         },
         60,
     )
+
     return data.esports?.events ?? []
 }
 
@@ -315,30 +347,6 @@ export interface RawTeamDetail {
 // Accepts a numeric team id or a slug.
 export async function fetchTeam(idOrSlug: string): Promise<RawTeamDetail | null> {
     const data = await get<{ teams: RawTeamDetail[] | null }>('getTeams', { id: idOrSlug }, 6 * 3600)
+
     return data.teams?.[0] ?? null
-}
-
-// ---------- live stats feed ----------
-
-export interface RawGameMetadata {
-    blueTeamMetadata: RawSideMetadata
-    redTeamMetadata: RawSideMetadata
-}
-
-export interface RawSideMetadata {
-    esportsTeamId: string
-    participantMetadata: { esportsPlayerId: string; summonerName: string; role: string }[]
-}
-
-// Who played a game. The live-stats window starts at the game's first frames, which already
-// carry the full lineup, so no time search is needed. A finished game never changes.
-export async function fetchGameMetadata(gameId: string): Promise<RawGameMetadata | null> {
-    const url = `https://feed.lolesports.com/livestats/v1/window/${gameId}`
-    return cached(url, 24 * 3600, async () => {
-        const res = await fetch(url)
-        // 204 = no stats yet (game just started). Throwing keeps that out of the cache.
-        if (!res.ok || res.status === 204) throw new ApiError(`livestats returned ${res.status}`)
-        const body = await res.json<{ gameMetadata?: RawGameMetadata }>()
-        return body.gameMetadata ?? null
-    })
 }
