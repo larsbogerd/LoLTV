@@ -60,7 +60,7 @@ footer a { color: var(--dim); }
 .col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 
 /* ---------- labels & headings ---------- */
-.label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); margin: 0 0 5px; display: flex; justify-content: space-between; }
+.label { font-size: 12px; font-weight: 700; color: var(--muted); margin: 0 0 5px; display: flex; justify-content: space-between; }
 .label a { color: var(--link); text-transform: none; font-weight: 500; letter-spacing: 0; }
 .h { font-size: 16px; font-weight: 600; margin: 4px 0 8px; color: var(--text); display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .h small, .h a { font-size: 12px; font-weight: 400; color: var(--link); }
@@ -143,7 +143,7 @@ a.li:hover { background: var(--box-hover); }
 .rbo { color: var(--muted); font-size: 11px; text-align: center; }
 
 /* ---------- today's matches (homepage right column) ---------- */
-.today .list > .tm-label { padding: 4px 10px; background: var(--head); color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; min-height: 0; }
+.today .list > .tm-label { padding: 4px 10px; background: var(--head); color: var(--muted); font-size: 11px; font-weight: 700; min-height: 0; }
 .tm { display: flex; align-items: center; gap: 6px; padding: 5px 8px 5px 10px; }
 .tm:hover { background: var(--box-hover); }
 .tm-teams { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }

@@ -36,7 +36,6 @@ export function MatchesPage(props: { fmt: Fmt; event: Event | null; matches: Mat
                 <ByDay
                     matches={upcoming}
                     fmt={fmt}
-                    heading="matches"
                     row={(m) => <MatchRow m={m} fmt={fmt} showEvent={!event} />}
                 />
             ) : (
@@ -70,12 +69,7 @@ export function ResultsPage(props: {
                 {props.newer && <a href="/results">← Latest</a>}
             </h2>
             {results.length ? (
-                <ByDay
-                    matches={results}
-                    fmt={fmt}
-                    heading="results"
-                    row={(m) => <ResultRow m={m} showEvent={!event} />}
-                />
+                <ByDay matches={results} fmt={fmt} row={(m) => <ResultRow m={m} showEvent={!event} />} />
             ) : (
                 <div class="empty">No results yet.</div>
             )}
@@ -85,7 +79,7 @@ export function ResultsPage(props: {
                     style="margin-top:12px;border-radius:3px"
                     href={`/results?before=${encodeURIComponent(props.older)}`}
                 >
-                    Older results →
+                    Older results
                 </a>
             )}
         </Layout>

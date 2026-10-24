@@ -24,8 +24,7 @@ export interface Fmt {
     tz: string
     time(iso: string): string // 20:00
     dayKey(iso: string): string // 2026-10-23, in the viewer's timezone
-    dayHeading(key: string): string // Friday - 2026-10-23   (HLTV matches page)
-    resultsHeading(key: string): string // Results for October 23rd 2026   (HLTV results page)
+    dayHeading(key: string): string // Friday 23 October, plus the year when it isn't this year
     shortDate(iso: string): string // 23 Oct
     ordinalDate(iso: string): string // 19th of Oct   (HLTV ranking box)
     longDate(iso: string): string // 24th of October 2026   (HLTV match page)
@@ -67,11 +66,11 @@ export function makeFmt(tz: string, now = new Date()): Fmt {
         tz,
         time: (iso) => time.format(new Date(iso)),
         dayKey,
-        dayHeading: (key) => `${weekday.format(keyDate(key))} - ${key}`,
-        resultsHeading: (key) => {
+        dayHeading: (key) => {
             const d = keyDate(key)
+            const year = key.slice(0, 4) === today.slice(0, 4) ? '' : ` ${d.getUTCFullYear()}`
 
-            return `Results for ${month.format(d)} ${ordinal(d.getUTCDate())} ${d.getUTCFullYear()}`
+            return `${weekday.format(d)} ${d.getUTCDate()} ${month.format(d)}${year}`
         },
         shortDate: (iso) => short.format(new Date(iso)),
         longDate: (iso) => {

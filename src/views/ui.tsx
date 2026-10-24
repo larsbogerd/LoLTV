@@ -211,12 +211,7 @@ export function ResultRow(props: { m: Match; showEvent?: boolean }) {
 }
 
 // Groups rows under day headings, like HLTV's matches and results pages.
-export function ByDay(props: {
-    matches: Match[]
-    fmt: Fmt
-    heading: 'matches' | 'results'
-    row: (m: Match) => Child
-}) {
+export function ByDay(props: { matches: Match[]; fmt: Fmt; row: (m: Match) => Child }) {
     const groups = new Map<string, Match[]>()
 
     for (const m of props.matches) {
@@ -233,9 +228,7 @@ export function ByDay(props: {
                     <>
                         <h3 class="day">
                             {rel && <em>{rel}</em>}
-                            {props.heading === 'results'
-                                ? props.fmt.resultsHeading(key)
-                                : props.fmt.dayHeading(key)}
+                            {props.fmt.dayHeading(key)}
                         </h3>
                         <div class="group">{ms.map(props.row)}</div>
                     </>

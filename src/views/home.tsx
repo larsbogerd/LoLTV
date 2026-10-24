@@ -114,13 +114,12 @@ export function HomePage(props: {
                     )}
                     <section>
                         <h2 class="h">
-                            Upcoming <a href={matchesHref}>All matches →</a>
+                            Upcoming <a href={matchesHref}>All matches</a>
                         </h2>
                         {upcoming.length ? (
                             <ByDay
                                 matches={upcoming}
                                 fmt={fmt}
-                                heading="matches"
                                 row={(m) => <MatchRow m={m} fmt={fmt} showEvent={!featured} />}
                             />
                         ) : (
@@ -129,13 +128,12 @@ export function HomePage(props: {
                     </section>
                     <section>
                         <h2 class="h">
-                            Latest results <a href={resultsHref}>All results →</a>
+                            Latest results <a href={resultsHref}>All results</a>
                         </h2>
                         {results.length ? (
                             <ByDay
                                 matches={results}
                                 fmt={fmt}
-                                heading="results"
                                 row={(m) => <ResultRow m={m} showEvent={!featured} />}
                             />
                         ) : (
