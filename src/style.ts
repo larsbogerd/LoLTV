@@ -419,6 +419,7 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
   .rrow .rbo { display: none; }
   .rrow .rev { border-left: 0; padding-left: 4px; justify-content: flex-end; }
   .rrow .rev .name { display: none; }
+  .rrow .tag { display: none; }
   .banner-title { font-size: 18px; }
   .tabs a { font-size: 13px; }
   .score .big { font-size: 28px; }
