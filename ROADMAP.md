@@ -21,20 +21,26 @@ Where LOLTV is heading and what to keep an eye on. Pick up from here in a new se
       which is rate-limited.
 - **Live match stats, round two.** The first version, a scoreboard per game on the match page,
   lives in `src/live.ts` and `src/views/game.tsx`. Ideas next:
-    - item names on hover (needs Data Dragon's item.json). Runes and skill order are also in
-      the `/details` endpoint, but were left out to keep the board lean.
+    - **item info on hover:** name, cost and stats in a small styled tooltip, for players who
+      don't know items. Data Dragon's `item.json` has it all (name, total gold, stats and passive
+      text, 672 KB, cached a day; only the items on the page go into the HTML). It can be done
+      with CSS hover/focus, no JS. Items only show on desktop, so phones aren't affected.
+      Small enough for one commit.
+    - runes, skill order and summoner spells: runes and skill order are in `/details` but were
+      left out to keep the board lean (tried runes, removed them). Summoner spells aren't in
+      the feed.
     - a gold-lead graph over the game, by fetching several windows
     - refreshing just the scoreboard every 10–15s while live, instead of the whole-page reload
       every minute
     - a winner in the Games table. The feed has no winner field: Bo1s use the match result,
       other games guess from towers destroyed (gold on a tie). Check this against real
       results.
-- **Power rank in match rows and on the match page**, e.g. "#1 HLE vs #13 TES". The data is
-  already loaded for the league tags.
 - **Calendar subscription (.ics)** per event or team, so matches appear in a phone calendar in
   local time.
 - **Favourite teams**, highlighted across pages and stored in a cookie (no accounts).
-- **Head-to-head and recent form** on the match page, built from schedule history.
+- **Head-to-head and recent form** on the match page: the last 5 results per team and earlier
+  meetings, from `GetTeamEvents` (already used by team pages). The match page now has the
+  stakes line and expected lineups (done), so these would complete a "match preview".
 - **Region strength** from lolesports.com's `GetLeagueElo` GraphQL query, which uses the same
   persisted-query setup as the power ranking. Gives context for cross-region matchups.
 - **Add to home screen**: a web app manifest and icon so it opens like an app on a phone.
