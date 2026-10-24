@@ -4,7 +4,7 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-    globalIgnores(['.wrangler', 'reference']),
+    globalIgnores(['.wrangler', 'reference', '.agents', '.claude', 'tools/oxlint/anti-slop']),
     {
         files: ['**/*.{ts,tsx}'],
         extends: [js.configs.recommended, tseslint.configs.recommendedTypeChecked],
