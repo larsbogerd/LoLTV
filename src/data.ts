@@ -500,15 +500,13 @@ export function matchStakes(m: Match, eventMatches: Match[]): string | null {
         )
         if (!pool) return null
         const record = `${pool.wins}:${pool.losses}`
-        if (pool.wins === 2 && pool.losses === 2)
-            return `Swiss ${record} decider: the winner advances, the loser is out`
-        if (pool.wins === 2) return `Swiss ${record} pool: the winner advances to the knockouts`
-        if (pool.losses === 2) return `Swiss ${record} pool: the loser is eliminated`
-        return `Swiss ${record} pool: the winner goes to ${pool.wins + 1}:${pool.losses}, the loser to ${pool.wins}:${pool.losses + 1}`
+        if (pool.wins === 2 && pool.losses === 2) return `Swiss ${record} · winner advances, loser is out`
+        if (pool.wins === 2) return `Swiss ${record} · winner advances`
+        if (pool.losses === 2) return `Swiss ${record} · loser is out`
+        return `Swiss ${record} · winner to ${pool.wins + 1}:${pool.losses}, loser to ${pool.wins}:${pool.losses + 1}`
     }
-    if (/^finals?$/i.test(m.stage)) return 'Final: the winner takes the title'
-    if (/^(quarter|semi)finals?$/i.test(m.stage))
-        return `${m.stage.replace(/s$/, '')}: the loser is eliminated`
+    if (/^finals?$/i.test(m.stage)) return 'Final · for the title'
+    if (/^(quarter|semi)finals?$/i.test(m.stage)) return `${m.stage.replace(/s$/, '')} · loser is out`
     return null
 }
 
@@ -856,7 +854,7 @@ export interface MatchDetail {
     details: RawEventDetails
     games: Game[]
     streams: { label: string; url: string }[]
-    stakes: string | null // e.g. "Swiss 1:2 pool: the loser is eliminated" (upcoming/live only)
+    stakes: string | null // e.g. "Swiss 1:2 · loser is out" (upcoming/live only)
 }
 
 function mediaUrl(provider: string, parameter: string): string | null {
