@@ -349,7 +349,7 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 .mhead { background: var(--box); border-radius: var(--radius); overflow: hidden; }
 .mev { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 4px 0 2px; }
 .mev { color: var(--link); }
-a.mev:hover { text-decoration: underline; }
+a.mev:hover { filter: brightness(1.2); }
 .mlive { margin-top: 6px; }
 .lineups { margin-top: 1px; }
 .lu-desk { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: end; padding: 18px 12px 12px; background: linear-gradient(180deg, var(--box), #14233b); border-radius: 0 0 var(--radius) var(--radius); }
