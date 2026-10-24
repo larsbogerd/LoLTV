@@ -10,6 +10,8 @@ import {
     getMatchDetail,
     getRanking,
     getTeamProfile,
+    type MatchDetail,
+    type Player,
     getSchedulePage,
     getStages,
     getUpcoming,
@@ -145,9 +147,27 @@ app.get('/matches/:id/:slug?', async (c) => {
     const version = patch ? await ddragonVersion(patch).catch(() => '') : ''
     return render(
         c,
-        <MatchPage fmt={fmtFor(c)} detail={detail} event={event} boards={boards} version={version} />,
+        <MatchPage
+            fmt={fmtFor(c)}
+            detail={detail}
+            event={event}
+            boards={boards}
+            version={version}
+            lineups={await expectedLineups(detail)}
+        />,
     )
 })
+
+// Before a match: both teams' starting fives, read from their latest games (same as team pages).
+async function expectedLineups(detail: MatchDetail): Promise<[Player[], Player[]] | null> {
+    if (!detail.match || detail.match.state !== 'unstarted') return null
+    const ids = detail.match.teams.map(
+        (t) => t.id ?? detail.details.match.teams.find((r) => r.code === t.code)?.id,
+    )
+    if (ids.some((id) => !id)) return null
+    const [a, b] = await Promise.all(ids.map((id) => getTeamProfile(id!).catch(() => null)))
+    return a?.starters.length && b?.starters.length ? [a.starters, b.starters] : null
+}
 
 // HLTV style: /team/<id>/<slug>
 app.get('/team/:id/:slug?', async (c) => {

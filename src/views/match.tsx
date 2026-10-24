@@ -1,4 +1,5 @@
-import { eventUrl, teamUrl, type Event, type MatchDetail, type Team } from '../data'
+import { eventUrl, teamUrl, type Event, type MatchDetail, type Player, type Team } from '../data'
+import { logoUrl } from '../format'
 import type { Fmt } from '../format'
 import type { GameStats } from '../live'
 import { GameBoard, type BoardTeam } from './game'
@@ -10,6 +11,7 @@ export function MatchPage(props: {
     event: Event | null
     boards: { number: number; stats: GameStats }[]
     version: string
+    lineups: [Player[], Player[]] | null
 }) {
     const { fmt, detail, event } = props
     const m = detail.match
@@ -67,6 +69,7 @@ export function MatchPage(props: {
                 </div>
                 {detail.stakes && <div class="mstakes">{detail.stakes}</div>}
             </div>
+            {props.lineups && <Lineups lineups={props.lineups} />}
 
             <div class="split" style="margin-top:16px">
                 <section>
@@ -187,5 +190,51 @@ function GameBoards(props: {
                 />
             ))}
         </div>
+    )
+}
+
+const ROLE_LABEL: Record<string, string> = {
+    top: 'TOP',
+    jungle: 'JGL',
+    mid: 'MID',
+    bottom: 'BOT',
+    support: 'SUP',
+}
+
+// Compact, role by role, like the scoreboard rows. Only shown before a match starts.
+function Lineups(props: { lineups: [Player[], Player[]] }) {
+    const [a, b] = props.lineups
+    return (
+        <section class="lineups">
+            <h2 class="h">
+                Expected lineups <small>from each team's latest game</small>
+            </h2>
+            <div class="list">
+                {a.map((p, i) => {
+                    const q = b[i]
+                    return (
+                        <div class="lu-row">
+                            <LineupPlayer p={p} side="l" />
+                            <span class="lu-role">{ROLE_LABEL[p.role] ?? p.role}</span>
+                            {q ? <LineupPlayer p={q} side="r" /> : <span />}
+                        </div>
+                    )
+                })}
+            </div>
+        </section>
+    )
+}
+
+function LineupPlayer(props: { p: Player; side: 'l' | 'r' }) {
+    const photo = logoUrl(props.p.image, 48)
+    return (
+        <span class={`lu-p ${props.side}`}>
+            {photo ? (
+                <img src={photo} width={24} height={24} alt="" loading="lazy" />
+            ) : (
+                <span class="lu-nophoto" />
+            )}
+            <b>{props.p.handle}</b>
+        </span>
     )
 }

@@ -349,6 +349,13 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 .mhead { background: var(--box); border-radius: var(--radius); overflow: hidden; }
 .mhead-ev { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--head); color: var(--dim); }
 .mhead-ev a { color: var(--link); }
+.lineups { max-width: 560px; margin: 16px auto 0; }
+.lu-row { display: grid; grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr); align-items: center; padding: 5px 12px; }
+.lu-role { text-align: center; color: var(--muted); font-size: 11px; font-weight: 700; }
+.lu-p { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.lu-p.r { flex-direction: row-reverse; }
+.lu-p b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lu-p img, .lu-nophoto { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; object-position: top; background: #ffffff10; flex: none; }
 .mstakes { text-align: center; padding: 8px 12px; border-top: 1px solid var(--line); color: var(--gold); font-weight: 600; font-size: 13px; }
 .score { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 22px 12px; gap: 12px; }
 .score .side { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; font-size: 16px; font-weight: 600; justify-self: center; padding: 12px 22px; border-radius: var(--radius); }
