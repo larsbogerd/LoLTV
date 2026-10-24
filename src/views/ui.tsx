@@ -182,9 +182,10 @@ export function MatchRow(props: { m: Match; fmt: Fmt; showEvent?: boolean }) {
 export function ResultRow(props: { m: Match; showEvent?: boolean }) {
     const { m } = props
     const [a, b] = m.teams
+    const showEvent = props.showEvent !== false
 
     return (
-        <a class="rrow" href={matchUrl(m)}>
+        <a class={`rrow ${showEvent ? '' : 'noev'}`} href={matchUrl(m)}>
             <div class={teamClass('rt r1', a)}>
                 <Tag t={a} />
                 <span class="tn">{a.name}</span>
@@ -200,10 +201,8 @@ export function ResultRow(props: { m: Match; showEvent?: boolean }) {
                 <Tag t={b} />
             </div>
             <div class="rev">
-                <Logo src={m.leagueImage} size={18} />
-                <span class="name">
-                    {props.showEvent === false ? m.stage : `${eventLabel(m)} · ${m.stage}`}
-                </span>
+                {showEvent && <Logo src={m.leagueImage} size={18} />}
+                <span class="name">{showEvent ? `${eventLabel(m)} · ${m.stage}` : m.stage}</span>
             </div>
             <div class="rbo">bo{m.bestOf}</div>
         </a>
