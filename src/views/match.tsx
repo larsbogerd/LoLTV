@@ -52,15 +52,11 @@ export function MatchPage(props: {
                         )}
                         {/* HLTV's centre stack: date, event, format, live state. */}
                         {m && <div class="when">{fmt.longDate(m.start)}</div>}
-                        <div class="mev">
+                        <a class="mev" href={event ? eventUrl(event) : undefined}>
                             <Logo src={raw.league.image} size={16} />
-                            {event ? (
-                                <a href={eventUrl(event)}>{event.name}</a>
-                            ) : (
-                                <span>{raw.league.name}</span>
-                            )}
-                            {m?.stage && <span class="sub">· {m.stage}</span>}
-                        </div>
+                            {event?.name ?? raw.league.name}
+                            {m?.stage && ` · ${m.stage}`}
+                        </a>
                         <div class="when">Best of {bestOf}</div>
                         {live && <span class="live mlive">LIVE</span>}
                     </div>
@@ -99,7 +95,15 @@ export function MatchPage(props: {
                                                 '–'
                                             )}
                                         </td>
-                                        <td class="c">{g.vod ? <a href={g.vod}>Watch</a> : '–'}</td>
+                                        <td class="c">
+                                            {g.vod ? (
+                                                <a href={g.vod} target="_blank" rel="noopener">
+                                                    Watch
+                                                </a>
+                                            ) : (
+                                                '–'
+                                            )}
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -113,7 +117,7 @@ export function MatchPage(props: {
                         <h3 class="label">English streams</h3>
                         <div class="list">
                             {detail.streams.map((s) => (
-                                <a class="li" href={s.url}>
+                                <a class="li" href={s.url} target="_blank" rel="noopener">
                                     {s.label}
                                 </a>
                             ))}

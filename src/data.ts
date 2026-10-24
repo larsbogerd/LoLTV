@@ -500,10 +500,10 @@ export function matchStakes(m: Match, eventMatches: Match[]): string | null {
         )
         if (!pool) return null
         const record = `${pool.wins}:${pool.losses}`
-        if (pool.wins === 2 && pool.losses === 2) return `Swiss ${record} · winner advances, loser is out`
-        if (pool.wins === 2) return `Swiss ${record} · winner advances`
-        if (pool.losses === 2) return `Swiss ${record} · loser is out`
-        return `Swiss ${record} · winner to ${pool.wins + 1}:${pool.losses}, loser to ${pool.wins}:${pool.losses + 1}`
+        if (pool.wins === 2 && pool.losses === 2) return `${record} · winner advances, loser is out`
+        if (pool.wins === 2) return `${record} · winner advances`
+        if (pool.losses === 2) return `${record} · loser is out`
+        return `${record} · winner to ${pool.wins + 1}:${pool.losses}, loser to ${pool.wins}:${pool.losses + 1}`
     }
     if (/^finals?$/i.test(m.stage)) return 'Final · for the title'
     if (/^(quarter|semi)finals?$/i.test(m.stage)) return `${m.stage.replace(/s$/, '')} · loser is out`
@@ -854,7 +854,7 @@ export interface MatchDetail {
     details: RawEventDetails
     games: Game[]
     streams: { label: string; url: string }[]
-    stakes: string | null // e.g. "Swiss 1:2 · loser is out" (upcoming/live only)
+    stakes: string | null // e.g. "1:2 · loser is out" (upcoming/live only)
 }
 
 function mediaUrl(provider: string, parameter: string): string | null {
