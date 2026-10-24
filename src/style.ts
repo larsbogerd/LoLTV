@@ -368,6 +368,14 @@ a.mev:hover { text-decoration: underline; }
 .lu-p.r { flex-direction: row-reverse; }
 .lu-p b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lu-p img, .lu-nophoto { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; object-position: top; background: #ffffff10; flex: none; }
+.mform { display: flex; flex-direction: column; gap: 14px; }
+.form { display: flex; gap: 3px; }
+.form span { width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; border-radius: 2px; }
+.form .w { background: #2e6a2a; color: #c8f0c3; }
+.form .l { background: #6c2323; color: #f0b3b3; }
+.h2h { justify-content: center; gap: 14px; }
+.h2h-score { font-size: 16px; font-weight: 700; }
+.h2h-m { font-size: 12px; }
 .mstakes { text-align: center; padding: 8px 12px; border-top: 1px solid var(--line); color: var(--gold); font-weight: 600; font-size: 13px; }
 .score { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; padding: 22px 12px; gap: 12px; }
 .score .side { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; font-size: 16px; font-weight: 600; justify-self: center; padding: 12px 22px; border-radius: var(--radius); }
@@ -428,6 +436,7 @@ a.mev:hover { text-decoration: underline; }
   .tp-date { grid-column: 1 / -1; }
   .gb-teams, .gb-row { padding-left: 6px; padding-right: 6px; }
   .lu-desk { display: none; }
+  .mform { display: none; }
   .lu-rows { display: block; }
   .gb-teams { gap: 10px; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
   .gb-gold { display: none; }

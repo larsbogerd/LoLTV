@@ -11,7 +11,7 @@ import {
     getRanking,
     getTeamProfile,
     type MatchDetail,
-    type Player,
+    type TeamProfile,
     getSchedulePage,
     getStages,
     getUpcoming,
@@ -153,20 +153,19 @@ app.get('/matches/:id/:slug?', async (c) => {
             event={event}
             boards={boards}
             version={version}
-            lineups={await expectedLineups(detail)}
+            profiles={await teamProfiles(detail)}
         />,
     )
 })
 
-// Before a match: both teams' starting fives, read from their latest games (same as team pages).
-async function expectedLineups(detail: MatchDetail): Promise<[Player[], Player[]] | null> {
-    if (!detail.match || detail.match.state !== 'unstarted') return null
-    const ids = detail.match.teams.map(
-        (t) => t.id ?? detail.details.match.teams.find((r) => r.code === t.code)?.id,
-    )
-    if (ids.some((id) => !id)) return null
+// Both teams' profiles (cached): the match page takes lineups, recent form and head-to-head
+// from them. Optional, like everything that isn't the match itself.
+async function teamProfiles(detail: MatchDetail): Promise<[TeamProfile, TeamProfile] | null> {
+    const teams = detail.match?.teams ?? detail.details.match.teams
+    const ids = teams.map((t) => t.id ?? detail.details.match.teams.find((r) => r.code === t.code)?.id)
+    if (ids.length !== 2 || ids.some((id) => !id)) return null
     const [a, b] = await Promise.all(ids.map((id) => getTeamProfile(id!).catch(() => null)))
-    return a?.starters.length && b?.starters.length ? [a.starters, b.starters] : null
+    return a && b ? [a, b] : null
 }
 
 // HLTV style: /team/<id>/<slug>
