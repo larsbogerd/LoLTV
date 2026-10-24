@@ -4,8 +4,6 @@ Where LOLTV is going and what to watch. Continue from here in a new session.
 
 ## Next up
 
-- **Deploy to Cloudflare Workers.** Run `npx wrangler login` once. Then run `npm run deploy`.
-  Then add a custom domain to the `loltv` Worker. See the README's "Deploy" section.
 - **Check live Bo3 and Bo5 scores** once Worlds Swiss has a live Bo3 (the first ones are on 25 and
   26 Oct 2026). The series score (games won) should update after each game in match rows, the
   Swiss bracket and the match page. If it updates only at the end, look at `getLive` instead of
@@ -38,9 +36,6 @@ Where LOLTV is going and what to watch. Continue from here in a new session.
 - **Calendar subscription (.ics)** per event or team, so matches appear in a phone calendar in
   local time.
 - **Favourite teams**, highlighted across pages and stored in a cookie (no accounts).
-- **Head-to-head and recent form** on the match page: the last 5 results per team and earlier
-  meetings, from `GetTeamEvents` (already used by team pages). The match page now has the
-  stakes line and expected lineups (done), so these would complete a "match preview".
 - **Region strength** from lolesports.com's `GetLeagueElo` GraphQL query, which uses the same
   persisted-query setup as the power ranking. It gives context for cross-region matchups.
 - **Add to home screen**: a web app manifest and icon so it opens like an app on a phone.
@@ -89,6 +84,13 @@ Where LOLTV is going and what to watch. Continue from here in a new session.
 
 ## Decisions so far
 
+- **Hosting:** Cloudflare Workers, and the site is live (see the README's "Deploy" section). It
+  stays on Workers, also for future live stats, which will poll from the client. Only push
+  updates would need self-hosting.
+- **Match page:** a stakes line, plus expected lineups before a match starts. Live and result
+  pages show no player photos. On desktop, a sidebar next to the Games table shows each team's
+  recent form (last five results) and their head-to-head (last three meetings), from
+  `GetTeamEvents`. Phones don't show the sidebar.
 - **Leagues:** tier 1 only. The cross-region events are Worlds, MSI, First Stand, EWC and
   Americas Cup. The regions are LCK, LPL, LEC, LCS, CBLOL and LCP. The list is at the top of
   `src/data.ts`.
