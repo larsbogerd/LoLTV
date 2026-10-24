@@ -409,10 +409,11 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
   .home .today .tm-label { display: none; }
   .home .today .tm { flex: 0 0 150px; background: var(--box); border-radius: var(--radius); flex-direction: column; align-items: stretch; gap: 3px; }
   .home .today .tm-time { order: -1; width: auto; text-align: left; font-size: 11px; }
-  .mrow { grid-template-columns: 52px minmax(0, 1fr); }
-  .mrow .mev { grid-column: 2; padding-top: 0; font-size: 11px; }
-  .mrow .mev .logo, .mrow .mev .logo-ph { display: none; }
-  .mrow .mev small { display: inline; margin-left: 6px; }
+  /* only the league icon on the right, as in result rows */
+  .mrow { grid-template-columns: 52px minmax(0, 1fr) 34px; }
+  .mrow .mev { padding: 0 10px 0 0; justify-content: flex-end; }
+  .mrow .mev > div { display: none; }
+  .mrow.noev { grid-template-columns: 52px minmax(0, 1fr); }
   .mrow.noev .mev { display: none; }
   .rrow { grid-template-columns: minmax(0, 1fr) 52px minmax(0, 1fr) 26px; }
   .rrow .rbo { display: none; }
