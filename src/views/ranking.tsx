@@ -49,7 +49,7 @@ export function RankingPage(props: { fmt: Fmt; ranking: Ranking | null; league?:
             </div>
             <p class="note">
                 Riot's Global Power Ranking (GPR): team strength in tier 1 play, from domestic and
-                international results this year. Record is matches played this year.
+                international results this year. The record covers matches played this year.
             </p>
         </Layout>
     )
