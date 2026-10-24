@@ -309,15 +309,19 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 .gb-sum .sub { margin-left: auto; }
 .gb-final { color: var(--dim); }
 .gb-sum .gb-win { margin-left: -4px; }
-.gb-teams { display: grid; grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr); align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--line); }
-.gb-vs { text-align: center; color: var(--muted); font-size: 11px; }
-.gb-team { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
-.gb-team.r { flex-direction: row-reverse; }
-.gb-name { display: flex; align-items: center; gap: 7px; }
-.gb-team.r .gb-name { flex-direction: row-reverse; }
+.gb-teams { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto minmax(0, 1fr); align-items: center; gap: 18px; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+.gb-team { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.gb-team.red { flex-direction: row-reverse; }
+.gb-side { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; padding: 1px 5px; border-radius: 2px; }
+.gb-side.blue { background: #2a4b7c; color: #a9c8ff; }
+.gb-side.red { background: #6b2a2a; color: #ffb3b3; }
 .gb-win { background: #2e6a2a; color: #c8f0c3; font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 2px; }
-.gb-totals { color: var(--muted); font-size: 11px; white-space: nowrap; }
-.gb-totals b { color: var(--text); font-size: 13px; }
+.gb-gold { color: var(--muted); font-size: 11px; white-space: nowrap; }
+.gb-gold b { color: var(--text); font-size: 13px; }
+.gb-kills { display: flex; align-items: center; gap: 8px; font-size: 18px; }
+.gb-kills .blue { color: #6aa5ff; }
+.gb-kills .red { color: #ff7a7a; }
+.gb-swords { color: var(--muted); }
 .gb-row { display: grid; grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr); align-items: center; padding: 4px 12px; }
 .gb-row + .gb-row { border-top: 1px solid var(--line); }
 .gb-role { text-align: center; font-size: 11px; font-weight: 700; color: var(--muted); line-height: 1.2; }
@@ -398,6 +402,8 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
   .tp-row { grid-template-columns: minmax(0, 1fr) 46px minmax(0, 1fr) 48px; }
   .tp-date { grid-column: 1 / -1; }
   .gb-teams, .gb-row { padding-left: 6px; padding-right: 6px; }
+  .gb-teams { gap: 10px; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+  .gb-gold { display: none; }
   .gb-row { grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); }
   .gb-p { gap: 5px; }
   .gb-p.l { grid-template-columns: 28px minmax(0, 1fr) 52px; }

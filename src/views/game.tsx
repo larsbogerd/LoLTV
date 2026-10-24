@@ -1,4 +1,4 @@
-import { championIcon, itemIcon, type GameStats, type PlayerLine, type SideStats } from '../live'
+import { championIcon, itemIcon, type GameStats, type PlayerLine } from '../live'
 import { logoUrl } from '../format'
 import { Logo } from './ui'
 
@@ -52,10 +52,21 @@ export function GameBoard(props: {
                 {winner && <span class="gb-win">{teams.get(g[winner].teamId)?.code ?? winner} win</span>}
                 <span class="sub">Patch {g.patch}</span>
             </summary>
+            {/* Like the in-game scoreboard: kills in the centre, team gold beside them. */}
             <div class="gb-teams">
-                <TeamTotals s={g.blue} team={teams.get(g.blue.teamId)} won={winner === 'blue'} side="l" />
-                <span class="gb-vs">vs</span>
-                <TeamTotals s={g.red} team={teams.get(g.red.teamId)} won={winner === 'red'} side="r" />
+                <TeamHead team={teams.get(g.blue.teamId)} won={winner === 'blue'} side="blue" />
+                <span class="gb-gold" title="Team gold">
+                    <b>{k(g.blue.gold)}</b> gold
+                </span>
+                <span class="gb-kills" title="Kills">
+                    <b class="blue">{g.blue.kills}</b>
+                    <Swords />
+                    <b class="red">{g.red.kills}</b>
+                </span>
+                <span class="gb-gold" title="Team gold">
+                    <b>{k(g.red.gold)}</b> gold
+                </span>
+                <TeamHead team={teams.get(g.red.teamId)} won={winner === 'red'} side="red" />
             </div>
             <div class="gb-row gb-cols">
                 <ColumnLabels side="l" />
@@ -76,19 +87,31 @@ export function GameBoard(props: {
     )
 }
 
-function TeamTotals(props: { s: SideStats; team?: BoardTeam; won: boolean; side: 'l' | 'r' }) {
-    const { s, team } = props
+function TeamHead(props: { team?: BoardTeam; won: boolean; side: 'blue' | 'red' }) {
+    const { team, side } = props
     return (
-        <div class={`gb-team ${props.side}`}>
-            <span class="gb-name">
-                <Logo src={team?.image} size={20} />
-                <b>{team?.code ?? '?'}</b>
-                {props.won && <span class="gb-win">WIN</span>}
+        <span class={`gb-team ${side}`}>
+            <Logo src={team?.image} size={20} />
+            <b>{team?.code ?? '?'}</b>
+            <span class={`gb-side ${side}`} title={side === 'blue' ? 'Blue side' : 'Red side'}>
+                {side}
             </span>
-            <span class="gb-totals" title="Team gold">
-                <b>{k(s.gold)}</b> gold
-            </span>
-        </div>
+            {props.won && <span class="gb-win">WIN</span>}
+        </span>
+    )
+}
+
+function Swords() {
+    return (
+        <svg class="gb-swords" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+            <path
+                d="M3 3l8 8M13 3L5 11M2.5 13.5l2.5-2.5M13.5 13.5L11 11"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                fill="none"
+            />
+        </svg>
     )
 }
 
