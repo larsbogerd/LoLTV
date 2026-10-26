@@ -362,7 +362,7 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 .gb-tip-fx { display: block; margin-top: 6px; }
 .gb-tip-fx b { color: var(--gold); }
 .gb-tip-cd { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
-.gb-tip-fx b.active::before { content: "Active: "; color: var(--dim); font-weight: 400; }
+.gb-tip-fx b.active::before { content: "Active: "; color: var(--text); }
 .gb-champ { position: relative; width: 28px; height: 28px; border-radius: 3px; overflow: hidden; background: #ffffff10; }
 .gb-champ img { width: 28px; height: 28px; }
 .gb-champ i { position: absolute; right: 0; bottom: 0; background: #000000c0; color: #fff; font-style: normal; font-size: 9px; font-weight: 700; padding: 0 2px; line-height: 12px; }
@@ -476,6 +476,10 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 
   .nav nav a { padding: 0 9px; font-size: 14px; }
   .brand { padding: 0 11px; font-size: 17px; }
+}
+/* Touch screens have no hover: a tap focuses the item and opens its tooltip. */
+@media (hover: none) {
+  .gb-it:focus .gb-tip { display: block; }
 }
 `
 
