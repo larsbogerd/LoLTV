@@ -22,6 +22,7 @@ export function MatchPage(props: {
     boards: { id: string; number: number; stats: GameStats }[]
     version: string
     items: Map<number, ItemInfo> | null
+    champions: Map<string, string> | null
     profiles: [TeamProfile, TeamProfile] | null
 }) {
     const { fmt, detail, event } = props
@@ -169,6 +170,7 @@ export function MatchPage(props: {
                 detail={detail}
                 version={props.version}
                 items={props.items}
+                champions={props.champions}
                 // In a Bo1 the match result is the game result, so no guessing needed.
                 winnerId={bestOf === 1 && state === 'completed' ? teams.find((t) => t.won)?.id : undefined}
             />
@@ -297,6 +299,7 @@ function GameBoards(props: {
     detail: MatchDetail
     version: string
     items: Map<number, ItemInfo> | null
+    champions: Map<string, string> | null
     winnerId?: string
 }) {
     if (!props.boards.length) return null
@@ -320,6 +323,7 @@ function GameBoards(props: {
                     teams={teams}
                     version={props.version}
                     items={props.items}
+                    champions={props.champions}
                     winnerId={props.boards.length === 1 ? props.winnerId : undefined}
                     open={b.number === openNumber}
                 />

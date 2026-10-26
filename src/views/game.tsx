@@ -18,6 +18,7 @@ export function GameBoard(props: {
     teams: Map<string, BoardTeam>
     version: string // Data Dragon version for champion and item icons
     items: Map<number, ItemInfo> | null // for item tooltips; same version
+    champions: Map<string, string> | null // for champion tooltips; same version
     winnerId?: string // the real result when known (Bo1); otherwise the stats' best guess is used
     open: boolean
 }) {
@@ -81,9 +82,25 @@ export function GameBoard(props: {
 
                 return (
                     <div class="gb-row">
-                        <Player p={b} version={props.version} items={props.items} side="l" />
+                        <Player
+                            p={b}
+                            version={props.version}
+                            items={props.items}
+                            champions={props.champions}
+                            side="l"
+                        />
                         <div class="gb-role">{roleLabel(b.role)}</div>
-                        {r ? <Player p={r} version={props.version} items={props.items} side="r" /> : <div />}
+                        {r ? (
+                            <Player
+                                p={r}
+                                version={props.version}
+                                items={props.items}
+                                champions={props.champions}
+                                side="r"
+                            />
+                        ) : (
+                            <div />
+                        )}
                     </div>
                 )
             })}
@@ -136,18 +153,32 @@ function Player(props: {
     p: PlayerLine
     version: string
     items: Map<number, ItemInfo> | null
+    champions: Map<string, string> | null
     side: 'l' | 'r'
 }) {
     const { p } = props
     const icon = logoUrl(championIcon(props.version, p.champion), 56)
+    const champ = props.champions?.get(p.champion) // display name
 
     return (
         <div class={`gb-p ${props.side}`}>
-            <span class="gb-champ" title={p.champion}>
+            <span class="gb-champ" tabindex={champ ? 0 : undefined} title={champ ? undefined : p.champion}>
                 {icon && (
-                    <img src={icon} width={28} height={28} alt={p.champion} loading="lazy" decoding="async" />
+                    <img
+                        src={icon}
+                        width={28}
+                        height={28}
+                        alt={champ ?? p.champion}
+                        loading="lazy"
+                        decoding="async"
+                    />
                 )}
                 <i>{p.level}</i>
+                {champ && (
+                    <span class="gb-tip gb-tip-ch" role="tooltip">
+                        {champ}
+                    </span>
+                )}
             </span>
             <span class="gb-pname">{p.name}</span>
             <span class="gb-items">

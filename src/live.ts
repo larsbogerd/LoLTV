@@ -296,12 +296,7 @@ interface RawItem {
 // the parsed fields. Some items lack text Riot never filled in (Infinity Edge has no passive).
 export async function getItems(version: string): Promise<Map<number, ItemInfo>> {
     return cached(`ddragon-items-${version}`, 7 * 24 * 3600, async () => {
-        const res = await fetch(`https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/item.json`, {
-            cf: { cacheTtl: 7 * 24 * 3600, cacheEverything: true },
-        })
-
-        if (!res.ok) throw new ApiError(`ddragon items returned ${res.status}`)
-        const { data } = await res.json<{ data: Record<string, RawItem> }>()
+        const data = await ddragonData<RawItem>(version, 'item')
 
         return new Map(
             Object.entries(data).map(([id, it]) => [
@@ -310,6 +305,26 @@ export async function getItems(version: string): Promise<Map<number, ItemInfo>> 
             ]),
         )
     })
+}
+
+// Display names by id: the feed only has the id, "KSante" for K'Sante.
+export async function getChampions(version: string): Promise<Map<string, string>> {
+    return cached(`ddragon-champions-${version}`, 7 * 24 * 3600, async () => {
+        const data = await ddragonData<{ name: string }>(version, 'champion')
+
+        return new Map(Object.entries(data).map(([id, c]) => [id, c.name]))
+    })
+}
+
+// A Data Dragon data file's "data" map. Files never change for a version, so the edge keeps them.
+async function ddragonData<T>(version: string, file: 'item' | 'champion'): Promise<Record<string, T>> {
+    const res = await fetch(`https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/${file}.json`, {
+        cf: { cacheTtl: 7 * 24 * 3600, cacheEverything: true },
+    })
+
+    if (!res.ok) throw new ApiError(`ddragon ${file}.json returned ${res.status}`)
+
+    return (await res.json<{ data: Record<string, T> }>()).data
 }
 
 // The description is Riot's own markup: <stats>a<br>b</stats>, then <passive>Name</passive> or
