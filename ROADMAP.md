@@ -18,12 +18,8 @@ Where LOLTV is going and what to watch. Continue from here in a new session.
     - not in the API: coach, player ages and nationalities. Those would need Liquipedia,
       which is rate-limited.
 - **Live match stats, round two.** The first version, a scoreboard per game on the match page,
-  lives in `src/live.ts` and `src/views/game.tsx`. Ideas next:
-    - **item info on hover:** name, cost and stats in a small styled tooltip, for players who
-      don't know items. Data Dragon's `item.json` has all of it: name, total gold, stats and
-      passive text. The file is 672 KB, so cache it for a day and put only the items on the
-      page into the HTML. CSS hover/focus can do it without JS. Items show only on desktop, so
-      the change doesn't affect phones. It is small enough for one commit.
+  lives in `src/live.ts` and `src/views/game.tsx`. Items have hover tooltips from Data Dragon's
+  `item.json` for the game's patch. Ideas next:
     - runes, skill order and summoner spells: `/details` has runes and skill order, but the
       board leaves both out to stay lean. An earlier version showed runes, and they were
       removed. Summoner spells aren't in the feed.

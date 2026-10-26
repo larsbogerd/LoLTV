@@ -302,7 +302,9 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 
 /* ---------- game scoreboards (match page) ---------- */
 .gboards { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
-.gb { background: var(--box); border-radius: var(--radius); overflow: hidden; }
+.gb { background: var(--box); border-radius: var(--radius); }
+.gb-sum { border-radius: var(--radius) var(--radius) 0 0; }
+.gb:not([open]) > .gb-sum { border-radius: var(--radius); }
 .gb-sum { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: var(--head); cursor: pointer; list-style: none; }
 .gb-sum::-webkit-details-marker { display: none; }
 .gb-sum::before { content: "▸"; color: var(--muted); }
@@ -340,6 +342,28 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 .gb-items { display: flex; gap: 2px; }
 .gb-items img, .gb-slot { width: 20px; height: 20px; border-radius: 2px; flex: none; }
 .gb-slot { background: #00000040; box-shadow: inset 0 0 0 1px #ffffff10; }
+/* Item tooltips: below the icon, growing toward the middle of the board. */
+.gb-it { position: relative; display: block; width: 20px; height: 20px; border-radius: 2px; outline: none; }
+.gb-it:hover img, .gb-it:focus-visible img { box-shadow: 0 0 0 1px var(--gold); }
+.gb-tip {
+  display: none; position: absolute; top: calc(100% + 6px); left: -6px; z-index: 20; width: 260px;
+  padding: 8px 10px; background: #14181d; border: 1px solid #c8aa6e66; border-radius: var(--radius);
+  box-shadow: 0 6px 18px #000000a0; font-size: 12px; line-height: 1.4; color: var(--dim); text-align: left; white-space: normal;
+}
+.gb-p.r .gb-tip { left: auto; right: -6px; }
+.gb-row:nth-last-child(-n + 2) .gb-tip { top: auto; bottom: calc(100% + 6px); }
+.gb-it:hover .gb-tip, .gb-it:focus-visible .gb-tip { display: block; }
+.gb-tip-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.gb-tip-head b { color: var(--text); font-size: 13px; }
+.gb-tip-gold { color: var(--gold); font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.gb-tip-gold::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 4px; border-radius: 50%; background: var(--gold); vertical-align: 1px; }
+.gb-tip-stats { display: block; margin-top: 5px; padding-top: 5px; border-top: 1px solid #ffffff14; }
+.gb-tip-stats > span { display: block; }
+.gb-tip-stats b { color: var(--text); }
+.gb-tip-fx { display: block; margin-top: 6px; }
+.gb-tip-fx b { color: var(--gold); }
+.gb-tip-cd { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.gb-tip-fx b.active::before { content: "Active: "; color: var(--dim); font-weight: 400; }
 .gb-champ { position: relative; width: 28px; height: 28px; border-radius: 3px; overflow: hidden; background: #ffffff10; }
 .gb-champ img { width: 28px; height: 28px; }
 .gb-champ i { position: absolute; right: 0; bottom: 0; background: #000000c0; color: #fff; font-style: normal; font-size: 9px; font-weight: 700; padding: 0 2px; line-height: 12px; }

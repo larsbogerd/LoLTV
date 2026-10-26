@@ -1,4 +1,4 @@
-import { championIcon, itemIcon, type GameStats, type PlayerLine } from '../live'
+import { championIcon, itemIcon, type GameStats, type ItemInfo, type PlayerLine } from '../live'
 import { logoUrl } from '../format'
 import { Logo, roleLabel } from './ui'
 
@@ -17,6 +17,7 @@ export function GameBoard(props: {
     stats: GameStats
     teams: Map<string, BoardTeam>
     version: string // Data Dragon version for champion and item icons
+    items: Map<number, ItemInfo> | null // for item tooltips; same version
     winnerId?: string // the real result when known (Bo1); otherwise the stats' best guess is used
     open: boolean
 }) {
@@ -81,9 +82,9 @@ export function GameBoard(props: {
 
                 return (
                     <div class="gb-row">
-                        <Player p={b} version={props.version} side="l" />
+                        <Player p={b} version={props.version} items={props.items} side="l" />
                         <div class="gb-role">{roleLabel(b.role)}</div>
-                        {r ? <Player p={r} version={props.version} side="r" /> : <div />}
+                        {r ? <Player p={r} version={props.version} items={props.items} side="r" /> : <div />}
                     </div>
                 )
             })}
@@ -132,7 +133,12 @@ function ColumnLabels(props: { side: 'l' | 'r' }) {
     )
 }
 
-function Player(props: { p: PlayerLine; version: string; side: 'l' | 'r' }) {
+function Player(props: {
+    p: PlayerLine
+    version: string
+    items: Map<number, ItemInfo> | null
+    side: 'l' | 'r'
+}) {
     const { p } = props
     const icon = logoUrl(championIcon(props.version, p.champion), 56)
 
@@ -149,18 +155,23 @@ function Player(props: { p: PlayerLine; version: string; side: 'l' | 'r' }) {
                 {/* Always six slots, so short builds line up with full ones. */}
                 {Array.from({ length: 6 }, (_, i) => {
                     const id = p.items[i]
+                    const info = id === undefined ? undefined : props.items?.get(id)
 
                     return id === undefined ? (
                         <span class="gb-slot" />
                     ) : (
-                        <img
-                            src={logoUrl(itemIcon(props.version, id), 40) ?? ''}
-                            width={20}
-                            height={20}
-                            alt=""
-                            loading="lazy"
-                            decoding="async"
-                        />
+                        // Focusable, so the tooltip also opens from the keyboard.
+                        <span class="gb-it" tabindex={info ? 0 : undefined}>
+                            <img
+                                src={logoUrl(itemIcon(props.version, id), 40) ?? ''}
+                                width={20}
+                                height={20}
+                                alt={info?.name ?? ''}
+                                loading="lazy"
+                                decoding="async"
+                            />
+                            {info && <ItemTip item={info} />}
+                        </span>
                     )
                 })}
             </span>
@@ -171,5 +182,39 @@ function Player(props: { p: PlayerLine; version: string; side: 'l' | 'r' }) {
                 {p.cs}
             </span>
         </div>
+    )
+}
+
+// Shown on hover or focus by CSS alone (items only show on desktop). Spans, as it sits in a span.
+function ItemTip(props: { item: ItemInfo }) {
+    const { item } = props
+
+    return (
+        <span class="gb-tip" role="tooltip">
+            <span class="gb-tip-head">
+                <b>{item.name}</b>
+                <span class="gb-tip-gold">{item.gold}</span>
+            </span>
+            {item.stats.length > 0 && (
+                <span class="gb-tip-stats">
+                    {item.stats.map((s) => {
+                        // "45 Attack Damage": the number stands out, like in game.
+                        const [, num, rest] = /^([\d.,%+-]+)\s+(.*)$/.exec(s) ?? ['', '', s]
+
+                        return (
+                            <span>
+                                {num && <b>{num}</b>} {rest}
+                            </span>
+                        )
+                    })}
+                </span>
+            )}
+            {item.effects.map((e) => (
+                <span class="gb-tip-fx">
+                    {e.name && <b class={e.kind}>{e.name}</b>}
+                    {e.cooldown && <span class="gb-tip-cd"> ({e.cooldown})</span>} {e.text}
+                </span>
+            ))}
+        </span>
     )
 }
