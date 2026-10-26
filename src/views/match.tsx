@@ -82,7 +82,22 @@ export function MatchPage(props: {
                 <Lineups lineups={[props.profiles[0].starters, props.profiles[1].starters]} />
             )}
 
-            <div class="split" style="margin-top:16px">
+            {live && (
+                // Phones while a game is on: the scoreboard below is the point, so games and streams
+                // shrink to a side-by-side pair (and the full split below is hidden).
+                <div class="mlivebar">
+                    <LiveGames detail={detail} boards={props.boards} />
+                    <section>
+                        <h2 class="h">Watch</h2>
+                        {detail.streams.length ? (
+                            <Streams streams={detail.streams} />
+                        ) : (
+                            <div class="empty">No English streams.</div>
+                        )}
+                    </section>
+                </div>
+            )}
+            <div class={live ? 'split mfull' : 'split'} style="margin-top:16px">
                 <section>
                     <h2 class="h">Games</h2>
                     {detail.games.length ? (
@@ -150,6 +165,41 @@ export function MatchPage(props: {
                 winnerId={bestOf === 1 && state === 'completed' ? teams.find((t) => t.won)?.id : undefined}
             />
         </Layout>
+    )
+}
+
+// Live view of the games: number and outcome only. Sides and VODs can wait until it's over;
+// winners are the scoreboard's best guess, same as the boards below.
+function LiveGames(props: { detail: MatchDetail; boards: { number: number; stats: GameStats }[] }) {
+    const teams = props.detail.details.match.teams
+
+    return (
+        <section>
+            <h2 class="h">Games</h2>
+            <div class="list">
+                {props.detail.games.map((g) => {
+                    const stats = props.boards.find((b) => b.number === g.number)?.stats
+                    const winnerId = stats?.winner ? stats[stats.winner].teamId : null
+                    const winner = winnerId ? teams.find((t) => t.id === winnerId) : null
+
+                    return (
+                        <div class="li">
+                            <span class="grow">Game {g.number}</span>
+                            {g.state === 'inProgress' ? (
+                                <span class="live">LIVE</span>
+                            ) : winner ? (
+                                <span class="lg-win" title={`${winner.name} won`}>
+                                    <Logo src={winner.image} size={16} />
+                                    {winner.code}
+                                </span>
+                            ) : (
+                                <span class="sub">{g.state === 'completed' ? 'Played' : '–'}</span>
+                            )}
+                        </div>
+                    )
+                })}
+            </div>
+        </section>
     )
 }
 
