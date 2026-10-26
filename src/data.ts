@@ -948,11 +948,16 @@ export interface Game {
     vod: string | null
 }
 
+export interface Stream {
+    provider: 'twitch' | 'youtube' | 'kick'
+    url: string
+}
+
 export interface MatchDetail {
     match: Match | null // schedule entry (has start time, stage, scores)
     details: RawEventDetails
     games: Game[]
-    streams: { label: string; url: string }[]
+    streams: Stream[]
     stakes: string | null // e.g. "1:2 · loser is out" (upcoming/live only)
 }
 
@@ -993,16 +998,15 @@ export async function getMatchDetail(id: string): Promise<MatchDetail | null> {
             }
         })
 
+    // Every English stream is a Riot channel, so the provider is all worth showing.
     const streams = details.streams
         .filter((s) => s.locale.startsWith('en'))
         .map((s) => {
             const url = mediaUrl(s.provider, s.parameter)
 
-            return url
-                ? { label: `${s.provider[0]!.toUpperCase()}${s.provider.slice(1)} · ${s.parameter}`, url }
-                : null
+            return url ? { provider: s.provider as Stream['provider'], url } : null
         })
-        .filter((s): s is { label: string; url: string } => s !== null)
+        .filter((s): s is Stream => s !== null)
 
     return { match, details, games, streams, stakes: match ? matchStakes(match, eventMatches) : null }
 }
