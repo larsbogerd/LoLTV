@@ -19,7 +19,7 @@ import {
     eventUrl,
 } from './data'
 import { makeFmt, safeTimeZone, type Fmt } from './format'
-import { ddragonVersion, getGameStats, getItems } from './live'
+import { ddragonVersion, getChampions, getGameStats, getItems } from './live'
 import { CSS } from './style'
 import { ErrorPage } from './views/error'
 import { EventPage } from './views/event'
@@ -168,8 +168,10 @@ app.get('/matches/:id/:slug?', async (c) => {
     )
     const patch = boards[0]?.stats.patch
     const version = patch ? await ddragonVersion(patch).catch(() => '') : ''
-    // Optional: without it the items just have no tooltips.
-    const items = version ? await getItems(version).catch(() => null) : null
+    // Optional: without them items and champions just have no tooltips.
+    const [items, champions] = version
+        ? await Promise.all([getItems(version).catch(() => null), getChampions(version).catch(() => null)])
+        : [null, null]
 
     return render(
         c,
@@ -180,6 +182,7 @@ app.get('/matches/:id/:slug?', async (c) => {
             boards={boards}
             version={version}
             items={items}
+            champions={champions}
             profiles={await teamProfiles(detail)}
         />,
     )

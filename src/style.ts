@@ -351,7 +351,8 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 }
 .gb-p.r .gb-tip { left: auto; right: -6px; }
 .gb-row:nth-last-child(-n + 2) .gb-tip { top: auto; bottom: calc(100% + 6px); }
-.gb-it:hover .gb-tip, .gb-it:focus-visible .gb-tip { display: block; }
+.gb-it:hover .gb-tip, .gb-it:focus-visible .gb-tip,
+.gb-champ:hover .gb-tip, .gb-champ:focus-visible .gb-tip { display: block; }
 .gb-tip-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .gb-tip-head b { color: var(--text); font-size: 13px; }
 .gb-tip-gold { color: var(--gold); font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -363,9 +364,13 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 .gb-tip-fx b { color: var(--gold); }
 .gb-tip-cd { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
 .gb-tip-fx b.active::before { content: "Active: "; color: var(--text); }
-.gb-champ { position: relative; width: 28px; height: 28px; border-radius: 3px; overflow: hidden; background: #ffffff10; }
-.gb-champ img { width: 28px; height: 28px; }
-.gb-champ i { position: absolute; right: 0; bottom: 0; background: #000000c0; color: #fff; font-style: normal; font-size: 9px; font-weight: 700; padding: 0 2px; line-height: 12px; }
+/* Champions: just the name, as a small label. */
+.gb-tip-ch { width: max-content; padding: 3px 8px; color: var(--text); font-weight: 600; white-space: nowrap; }
+/* No overflow: hidden, so the tooltip can leave the icon: the image and badge round themselves. */
+.gb-champ { position: relative; width: 28px; height: 28px; border-radius: 3px; background: #ffffff10; outline: none; }
+.gb-champ[tabindex]:hover, .gb-champ:focus-visible { box-shadow: 0 0 0 1px var(--gold); }
+.gb-champ img { display: block; width: 28px; height: 28px; border-radius: 3px; }
+.gb-champ i { position: absolute; right: 0; bottom: 0; background: #000000c0; color: #fff; font-style: normal; font-size: 9px; font-weight: 700; padding: 0 2px; line-height: 12px; border-radius: 3px 0 3px 0; }
 .gb-pname { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
 .gb-kda { text-align: center; white-space: nowrap; font-weight: 600; }
 .gb-cs { text-align: center; color: var(--dim); font-size: 12px; white-space: nowrap; }
@@ -479,7 +484,7 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 }
 /* Touch screens have no hover: a tap focuses the item and opens its tooltip. */
 @media (hover: none) {
-  .gb-it:focus .gb-tip { display: block; }
+  .gb-it:focus .gb-tip, .gb-champ:focus .gb-tip { display: block; }
 }
 `
 
