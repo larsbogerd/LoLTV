@@ -386,6 +386,8 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 .side-b { color: #6aa5ff; font-size: 11px; font-weight: 700; }
 .side-r { color: #ff7a7a; font-size: 11px; font-weight: 700; }
 .games a { color: var(--link); }
+.mlivebar { display: none; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 16px; align-items: start; }
+.lg-win { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
 
 /* ---------- responsive ---------- */
 @media (max-width: 1000px) {
@@ -437,6 +439,8 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
   .gb-teams, .gb-row { padding-left: 6px; padding-right: 6px; }
   .lu-desk { display: none; }
   .mform { display: none; }
+  .mlivebar { display: grid; }
+  .split.mfull { display: none; }
   .lu-rows { display: block; }
   .gb-teams { gap: 10px; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
   .gb-gold { display: none; }
