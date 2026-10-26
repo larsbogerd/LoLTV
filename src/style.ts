@@ -309,7 +309,9 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 .gb-sum::-webkit-details-marker { display: none; }
 .gb-sum::before { content: "▸"; color: var(--muted); }
 .gb[open] > .gb-sum::before { content: "▾"; }
-.gb-sum .sub { margin-left: auto; }
+.gb-full-btn { display: none; margin-left: auto; padding: 2px 0; background: none; border: 0; font: inherit; font-size: 12px; color: var(--link); cursor: pointer; }
+.gb-full-btn .to-compact, .gb-full .gb-full-btn .to-full { display: none; }
+.gb-full .gb-full-btn .to-compact { display: inline; }
 .gb-final { color: var(--dim); }
 .gb-sum .gb-win { margin-left: -4px; }
 .gb-teams { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto minmax(0, 1fr); align-items: center; gap: 18px; padding: 8px 12px; border-bottom: 1px solid var(--line); }
@@ -477,6 +479,37 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 
   .nav nav a { padding: 0 9px; font-size: 14px; }
   .brand { padding: 0 11px; font-size: 17px; }
+}
+/* Phones and tablets: the "Full board" toggle stacks both teams into one list (blue five, then
+   red five, marked by a side stripe) with items and CS back. Specific enough to beat the
+   mirrored layout above without reordering it. */
+@media (max-width: 1000px) {
+  .gb[open] .gb-full-btn { display: inline; }
+  .gb-full .gb-body { display: grid; }
+  .gb-full .gb-row { display: contents; }
+  .gb-full .gb-role, .gb-full .gb-cols { display: none; }
+  .gb-full .gb-p.l, .gb-full .gb-p.r {
+    grid-template-columns: 36px minmax(0, 1fr) 56px 44px;
+    grid-template-areas: "champ name kda cs" "champ items kda cs";
+    column-gap: 10px; row-gap: 4px; padding: 7px 12px; border-top: 1px solid var(--line);
+  }
+  .gb-full .gb-p.l { order: 1; box-shadow: inset 3px 0 0 #6aa5ff; }
+  .gb-full .gb-p.r { order: 2; box-shadow: inset 3px 0 0 #ff7a7a; }
+  .gb-full .gb-body > .gb-row:nth-child(2) > .gb-p.r { border-top-width: 6px; }
+  .gb-full .gb-champ { grid-area: champ; width: 36px; height: 36px; }
+  .gb-full .gb-champ img { width: 36px; height: 36px; }
+  .gb-full .gb-p .gb-pname { grid-area: name; text-align: left; }
+  .gb-full .gb-items { grid-area: items; display: flex !important; }
+  .gb-full .gb-kda { grid-area: kda; }
+  .gb-full .gb-cs { grid-area: cs; display: block; }
+  .gb-full .gb-cs::after { content: " cs"; color: var(--muted); }
+  /* Blue's five sit on top, red's at the bottom: open toward the rest of the board. */
+  .gb-full .gb-p.l .gb-tip { top: calc(100% + 6px); bottom: auto; }
+  .gb-full .gb-p.r .gb-tip { top: auto; bottom: calc(100% + 6px); left: -6px; right: auto; }
+}
+/* Touch screens have no hover: a tap focuses the item and opens its tooltip. */
+@media (hover: none) {
+  .gb-it:focus .gb-tip { display: block; }
 }
 `
 

@@ -104,7 +104,7 @@ export function MatchPage(props: {
             )}
             <div class={splitCls} style="margin-top:16px">
                 <section>
-                    <h2 class="h">Games</h2>
+                    <GamesHeading boards={props.boards} />
                     {detail.games.length ? (
                         <table class="stand games">
                             <thead>
@@ -176,6 +176,18 @@ export function MatchPage(props: {
     )
 }
 
+// The patch is the same for every game in a match, so it's said once, here.
+function GamesHeading(props: { boards: { stats: GameStats }[] }) {
+    const patches = [...new Set(props.boards.map((b) => b.stats.patch))]
+
+    return (
+        <h2 class="h">
+            Games
+            {patches.length > 0 && <small>Patch {patches.join(', ')}</small>}
+        </h2>
+    )
+}
+
 // Live view of the games: number and outcome only. Sides and VODs can wait until it's over;
 // winners are the scoreboard's best guess, same as the boards below.
 function LiveGames(props: { detail: MatchDetail; boards: { number: number; stats: GameStats }[] }) {
@@ -183,7 +195,7 @@ function LiveGames(props: { detail: MatchDetail; boards: { number: number; stats
 
     return (
         <section>
-            <h2 class="h">Games</h2>
+            <GamesHeading boards={props.boards} />
             <div class="list">
                 {props.detail.games.map((g) => {
                     const stats = props.boards.find((b) => b.number === g.number)?.stats

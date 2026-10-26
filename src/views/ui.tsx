@@ -7,6 +7,11 @@ import { CSS_VERSION } from '../style'
 // Reloads once (per tab session) when the cookie was missing or outdated.
 const TZ_SCRIPT = `(function(){try{var z=Intl.DateTimeFormat().resolvedOptions().timeZone;var m=document.cookie.match(/(?:^|; )tz=([^;]*)/);if(z&&(!m||decodeURIComponent(m[1])!==z)){document.cookie="tz="+encodeURIComponent(z)+"; path=/; max-age=31536000; samesite=lax";if(!sessionStorage.getItem("tzr")){sessionStorage.setItem("tzr","1");location.reload();}}}catch(e){}})();`
 
+// Phones: the scoreboards' "Full board" toggle. Runs in <head> so a remembered choice applies
+// before the first paint (live pages reload every minute). The click is kept from also
+// opening or closing the game, as the button sits in its <summary>.
+const BOARD_SCRIPT = `(function(){var h=document.documentElement;try{if(localStorage.getItem("fullboard")==="1")h.classList.add("gb-full")}catch(e){}document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest(".gb-full-btn");if(!b)return;e.preventDefault();var on=h.classList.toggle("gb-full");try{localStorage.setItem("fullboard",on?"1":"0")}catch(e){}})})();`
+
 // Keeps pages current without polling all day: reload every minute while something is live
 // (data-live), or once when the next match is due to start (data-next). Only while visible.
 const REFRESH_SCRIPT = `(function(){var d=document.body.dataset,t=Date.now(),due=d.next?Date.parse(d.next)+30000:0;if(!d.live&&!due)return;function r(){if(document.visibilityState!=="visible")return;var n=Date.now();if(d.live?n-t>60000:n>=due){try{sessionStorage.setItem("auto","1")}catch(e){}location.reload();}}setInterval(r,5000);document.addEventListener("visibilitychange",r);})();`
@@ -58,6 +63,7 @@ export function Layout(props: { title?: string; fmt: Fmt; watch?: Match[]; nav?:
                 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
                 <link rel="stylesheet" href={`/style.css?v=${CSS_VERSION}`} />
                 <script dangerouslySetInnerHTML={{ __html: TZ_SCRIPT }} />
+                <script dangerouslySetInnerHTML={{ __html: BOARD_SCRIPT }} />
             </head>
             <body data-live={live ? '1' : undefined} data-next={!live && next ? next : undefined}>
                 <header class="nav">

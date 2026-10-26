@@ -54,7 +54,11 @@ export function GameBoard(props: {
                 <b>Game {props.number}</b>
                 <span class="gb-state">{state}</span>
                 {winner && <span class="gb-win">{teams.get(g[winner].teamId)?.code ?? winner} win</span>}
-                <span class="sub">Patch {g.patch}</span>
+                {/* Phones only; see BOARD_SCRIPT in ui.tsx. The label says what a tap switches to. */}
+                <button type="button" class="gb-full-btn">
+                    <span class="to-full">Full board</span>
+                    <span class="to-compact">Compact</span>
+                </button>
             </summary>
             {/* Like the in-game scoreboard: kills in the centre, team gold beside them. */}
             <div class="gb-teams">
@@ -72,22 +76,29 @@ export function GameBoard(props: {
                 </span>
                 <TeamHead team={teams.get(g.red.teamId)} side="red" />
             </div>
-            <div class="gb-row gb-cols">
-                <ColumnLabels side="l" />
-                <div />
-                <ColumnLabels side="r" />
-            </div>
-            {g.blue.players.map((b, i) => {
-                const r = g.red.players[i]
+            {/* On phones with the full board on, the rows dissolve into one list: blue five, red five. */}
+            <div class="gb-body">
+                <div class="gb-row gb-cols">
+                    <ColumnLabels side="l" />
+                    <div />
+                    <ColumnLabels side="r" />
+                </div>
+                {g.blue.players.map((b, i) => {
+                    const r = g.red.players[i]
 
-                return (
-                    <div class="gb-row">
-                        <Player p={b} version={props.version} items={props.items} side="l" />
-                        <div class="gb-role">{roleLabel(b.role)}</div>
-                        {r ? <Player p={r} version={props.version} items={props.items} side="r" /> : <div />}
-                    </div>
-                )
-            })}
+                    return (
+                        <div class="gb-row">
+                            <Player p={b} version={props.version} items={props.items} side="l" />
+                            <div class="gb-role">{roleLabel(b.role)}</div>
+                            {r ? (
+                                <Player p={r} version={props.version} items={props.items} side="r" />
+                            ) : (
+                                <div />
+                            )}
+                        </div>
+                    )
+                })}
+            </div>
         </details>
     )
 }
