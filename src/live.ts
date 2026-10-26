@@ -276,3 +276,81 @@ export function championIcon(version: string, champion: string): string {
 export function itemIcon(version: string, item: number): string {
     return `https://ddragon.leagueoflegends.com/cdn/${version}/img/item/${item}.png`
 }
+
+// ---------- item tooltips (Data Dragon) ----------
+
+export interface ItemInfo {
+    name: string
+    gold: number // total cost, components included
+    stats: string[] // "45 Attack Damage"
+    effects: { kind: 'passive' | 'active' | ''; name: string; cooldown: string; text: string }[]
+}
+
+interface RawItem {
+    name: string
+    description: string
+    gold: { total: number }
+}
+
+// item.json is ~670 KB and never changes for a version, so the edge keeps it and we keep only
+// the parsed fields. Some items lack text Riot never filled in (Infinity Edge has no passive).
+export async function getItems(version: string): Promise<Map<number, ItemInfo>> {
+    return cached(`ddragon-items-${version}`, 7 * 24 * 3600, async () => {
+        const res = await fetch(`https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/item.json`, {
+            cf: { cacheTtl: 7 * 24 * 3600, cacheEverything: true },
+        })
+
+        if (!res.ok) throw new ApiError(`ddragon items returned ${res.status}`)
+        const { data } = await res.json<{ data: Record<string, RawItem> }>()
+
+        return new Map(
+            Object.entries(data).map(([id, it]) => [
+                Number(id),
+                { name: it.name, gold: it.gold.total, ...parseDescription(it.description) },
+            ]),
+        )
+    })
+}
+
+// The description is Riot's own markup: <stats>a<br>b</stats>, then <passive>Name</passive> or
+// <active>Name</active>, each followed by its text. Every other tag only colours words.
+function parseDescription(description: string): Pick<ItemInfo, 'stats' | 'effects'> {
+    const html = description.replace(/<\/?mainText>/g, '')
+    const stats = (/<stats>([\s\S]*?)<\/stats>/.exec(html)?.[1] ?? '')
+        .split(/<br\s*\/?>/)
+        .map(plain)
+        .filter(Boolean)
+
+    // [text before, kind, name, text, kind, name, text, ...]. A tag only starts an effect at the
+    // start of a line or sentence; mid-sentence it just names one ("Empower your next Cleave").
+    const parts = html
+        .replace(/<stats>[\s\S]*?<\/stats>/, '')
+        .split(/(?<=(?:^|<br\s*\/?>|<li>|<\/rules>|\.)\s*)<(passive|active)>([\s\S]*?)<\/\1>/)
+    const effects: ItemInfo['effects'] = []
+    const before = plain(parts[0] ?? '')
+
+    if (before) effects.push({ kind: '', name: '', cooldown: '', text: before })
+
+    for (let i = 1; i + 2 < parts.length; i += 3) {
+        // The text may open with a cooldown: "(8s, max 4 charges) Grant ...". "(0s)" means none.
+        const [, cooldown = '', text = ''] = /^(?:\(([^)]*)\)\s*)?(.*)$/.exec(plain(parts[i + 2]!)) ?? []
+
+        // Some items carry a bare "ACTIVE" heading before the real active: nothing to show.
+        if (!text) continue
+        effects.push({
+            kind: parts[i] as 'passive' | 'active',
+            name: plain(parts[i + 1]!).replace(/:$/, ''),
+            cooldown: /^0s\b|max 0 charges/.test(cooldown) ? '' : cooldown,
+            text,
+        })
+    }
+
+    return { stats, effects }
+}
+
+const plain = (html: string) =>
+    html
+        .replace(/<br\s*\/?>/g, ' ')
+        .replace(/<[^>]+>/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
