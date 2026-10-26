@@ -57,6 +57,7 @@ footer a { color: var(--dim); }
 
 .home { display: grid; grid-template-columns: 190px minmax(0, 1fr) 230px; gap: 16px; align-items: start; }
 .split { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+.split.solo { grid-template-columns: minmax(0, 1fr); }
 .col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 
 /* ---------- labels & headings ---------- */

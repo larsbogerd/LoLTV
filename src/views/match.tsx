@@ -48,6 +48,10 @@ export function MatchPage(props: {
     const live = state === 'inProgress'
     const title = `${a.name} vs. ${b.name}${event ? ` at ${event.name}` : ''}`
     const side = (t: Team) => (t.won === false ? 'side lost' : 'side')
+    // Form only matters before a match; once it's on, the sidebar is just streams.
+    const form = state === 'unstarted' ? props.profiles : null
+    const streams = state !== 'completed' && detail.streams.length > 0
+    const splitCls = ['split', live && 'mfull', !form && !streams && 'solo'].filter(Boolean).join(' ')
 
     return (
         <Layout fmt={fmt} title={title} watch={m ? [m] : []} nav="matches">
@@ -97,7 +101,7 @@ export function MatchPage(props: {
                     </section>
                 </div>
             )}
-            <div class={live ? 'split mfull' : 'split'} style="margin-top:16px">
+            <div class={splitCls} style="margin-top:16px">
                 <section>
                     <h2 class="h">Games</h2>
                     {detail.games.length ? (
@@ -143,19 +147,21 @@ export function MatchPage(props: {
                         <div class="empty">Games appear once the match is set.</div>
                     )}
                 </section>
-                <div class="col">
-                    {props.profiles && (
-                        <div class="mform">
-                            <Form profiles={props.profiles} matchId={detail.details.id} fmt={fmt} />
-                        </div>
-                    )}
-                    {state !== 'completed' && detail.streams.length > 0 && (
-                        <section>
-                            <h3 class="label">English streams</h3>
-                            <Streams streams={detail.streams} />
-                        </section>
-                    )}
-                </div>
+                {(form || streams) && (
+                    <div class="col">
+                        {form && (
+                            <div class="mform">
+                                <Form profiles={form} matchId={detail.details.id} fmt={fmt} />
+                            </div>
+                        )}
+                        {streams && (
+                            <section>
+                                <h2 class="h">Watch</h2>
+                                <Streams streams={detail.streams} />
+                            </section>
+                        )}
+                    </div>
+                )}
             </div>
             <GameBoards
                 boards={props.boards}
