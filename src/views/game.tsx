@@ -54,7 +54,6 @@ export function GameBoard(props: {
                 <b>Game {props.number}</b>
                 <span class="gb-state">{state}</span>
                 {winner && <span class="gb-win">{teams.get(g[winner].teamId)?.code ?? winner} win</span>}
-                <span class="sub">Patch {g.patch}</span>
             </summary>
             {/* Like the in-game scoreboard: kills in the centre, team gold beside them. */}
             <div class="gb-teams">
