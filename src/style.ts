@@ -309,7 +309,6 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 .gb-sum::-webkit-details-marker { display: none; }
 .gb-sum::before { content: "▸"; color: var(--muted); }
 .gb[open] > .gb-sum::before { content: "▾"; }
-.gb-sum .sub { margin-left: auto; }
 .gb-final { color: var(--dim); }
 .gb-sum .gb-win { margin-left: -4px; }
 .gb-teams { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto minmax(0, 1fr); align-items: center; gap: 18px; padding: 8px 12px; border-bottom: 1px solid var(--line); }
