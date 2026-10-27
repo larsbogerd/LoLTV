@@ -18,6 +18,10 @@ const REFRESH_SCRIPT = `(function(){var d=document.body.dataset,t=Date.now(),due
 // the user takes the feed's clock again. Clocks of paused games don't run.
 const CLOCK_SCRIPT = `(function(){var els=document.querySelectorAll("[data-clock]");if(!els.length)return;var auto=false,t0=Date.now();try{auto=sessionStorage.getItem("auto")==="1";sessionStorage.removeItem("auto")}catch(e){}els.forEach(function(el){var base=+el.dataset.clock,key="clock-"+el.dataset.game,run=!!el.dataset.running;try{var s=JSON.parse(sessionStorage.getItem(key)||"null");if(auto&&run&&s&&s.r)base=s.c+(t0-s.t)/1000;sessionStorage.setItem(key,JSON.stringify({c:base,t:t0,r:run}))}catch(e){}el.base=base});function fmt(s){s=Math.max(0,Math.floor(s));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}function tick(){var dt=(Date.now()-t0)/1000;els.forEach(function(el){el.textContent=fmt(el.dataset.running?el.base+dt:el.base)})}tick();setInterval(tick,1000)})();`
 
+// Game boards opened or closed by hand stay that way for the tab session, so the reload every
+// minute while live doesn't fold them back. Boards left alone follow the page: the live one open.
+const GAMES_SCRIPT = `(function(){document.querySelectorAll("details.gb[data-game]").forEach(function(d){var k="gb-open-"+d.dataset.game;try{var s=sessionStorage.getItem(k);if(s)d.open=s==="1"}catch(e){}d.querySelector("summary").addEventListener("click",function(){try{sessionStorage.setItem(k,d.open?"0":"1")}catch(e){}})})})();`
+
 // A match counts as live from its scheduled start: the API often flips to inProgress a few
 // minutes late. Matches that are hours overdue are ignored (postponed or stale data).
 function refreshHints(matches: Match[], now = Date.now()) {
@@ -90,6 +94,7 @@ export function Layout(props: { title?: string; fmt: Fmt; watch?: Match[]; nav?:
                         <span>Refreshes when the next match starts ({props.fmt.time(next)})</span>
                     )}
                 </footer>
+                <script dangerouslySetInnerHTML={{ __html: GAMES_SCRIPT }} />
                 <script dangerouslySetInnerHTML={{ __html: CLOCK_SCRIPT }} />
                 <script dangerouslySetInnerHTML={{ __html: REFRESH_SCRIPT }} />
             </body>
