@@ -155,6 +155,7 @@ a.li:hover { background: var(--box-hover); }
 .tm-team.lost .ts { color: var(--loss); }
 .tm-time { width: 42px; text-align: right; color: var(--dim); font-size: 12px; }
 .tm.completed .tm-time { color: var(--muted); font-size: 11px; }
+.tm-day { display: none; }
 
 /* ---------- event banner + tabs ---------- */
 .banner { border-radius: var(--radius); overflow: hidden; background: var(--box); }
@@ -440,6 +441,7 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
   .home .today .tm-label { display: none; }
   .home .today .tm { flex: 0 0 150px; background: var(--box); border-radius: var(--radius); flex-direction: column; align-items: stretch; gap: 3px; }
   .home .today .tm-time { order: -1; width: auto; text-align: left; font-size: 11px; }
+  .home .today .tm-day { display: inline; }
   /* only the league icon on the right, as in result rows */
   .mrow { grid-template-columns: 52px minmax(0, 1fr) 34px; }
   .mrow .mev { padding: 0 10px 0 0; justify-content: flex-end; }

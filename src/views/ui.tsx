@@ -245,7 +245,9 @@ export function ByDay(props: { matches: Match[]; fmt: Fmt; row: (m: Match) => Ch
 
 // ---------- compact "today's matches" box ----------
 
-export function CompactMatch(props: { m: Match; fmt: Fmt }) {
+// `day` labels a match that isn't today. It shows only on phones, where the group labels
+// of the homepage strip are hidden.
+export function CompactMatch(props: { m: Match; fmt: Fmt; day?: string }) {
     const { m, fmt } = props
     const showScore = m.state !== 'unstarted'
 
@@ -266,7 +268,10 @@ export function CompactMatch(props: { m: Match; fmt: Fmt }) {
                 ) : m.state === 'completed' ? (
                     'Final'
                 ) : (
-                    fmt.time(m.start)
+                    <>
+                        {props.day && <span class="tm-day">{props.day} </span>}
+                        {fmt.time(m.start)}
+                    </>
                 )}
             </div>
         </a>
