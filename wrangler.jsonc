@@ -3,5 +3,7 @@
     "name": "loltv",
     "main": "src/index.tsx",
     "compatibility_date": "2026-10-01",
+    // Home-screen icons and the web app manifest. Files here are served before the Worker runs.
+    "assets": { "directory": "./public" },
     "observability": { "enabled": true },
 }
