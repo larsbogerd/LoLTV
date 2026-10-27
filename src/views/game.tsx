@@ -50,7 +50,7 @@ export function GameBoard(props: {
         )
 
     return (
-        <details class="gb" open={props.open || undefined}>
+        <details class="gb" data-game={props.id} open={props.open || undefined}>
             <summary class="gb-sum">
                 <b>Game {props.number}</b>
                 <span class="gb-state">{state}</span>
