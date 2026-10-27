@@ -181,7 +181,9 @@ function TodayBox(props: { fmt: Fmt; matches: Match[] }) {
     return (
         <section>
             <h3 class="label">
-                {!live.length && !later.length && !done.length && next.length ? 'Upcoming matches' : "Today's matches"}{' '}
+                {!live.length && !later.length && !done.length && next.length
+                    ? 'Upcoming matches'
+                    : "Today's matches"}{' '}
                 <a href="/matches">All</a>
             </h3>
             <div class="list">
