@@ -2,13 +2,6 @@
 
 Where LOLTV is going and what to watch. Continue from here in a new session.
 
-## Next up
-
-- **Check live Bo3 and Bo5 scores** once Worlds Swiss has a live Bo3 (the first ones are on 25 and
-  26 Oct 2026). The series score (games won) should update after each game in match rows, the
-  Swiss bracket and the match page. If it updates only at the end, look at `getLive` instead of
-  the schedule.
-
 ## Later additions
 
 - **Team profiles, round two:** the pages exist (`/team/<id>/<slug>`). Ideas next:
