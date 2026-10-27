@@ -140,6 +140,7 @@ src/
   style.ts         all CSS
   views/           ui.tsx (shared components), home, lists (matches/results/events),
                    event, match, ranking
+public/            web app manifest and home-screen icons, served as static assets
 reference/         HLTV (good) and lolesports.com (bad) screenshots used as design reference
 ```
 

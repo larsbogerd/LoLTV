@@ -9,7 +9,9 @@ const TZ_SCRIPT = `(function(){try{var z=Intl.DateTimeFormat().resolvedOptions()
 
 // Keeps pages current without polling all day: reload every minute while something is live
 // (data-live), or once when the next match is due to start (data-next). Only while visible.
-const REFRESH_SCRIPT = `(function(){var d=document.body.dataset,t=Date.now(),due=d.next?Date.parse(d.next)+30000:0;if(!d.live&&!due)return;function r(){if(document.visibilityState!=="visible")return;var n=Date.now();if(d.live?n-t>60000:n>=due){try{sessionStorage.setItem("auto","1")}catch(e){}location.reload();}}setInterval(r,5000);document.addEventListener("visibilitychange",r);})();`
+// Opened from the home screen there's no reload button, so a page older than 10 minutes also
+// reloads when the app comes back to the front.
+const REFRESH_SCRIPT = `(function(){var d=document.body.dataset,t=Date.now(),due=d.next?Date.parse(d.next)+30000:0;if(matchMedia("(display-mode: standalone)").matches||navigator.standalone)document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible"&&Date.now()-t>600000)location.reload()});if(!d.live&&!due)return;function r(){if(document.visibilityState!=="visible")return;var n=Date.now();if(d.live?n-t>60000:n>=due){try{sessionStorage.setItem("auto","1")}catch(e){}location.reload();}}setInterval(r,5000);document.addEventListener("visibilitychange",r);})();`
 
 // Live game clocks count up every second. The feed's clock only arrives with a page load, so
 // after one of our own auto-refreshes the running clock stays canon (no jumps); a refresh by
@@ -56,6 +58,10 @@ export function Layout(props: { title?: string; fmt: Fmt; watch?: Match[]; nav?:
                     {props.title ? `${props.title} | LOLTV` : 'LOLTV — League of Legends matches & results'}
                 </title>
                 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+                <link rel="manifest" href="/manifest.webmanifest" />
+                <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+                <meta name="apple-mobile-web-app-title" content="LOLTV" />
+                <meta name="apple-mobile-web-app-status-bar-style" content="black" />
                 <link rel="stylesheet" href={`/style.css?v=${CSS_VERSION}`} />
                 <script dangerouslySetInnerHTML={{ __html: TZ_SCRIPT }} />
             </head>
