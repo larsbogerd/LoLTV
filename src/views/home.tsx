@@ -168,15 +168,16 @@ function TodayBox(props: { fmt: Fmt; matches: Match[] }) {
               )
             : []
 
-    const group = (label: string, ms: Match[]) =>
+    const group = (label: string, ms: Match[], day?: string) =>
         ms.length > 0 && (
             <>
                 <div class="li tm-label">{label}</div>
                 {ms.map((m) => (
-                    <CompactMatch m={m} fmt={fmt} />
+                    <CompactMatch m={m} fmt={fmt} day={day} />
                 ))}
             </>
         )
+    const nextLabel = nextDay && (fmt.relativeDay(fmt.dayKey(nextDay.start)) ?? fmt.shortDate(nextDay.start))
 
     return (
         <section>
@@ -189,8 +190,7 @@ function TodayBox(props: { fmt: Fmt; matches: Match[] }) {
             <div class="list">
                 {group('Live', live)}
                 {group('Upcoming', later)}
-                {nextDay &&
-                    group(fmt.relativeDay(fmt.dayKey(nextDay.start)) ?? fmt.shortDate(nextDay.start), next)}
+                {nextLabel && group(nextLabel, next, nextLabel)}
                 {group('Finished', done)}
                 {!live.length && !later.length && !next.length && !done.length && (
                     <div class="li sub">No matches today.</div>
