@@ -41,13 +41,15 @@ export function MatchPage(props: {
             tbd: t.code === 'TBD',
         }))
 
-    const [a, b] = [teams[0]!, teams[1]!]
-
     const state =
         m?.state ?? (raw.match.games.some((g) => g.state === 'inProgress') ? 'inProgress' : 'unstarted')
 
     const bestOf = m?.bestOf ?? raw.match.strategy.count
     const live = state === 'inProgress'
+    const [a, b] = live ? withFeedScore(teams, detail, props.boards, bestOf) : [teams[0]!, teams[1]!]
+    // Some of the score comes from the live feed, not Riot's results (yet).
+    const unofficial = a.score !== teams[0]!.score || b.score !== teams[1]!.score
+    const decided = a.won !== null
     const title = `${a.name} vs. ${b.name}${event ? ` at ${event.name}` : ''}`
     const side = (t: Team) => (t.won === false ? 'side lost' : 'side')
     // Form only matters before a match; once it's on, the sidebar is just streams.
@@ -64,10 +66,17 @@ export function MatchPage(props: {
                         {state === 'unstarted' ? (
                             <div class="big">{m ? fmt.time(m.start) : 'TBD'}</div>
                         ) : (
-                            <div class="big">
-                                <span class={a.won ? 'w' : live ? '' : 'l'}>{a.score ?? 0}</span>
+                            <div
+                                class="big"
+                                title={
+                                    unofficial
+                                        ? 'From the live game feed, not yet confirmed by Riot'
+                                        : undefined
+                                }
+                            >
+                                <span class={a.won ? 'w' : live && !decided ? '' : 'l'}>{a.score ?? 0}</span>
                                 <span style="color:var(--muted)"> - </span>
-                                <span class={b.won ? 'w' : live ? '' : 'l'}>{b.score ?? 0}</span>
+                                <span class={b.won ? 'w' : live && !decided ? '' : 'l'}>{b.score ?? 0}</span>
                             </div>
                         )}
                         {/* HLTV's centre stack: date, event, format, live state. */}
@@ -78,7 +87,7 @@ export function MatchPage(props: {
                             {m?.stage && ` · ${m.stage}`}
                         </a>
                         <div class="when">Best of {bestOf}</div>
-                        {live && <span class="live mlive">LIVE</span>}
+                        {live && !decided && <span class="live mlive">LIVE</span>}
                     </div>
                     <TeamSide t={b} cls={side(b)} />
                 </div>
@@ -124,9 +133,9 @@ export function MatchPage(props: {
                                         <td>{g.blue ? <TeamCell t={g.blue} /> : 'TBD'}</td>
                                         <td>{g.red ? <TeamCell t={g.red} /> : 'TBD'}</td>
                                         <td class="c">
-                                            {g.state === 'inProgress' ? (
+                                            {gameState(g, props.boards) === 'inProgress' ? (
                                                 <span class="live">LIVE</span>
-                                            ) : g.state === 'completed' ? (
+                                            ) : gameState(g, props.boards) === 'completed' ? (
                                                 'Played'
                                             ) : (
                                                 '–'
@@ -178,6 +187,48 @@ export function MatchPage(props: {
     )
 }
 
+// Riot's results trail the live feed by minutes: a game can be over on the feed (and on stream)
+// while the match still says it's in progress. Feed-finished games Riot hasn't counted yet are
+// added to the score with the feed's best-guess winner, until Riot's own numbers catch up.
+// Games are played in order, so Riot's total says which games it has counted: the first N.
+function withFeedScore(
+    teams: Team[],
+    detail: MatchDetail,
+    boards: { number: number; stats: GameStats }[],
+    bestOf: number,
+): [Team, Team] {
+    const [a, b] = [{ ...teams[0]! }, { ...teams[1]! }]
+    const counted = (a.score ?? 0) + (b.score ?? 0)
+    const codeOf = (teamId: string) => detail.details.match.teams.find((t) => t.id === teamId)?.code
+
+    for (const { number, stats } of boards) {
+        if (number <= counted || stats.state !== 'finished' || !stats.winner) continue
+        const code = codeOf(stats[stats.winner].teamId)
+        const t = code === a.code ? a : code === b.code ? b : null
+
+        if (t) t.score = (t.score ?? 0) + 1
+    }
+
+    const needed = Math.floor(bestOf / 2) + 1
+
+    if ((a.score ?? 0) >= needed || (b.score ?? 0) >= needed) {
+        a.won = (a.score ?? 0) >= needed
+        b.won = !a.won
+    }
+
+    return [a, b]
+}
+
+// A game's state, with the live feed's word on when it ended (Riot's lags behind).
+function gameState(
+    g: { number: number; state: string },
+    boards: { number: number; stats: GameStats }[],
+): string {
+    const finished = boards.find((b) => b.number === g.number)?.stats.state === 'finished'
+
+    return g.state === 'inProgress' && finished ? 'completed' : g.state
+}
+
 // The patch is the same for every game in a match, so it's said once, here.
 function GamesHeading(props: { boards: { stats: GameStats }[] }) {
     const patches = [...new Set(props.boards.map((b) => b.stats.patch))]
@@ -207,7 +258,7 @@ function LiveGames(props: { detail: MatchDetail; boards: { number: number; stats
                     return (
                         <div class="li">
                             <span class="grow">Game {g.number}</span>
-                            {g.state === 'inProgress' ? (
+                            {gameState(g, props.boards) === 'inProgress' ? (
                                 <span class="live">LIVE</span>
                             ) : winner ? (
                                 <span class="lg-win" title={`${winner.name} won`}>
@@ -215,7 +266,9 @@ function LiveGames(props: { detail: MatchDetail; boards: { number: number; stats
                                     {winner.code}
                                 </span>
                             ) : (
-                                <span class="sub">{g.state === 'completed' ? 'Played' : '–'}</span>
+                                <span class="sub">
+                                    {gameState(g, props.boards) === 'completed' ? 'Played' : '–'}
+                                </span>
                             )}
                         </div>
                     )
