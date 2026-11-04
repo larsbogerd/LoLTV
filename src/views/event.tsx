@@ -1,18 +1,31 @@
-import { matchUrl, teamUrl, type Event, type Match, type Stage, type SwissRow, type Team } from '../data'
+import {
+    matchUrl,
+    teamUrl,
+    type DoubleElim,
+    type Event,
+    type Match,
+    type Stage,
+    type SwissRow,
+    type Team,
+} from '../data'
 import { dateRange, type Fmt } from '../format'
 import { CompactMatch, EventBanner, Layout, Logo, Tag, TeamName } from './ui'
+
+// Next up / Latest results stay short; the full lists are one click away. Four fits a
+// whole knockout round (Worlds quarterfinals) without burying the bracket.
+const LIST_CAP = 4
 
 const STATUS_LABEL = { active: 'In progress', upcoming: 'Upcoming', done: 'Completed' }
 
 export function EventPage(props: { fmt: Fmt; event: Event; matches: Match[]; stages: Stage[] }) {
     const { fmt, event, matches, stages } = props
     const live = matches.filter((m) => m.state === 'inProgress')
-    const next = matches.filter((m) => m.state === 'unstarted').slice(0, 6)
+    const next = matches.filter((m) => m.state === 'unstarted').slice(0, Math.max(0, LIST_CAP - live.length))
 
     const recent = matches
         .filter((m) => m.state === 'completed')
         .reverse()
-        .slice(0, 6)
+        .slice(0, LIST_CAP)
 
     const stage = (live[0] ?? next[0] ?? recent[0])?.stage
     const teams = new Set(matches.flatMap((m) => m.teams.filter((t) => !t.tbd).map((t) => t.code)))
@@ -87,6 +100,8 @@ export function EventPage(props: { fmt: Fmt; event: Event; matches: Match[]; sta
 
 function StageBody(props: { stage: Stage; fmt: Fmt }) {
     const s = props.stage
+
+    if (s.kind === 'double' && s.double) return <DoubleStage d={s.double} fmt={props.fmt} />
 
     if (s.kind === 'swiss') return <SwissStage stage={s} fmt={props.fmt} />
 
@@ -311,40 +326,133 @@ function RankTable(props: { rows: NonNullable<Stage['tables']>[number]['rows'] }
 
 function Bracket(props: { columns: { name: string; matches: Match[] }[]; fmt: Fmt }) {
     const { fmt } = props
+    const single = props.columns.length === 1
 
     return (
-        <div class={`bracket ${props.columns.length === 1 ? 'single' : ''}`}>
+        <div class={`bracket ${single ? 'single' : ''}`}>
             {props.columns.map((col) => (
                 <div class="bcol">
-                    {props.columns.length > 1 && <h4>{col.name}</h4>}
+                    {!single && <h4>{col.name}</h4>}
                     {col.matches.map((m) => (
-                        <a class={`bm ${m.state}`} href={matchUrl(m)}>
-                            <div class="bd">
-                                <span>
-                                    {fmt.shortDate(m.start)} {fmt.time(m.start)}
-                                    {props.columns.length === 1 &&
-                                        m.stage &&
-                                        m.stage !== col.name &&
-                                        ` · ${m.stage}`}
-                                </span>
-                                {m.state === 'inProgress' ? (
-                                    <span class="live">LIVE</span>
-                                ) : (
-                                    <span>bo{m.bestOf}</span>
-                                )}
-                            </div>
-                            {m.teams.map((t) => (
-                                <div class={`bt ${t.won === true ? 'won' : t.won === false ? 'lost' : ''}`}>
-                                    <Logo src={t.image} size={16} />
-                                    <span class="tn">{t.name}</span>
-                                    <Tag t={t} />
-                                    {m.state !== 'unstarted' && <span class="ts">{t.score ?? 0}</span>}
-                                </div>
-                            ))}
-                        </a>
+                        <BracketMatch
+                            m={m}
+                            fmt={fmt}
+                            note={single && m.stage && m.stage !== col.name ? m.stage : undefined}
+                        />
                     ))}
                 </div>
             ))}
         </div>
     )
 }
+
+function BracketMatch(props: { m: Match; fmt: Fmt; note?: string; foot?: string }) {
+    const { m, fmt } = props
+
+    return (
+        <a class={`bm ${m.state}`} href={matchUrl(m)} data-id={m.id}>
+            <div class="bd">
+                <span>
+                    {fmt.shortDate(m.start)} {fmt.time(m.start)}
+                    {props.note && ` · ${props.note}`}
+                </span>
+                {m.state === 'inProgress' ? <span class="live">LIVE</span> : <span>bo{m.bestOf}</span>}
+            </div>
+            {m.teams.map((t) => (
+                <div class={`bt ${t.won === true ? 'won' : t.won === false ? 'lost' : ''}`}>
+                    <Logo src={t.image} size={16} />
+                    <span class="tn">{t.name}</span>
+                    <Tag t={t} />
+                    {m.state !== 'unstarted' && <span class="ts">{t.score ?? 0}</span>}
+                </div>
+            ))}
+            {props.foot && <div class="bf">{props.foot}</div>}
+        </a>
+    )
+}
+
+// ---------- double elimination ----------
+
+// Liquipedia-style. Upper bracket on top, lower below, rounds aligned from the right so the
+// two finals sit side by side and feed the grand final. Connector lines are drawn client-side.
+function DoubleStage(props: { d: DoubleElim; fmt: Fmt }) {
+    const { d, fmt } = props
+    const shift = Math.max(0, d.lower.length - d.upper.length)
+    const cols = Math.max(d.upper.length, d.lower.length) + (d.final ? 1 : 0)
+
+    return (
+        <div class="de-scroll">
+            <div class="de" style={`grid-template-columns: repeat(${cols}, minmax(170px, 1fr))`}>
+                {d.upper.map((r, i) => (
+                    <div class="de-cell" style={`grid-column: ${i + 1 + shift}; grid-row: 1`}>
+                        <h4>{r.name}</h4>
+                        <div class="de-ms">
+                            {r.matches.map((m) => (
+                                <BracketMatch m={m} fmt={fmt} foot={dropNote(d, m)} />
+                            ))}
+                        </div>
+                    </div>
+                ))}
+                {d.lower.map((r, i) => (
+                    <div class="de-cell" style={`grid-column: ${i + 1}; grid-row: 2`}>
+                        <h4>{r.name}</h4>
+                        <div class="de-ms">
+                            {r.matches.map((m) => (
+                                <BracketMatch m={m} fmt={fmt} />
+                            ))}
+                        </div>
+                    </div>
+                ))}
+                {d.final && (
+                    <div class="de-cell de-gf" style={`grid-column: ${cols}; grid-row: 1 / span 2`}>
+                        <h4>Grand final</h4>
+                        <div class="de-ms">
+                            <BracketMatch m={d.final} fmt={fmt} />
+                        </div>
+                    </div>
+                )}
+                <svg class="de-lines" data-from={JSON.stringify(d.from)} />
+            </div>
+            <script dangerouslySetInnerHTML={{ __html: DE_LINES }} />
+        </div>
+    )
+}
+
+// Upper-bracket losers get a second life; say where, since no line shows it.
+function dropNote(d: DoubleElim, m: Match): string {
+    const to = d.drop[m.id]
+    const loser = m.teams.find((t) => t.won === false)
+    const round = to && d.lower.find((r) => r.matches.some((x) => x.id === to))
+
+    return loser && round
+        ? `↓ ${loser.code} drops to ${round.name.toLowerCase()}`
+        : '↓ Loser drops to the lower bracket'
+}
+
+// Draws elbow lines from each match to the match its winner played next on the same side.
+const DE_LINES = `(() => {
+  const s = document.currentScript.previousElementSibling.querySelector('.de-lines')
+  const box = s.parentElement
+  const from = JSON.parse(s.dataset.from)
+  const draw = () => {
+    const o = box.getBoundingClientRect()
+    s.setAttribute('width', box.scrollWidth); s.setAttribute('height', box.scrollHeight)
+    let d = ''
+    for (const [to, srcs] of Object.entries(from)) {
+      const t = box.querySelector('[data-id="' + to + '"]')
+      for (const id of srcs) {
+        const f = box.querySelector('[data-id="' + id + '"]')
+        if (!t || !f) continue
+        const a = f.getBoundingClientRect(), b = t.getBoundingClientRect()
+        if (b.left <= a.right) continue
+        const ay = a.top + a.height / 2 - o.top, by = b.top + b.height / 2 - o.top
+        // only winners' paths: skip lines that would cross between the two tiers
+        if (Math.abs(ay - by) > box.clientHeight / 2 && !t.closest('.de-gf')) continue
+        const x1 = a.right - o.left, x2 = b.left - o.left, mx = x2 - 8
+        d += 'M' + x1 + ' ' + ay + 'H' + mx + 'V' + by + 'H' + x2
+      }
+    }
+    s.innerHTML = '<path d="' + d + '" />'
+  }
+  draw(); addEventListener('resize', draw)
+})()`
