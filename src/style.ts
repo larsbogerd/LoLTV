@@ -200,11 +200,9 @@ a.li:hover { background: var(--box-hover); }
 .mini .eliminated .rec { color: var(--loss); }
 
 /* ---------- brackets ---------- */
-.bracket { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px; }
-.bcol { flex: 1 0 170px; display: flex; flex-direction: column; gap: 8px; justify-content: space-around; }
-.bcol h4 { margin: 0; font-size: 11px; text-transform: uppercase; color: var(--muted); letter-spacing: .4px; }
-.bm { background: var(--box); border-radius: var(--radius); display: block; }
+.bm { background: var(--box); border-radius: var(--radius); display: block; position: relative; transition: opacity .12s; }
 .bm:hover { background: var(--box-hover); }
+.bm:focus-visible { outline: 1px solid var(--link); outline-offset: 1px; }
 .bm .bt { display: flex; align-items: center; gap: 7px; padding: 5px 8px; }
 .bm .bt + .bt { border-top: 1px solid var(--line); }
 .bm .bt .tn { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -212,17 +210,31 @@ a.li:hover { background: var(--box-hover); }
 .bm .bt.won .ts { color: var(--win); }
 .bm .bt.lost { color: var(--dim); }
 .bm .bt.lost .ts { color: var(--loss); }
+.bm .bt.tbd { color: var(--muted); padding-left: 10px; }
 .bm .bd { font-size: 10px; color: var(--muted); padding: 3px 8px 0; display: flex; justify-content: space-between; }
 .bm .bf { font-size: 10px; color: var(--muted); padding: 3px 8px 4px; border-top: 1px solid var(--line); }
-.de-scroll { overflow-x: auto; }
-.de { position: relative; display: grid; grid-template-rows: auto auto; column-gap: 24px; row-gap: 18px; min-width: 720px; }
-.de-cell { display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 1; }
-.de-cell h4 { margin: 0; font-size: 11px; text-transform: uppercase; color: var(--muted); letter-spacing: .4px; }
-.de-ms { flex: 1; display: flex; flex-direction: column; justify-content: space-around; gap: 8px; }
-.de-gf .de-ms { justify-content: center; }
-.de-lines { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
-.de-lines path { fill: none; stroke: #4a5563; stroke-width: 1.5; }
-.bracket.single .bcol { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+/* the champion: the one place gold appears in a bracket */
+.bm .bt.champ { box-shadow: inset 2px 0 0 var(--gold); }
+.bm .bt.champ .tn { color: var(--gold); font-weight: 600; }
+.mgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+
+.tree-scroll { overflow-x: auto; }
+.tree { position: relative; display: grid; column-gap: 26px; min-width: 640px; }
+.tree.tiered { grid-template-rows: auto auto; row-gap: 12px; min-width: 720px; }
+.tree-cell { display: flex; flex-direction: column; gap: 8px; position: relative; z-index: 1; padding: 0 0 4px; }
+.tree.tiered .tree-cell { padding: 10px 0; }
+.tree-cell h4 { margin: 0; font-size: 12px; font-weight: 600; color: var(--dim); }
+.tree-ms { flex: 1; display: flex; flex-direction: column; justify-content: space-around; gap: 8px; }
+.tree-cell.final .tree-ms { justify-content: center; }
+/* the lower bracket sits on a recessed band so the two tiers read apart */
+.tree-band { background: #ffffff05; border-top: 1px solid var(--line); border-radius: var(--radius); margin: 0 -10px; }
+.tree-lines { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.tree-lines path { fill: none; stroke: #4a5563; stroke-width: 1.5; }
+/* following a team's run */
+.tracing .bm:not(.on) { opacity: .35; }
+.tracing .tree-lines path:not(.on) { opacity: .25; }
+.tree-lines path.on { stroke: var(--accent); stroke-width: 2; }
+.tracing .bt.on { background: #3c7ac41f; }
 .stage + .stage { margin-top: 18px; }
 details.stage > summary { cursor: pointer; list-style: none; }
 details.stage > summary::-webkit-details-marker { display: none; }
