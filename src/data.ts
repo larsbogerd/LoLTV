@@ -546,11 +546,19 @@ export function swissBracket(matches: Match[]): SwissBracket | null {
     return { pools, outcomes }
 }
 
-// What a match decides, for upcoming and live matches. Swiss pools come from swissBracket();
-// knockout rounds from their stage name. Regional playoffs (often double elimination) have no
-// bracket structure in the API, so they get nothing rather than a wrong claim.
+// What a match decides (upcoming and live) or decided (finished, told with the result). Swiss
+// pools come from swissBracket(); knockout rounds from their stage name. Regional playoffs (often
+// double elimination) have no bracket structure in the API, so they get nothing rather than a
+// wrong claim.
 export function matchStakes(m: Match, eventMatches: Match[]): string | null {
-    if (m.state === 'completed' || m.teams.some((t) => t.tbd)) return null
+    if (m.teams.some((t) => t.tbd)) return null
+
+    const done = m.state === 'completed'
+    const w = m.teams.find((t) => t.won === true)?.code
+    const l = m.teams.find((t) => t.won === false)?.code
+
+    // A finished match without a known result: say nothing rather than a future tense.
+    if (done && (!w || !l)) return null
 
     if (isSwiss(m.stage)) {
         const pool = swissBracket(eventMatches.filter((x) => isSwiss(x.stage)))?.pools.find((p) =>
@@ -559,6 +567,10 @@ export function matchStakes(m: Match, eventMatches: Match[]): string | null {
 
         if (!pool) return null
         const record = `${pool.wins}:${pool.losses}`
+        const up = pool.wins === 2 ? 'advances' : `to ${pool.wins + 1}:${pool.losses}`
+        const down = pool.losses === 2 ? 'is out' : `to ${pool.wins}:${pool.losses + 1}`
+
+        if (done) return `${record} · ${w} ${up}, ${l} ${down}`
 
         if (pool.wins === 2 && pool.losses === 2) return `${record} · winner advances, loser is out`
 
@@ -566,12 +578,14 @@ export function matchStakes(m: Match, eventMatches: Match[]): string | null {
 
         if (pool.losses === 2) return `${record} · loser is out`
 
-        return `${record} · winner to ${pool.wins + 1}:${pool.losses}, loser to ${pool.wins}:${pool.losses + 1}`
+        return `${record} · winner ${up}, loser ${down}`
     }
 
-    if (/^finals?$/i.test(m.stage)) return 'Final · for the title'
+    if (/^finals?$/i.test(m.stage)) return done ? `Final · ${w} won the title` : 'Final · for the title'
 
-    if (/^(quarter|semi)finals?$/i.test(m.stage)) return `${m.stage.replace(/s$/, '')} · loser is out`
+    if (/^(quarter|semi)finals?$/i.test(m.stage)) {
+        return `${m.stage.replace(/s$/, '')} · ${done ? `${l} is out` : 'loser is out'}`
+    }
 
     return null
 }
@@ -1067,7 +1081,7 @@ export interface MatchDetail {
     details: RawEventDetails
     games: Game[]
     streams: Stream[]
-    stakes: string | null // e.g. "1:2 · loser is out" (upcoming/live only)
+    stakes: string | null // e.g. "1:2 · loser is out", or "1:2 · BLG to 2:2, HLE is out" once played
 }
 
 function mediaUrl(provider: string, parameter: string): string | null {
