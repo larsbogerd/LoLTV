@@ -120,7 +120,11 @@ function StageBody(props: { stage: Stage; fmt: Fmt }) {
         )
     }
 
-    return <Bracket columns={s.columns ?? []} fmt={props.fmt} />
+    const columns = s.columns ?? []
+
+    if (columns.length > 1) return <KnockoutStage columns={columns} fmt={props.fmt} />
+
+    return <MatchGrid matches={columns[0]?.matches ?? []} name={columns[0]?.name} fmt={props.fmt} />
 }
 
 function MatchWithDate(props: { m: Match; fmt: Fmt }) {
@@ -324,29 +328,22 @@ function RankTable(props: { rows: NonNullable<Stage['tables']>[number]['rows'] }
     )
 }
 
-function Bracket(props: { columns: { name: string; matches: Match[] }[]; fmt: Fmt }) {
-    const { fmt } = props
-    const single = props.columns.length === 1
-
+// Blocks that don't form a tree (gauntlets, unknown formats): a plain chronological grid.
+function MatchGrid(props: { matches: Match[]; name?: string; fmt: Fmt }) {
     return (
-        <div class={`bracket ${single ? 'single' : ''}`}>
-            {props.columns.map((col) => (
-                <div class="bcol">
-                    {!single && <h4>{col.name}</h4>}
-                    {col.matches.map((m) => (
-                        <BracketMatch
-                            m={m}
-                            fmt={fmt}
-                            note={single && m.stage && m.stage !== col.name ? m.stage : undefined}
-                        />
-                    ))}
-                </div>
+        <div class="mgrid">
+            {props.matches.map((m) => (
+                <BracketMatch
+                    m={m}
+                    fmt={props.fmt}
+                    note={m.stage && m.stage !== props.name ? m.stage : undefined}
+                />
             ))}
         </div>
     )
 }
 
-function BracketMatch(props: { m: Match; fmt: Fmt; note?: string; foot?: string }) {
+function BracketMatch(props: { m: Match; fmt: Fmt; note?: string; foot?: string; champion?: boolean }) {
     const { m, fmt } = props
 
     return (
@@ -358,64 +355,131 @@ function BracketMatch(props: { m: Match; fmt: Fmt; note?: string; foot?: string 
                 </span>
                 {m.state === 'inProgress' ? <span class="live">LIVE</span> : <span>bo{m.bestOf}</span>}
             </div>
-            {m.teams.map((t) => (
-                <div class={`bt ${t.won === true ? 'won' : t.won === false ? 'lost' : ''}`}>
-                    <Logo src={t.image} size={16} />
-                    <span class="tn">{t.name}</span>
-                    <Tag t={t} />
-                    {m.state !== 'unstarted' && <span class="ts">{t.score ?? 0}</span>}
-                </div>
-            ))}
+            {m.teams.map((t) =>
+                t.tbd ? (
+                    <div class="bt tbd">
+                        <span class="tn">TBD</span>
+                    </div>
+                ) : (
+                    <div
+                        class={`bt ${t.won === true ? 'won' : t.won === false ? 'lost' : ''} ${props.champion && t.won ? 'champ' : ''}`}
+                        data-team={t.code}
+                    >
+                        <Logo src={t.image} size={16} />
+                        <span class="tn">{t.name}</span>
+                        <Tag t={t} />
+                        {m.state !== 'unstarted' && <span class="ts">{t.score ?? 0}</span>}
+                    </div>
+                ),
+            )}
             {props.foot && <div class="bf">{props.foot}</div>}
         </a>
     )
 }
 
-// ---------- double elimination ----------
+// ---------- tree brackets ----------
 
-// Liquipedia-style. Upper bracket on top, lower below, rounds aligned from the right so the
-// two finals sit side by side and feed the grand final. Connector lines are drawn client-side.
+// One cell of the bracket grid: a round's header and its matches, stacked and centred so each
+// match sits between the two it was fed by.
+interface Cell {
+    name: string
+    matches: Match[]
+    col: number
+    row: string // grid-row value: "1", "2", "1 / span 2"
+    foot?: (m: Match) => string | undefined
+    final?: boolean
+}
+
+// Shared by single and double elimination: rounds on a grid, connector lines drawn client-side
+// from `from` (match id -> the matches its teams came from), and hovering a team traces its run.
+function TreeBracket(props: {
+    cells: Cell[]
+    cols: number
+    tiers: number
+    from: Record<string, string[]>
+    fmt: Fmt
+}) {
+    const { cells, cols, tiers, fmt } = props
+
+    return (
+        <div class="tree-scroll">
+            <div
+                class={`tree ${tiers > 1 ? 'tiered' : ''}`}
+                style={`grid-template-columns: repeat(${cols}, minmax(176px, 1fr))`}
+            >
+                {tiers > 1 && <div class="tree-band" style={`grid-column: 1 / ${props.cols}; grid-row: 2`} />}
+                {cells.map((c) => (
+                    <div
+                        class={`tree-cell ${c.final ? 'final' : ''}`}
+                        style={`grid-column: ${c.col}; grid-row: ${c.row}`}
+                    >
+                        <h4>{c.name}</h4>
+                        <div class="tree-ms">
+                            {c.matches.map((m) => (
+                                <BracketMatch
+                                    m={m}
+                                    fmt={fmt}
+                                    foot={c.foot?.(m)}
+                                    champion={c.final && m.state === 'completed'}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                ))}
+                <svg class="tree-lines" aria-hidden="true" data-from={JSON.stringify(props.from)} />
+            </div>
+            <script dangerouslySetInnerHTML={{ __html: TREE_SCRIPT }} />
+        </div>
+    )
+}
+
+// Single elimination (Worlds knockouts): each round halves, so match j is fed by 2j and 2j+1.
+function KnockoutStage(props: { columns: { name: string; matches: Match[] }[]; fmt: Fmt }) {
+    const { columns } = props
+    const from: Record<string, string[]> = {}
+
+    columns.forEach((c, i) =>
+        c.matches.forEach((m, j) => {
+            const prev = columns[i - 1]?.matches
+
+            if (prev)
+                from[m.id] = [prev[2 * j], prev[2 * j + 1]].filter((x): x is Match => !!x).map((x) => x.id)
+        }),
+    )
+
+    const cells = columns.map((c, i) => ({
+        name: c.name,
+        matches: c.matches,
+        col: i + 1,
+        row: '1',
+        final: i === columns.length - 1 && c.matches.length === 1,
+    }))
+
+    return <TreeBracket cells={cells} cols={columns.length} tiers={1} from={from} fmt={props.fmt} />
+}
+
+// Double elimination, Liquipedia-style: upper bracket on top, lower below, rounds aligned from
+// the right so the two finals sit side by side and feed the grand final.
 function DoubleStage(props: { d: DoubleElim; fmt: Fmt }) {
-    const { d, fmt } = props
+    const { d } = props
     const shift = Math.max(0, d.lower.length - d.upper.length)
     const cols = Math.max(d.upper.length, d.lower.length) + (d.final ? 1 : 0)
 
-    return (
-        <div class="de-scroll">
-            <div class="de" style={`grid-template-columns: repeat(${cols}, minmax(170px, 1fr))`}>
-                {d.upper.map((r, i) => (
-                    <div class="de-cell" style={`grid-column: ${i + 1 + shift}; grid-row: 1`}>
-                        <h4>{r.name}</h4>
-                        <div class="de-ms">
-                            {r.matches.map((m) => (
-                                <BracketMatch m={m} fmt={fmt} foot={dropNote(d, m)} />
-                            ))}
-                        </div>
-                    </div>
-                ))}
-                {d.lower.map((r, i) => (
-                    <div class="de-cell" style={`grid-column: ${i + 1}; grid-row: 2`}>
-                        <h4>{r.name}</h4>
-                        <div class="de-ms">
-                            {r.matches.map((m) => (
-                                <BracketMatch m={m} fmt={fmt} />
-                            ))}
-                        </div>
-                    </div>
-                ))}
-                {d.final && (
-                    <div class="de-cell de-gf" style={`grid-column: ${cols}; grid-row: 1 / span 2`}>
-                        <h4>Grand final</h4>
-                        <div class="de-ms">
-                            <BracketMatch m={d.final} fmt={fmt} />
-                        </div>
-                    </div>
-                )}
-                <svg class="de-lines" data-from={JSON.stringify(d.from)} />
-            </div>
-            <script dangerouslySetInnerHTML={{ __html: DE_LINES }} />
-        </div>
-    )
+    const cells: Cell[] = [
+        ...d.upper.map((r, i) => ({
+            name: r.name,
+            matches: r.matches,
+            col: i + 1 + shift,
+            row: '1',
+            foot: (m: Match) => dropNote(d, m),
+        })),
+        ...d.lower.map((r, i) => ({ name: r.name, matches: r.matches, col: i + 1, row: '2' })),
+        ...(d.final
+            ? [{ name: 'Grand final', matches: [d.final], col: cols, row: '1 / span 2', final: true }]
+            : []),
+    ]
+
+    return <TreeBracket cells={cells} cols={cols} tiers={2} from={d.from} fmt={props.fmt} />
 }
 
 // Upper-bracket losers get a second life; say where, since no line shows it.
@@ -429,15 +493,18 @@ function dropNote(d: DoubleElim, m: Match): string {
         : '↓ Loser drops to the lower bracket'
 }
 
-// Draws elbow lines from each match to the match its winner played next on the same side.
-const DE_LINES = `(() => {
-  const s = document.currentScript.previousElementSibling.querySelector('.de-lines')
-  const box = s.parentElement
-  const from = JSON.parse(s.dataset.from)
+// Draws elbow lines from each match to the next match on the same side, tagging each line with
+// the team(s) that travelled it. Hovering a team row lights up every card and line of its run.
+const TREE_SCRIPT = `(() => {
+  const box = document.currentScript.previousElementSibling
+  const svg = box.querySelector('.tree-lines')
+  const from = JSON.parse(svg.dataset.from)
+  const teams = (el) => [...el.querySelectorAll('[data-team]')].map((t) => t.dataset.team)
   const draw = () => {
+    if (!box.offsetParent) return
     const o = box.getBoundingClientRect()
-    s.setAttribute('width', box.scrollWidth); s.setAttribute('height', box.scrollHeight)
-    let d = ''
+    svg.setAttribute('width', box.scrollWidth); svg.setAttribute('height', box.scrollHeight)
+    let out = ''
     for (const [to, srcs] of Object.entries(from)) {
       const t = box.querySelector('[data-id="' + to + '"]')
       for (const id of srcs) {
@@ -446,13 +513,26 @@ const DE_LINES = `(() => {
         const a = f.getBoundingClientRect(), b = t.getBoundingClientRect()
         if (b.left <= a.right) continue
         const ay = a.top + a.height / 2 - o.top, by = b.top + b.height / 2 - o.top
-        // only winners' paths: skip lines that would cross between the two tiers
-        if (Math.abs(ay - by) > box.clientHeight / 2 && !t.closest('.de-gf')) continue
-        const x1 = a.right - o.left, x2 = b.left - o.left, mx = x2 - 8
-        d += 'M' + x1 + ' ' + ay + 'H' + mx + 'V' + by + 'H' + x2
+        // an upper-bracket loser's drop isn't drawn; the card's footnote says where it went
+        if (Math.abs(ay - by) > box.clientHeight / 2 && !t.closest('.final')) continue
+        const x1 = a.right - o.left, x2 = b.left - o.left, mx = x2 - 10
+        const both = teams(t).filter((c) => teams(f).includes(c))
+        out += '<path data-teams="' + both.join(' ') + '" d="M' + x1 + ' ' + ay + 'H' + mx + 'V' + by + 'H' + x2 + '" />'
       }
     }
-    s.innerHTML = '<path d="' + d + '" />'
+    svg.innerHTML = out
   }
+  const trace = (code) => {
+    box.classList.toggle('tracing', !!code)
+    for (const el of box.querySelectorAll('.on')) el.classList.remove('on')
+    if (!code) return
+    for (const row of box.querySelectorAll('[data-team="' + code + '"]')) {
+      row.classList.add('on'); row.closest('.bm').classList.add('on')
+    }
+    for (const p of svg.querySelectorAll('path')) if (p.dataset.teams.split(' ').includes(code)) p.classList.add('on')
+  }
+  box.addEventListener('mouseover', (e) => trace(e.target.closest('[data-team]')?.dataset.team))
+  box.addEventListener('mouseleave', () => trace(null))
+  box.closest('details')?.addEventListener('toggle', draw)
   draw(); addEventListener('resize', draw)
 })()`
