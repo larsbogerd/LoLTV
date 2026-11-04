@@ -213,6 +213,15 @@ a.li:hover { background: var(--box-hover); }
 .bm .bt.lost { color: var(--dim); }
 .bm .bt.lost .ts { color: var(--loss); }
 .bm .bd { font-size: 10px; color: var(--muted); padding: 3px 8px 0; display: flex; justify-content: space-between; }
+.bm .bf { font-size: 10px; color: var(--muted); padding: 3px 8px 4px; border-top: 1px solid var(--line); }
+.de-scroll { overflow-x: auto; }
+.de { position: relative; display: grid; grid-template-rows: auto auto; column-gap: 24px; row-gap: 18px; min-width: 720px; }
+.de-cell { display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 1; }
+.de-cell h4 { margin: 0; font-size: 11px; text-transform: uppercase; color: var(--muted); letter-spacing: .4px; }
+.de-ms { flex: 1; display: flex; flex-direction: column; justify-content: space-around; gap: 8px; }
+.de-gf .de-ms { justify-content: center; }
+.de-lines { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.de-lines path { fill: none; stroke: #4a5563; stroke-width: 1.5; }
 .bracket.single .bcol { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
 .stage + .stage { margin-top: 18px; }
 details.stage > summary { cursor: pointer; list-style: none; }
