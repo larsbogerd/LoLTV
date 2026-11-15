@@ -391,6 +391,7 @@ ${ROLE_CSS}
 .tr-text b { color: var(--text); font-weight: 600; }
 .tr-text a:hover b { color: var(--link); }
 .tr-src { color: var(--link); font-size: 11px; }
+.tr-src svg { display: none; width: 14px; height: 14px; }
 .li.trm { gap: 6px; }
 .trm .tr-side.none { width: 20px; font-size: 8px; }
 .note a { color: var(--dim); text-decoration: underline; }
@@ -563,10 +564,13 @@ ${ROLE_CSS}
   .tp-name { font-size: 11px; }
   .tp-fold:not(:checked) ~ .tp-matches .fold-phone { display: none; }
   .tp-foldbar.phone { display: block; }
-  .tr { grid-template-columns: 30px 34px 10px 34px 14px minmax(0, 1fr); gap: 6px; padding: 6px 8px; }
+  .tr { grid-template-columns: 30px 34px 10px 34px 14px minmax(0, 1fr) auto; gap: 6px; padding: 6px 0 6px 8px; }
   .tr .role { width: 14px; height: 14px; }
   .tr-text { font-size: 13px; }
-  .tr-src { display: none; }
+  /* No room for the word: an icon, with a tap area the row's height. */
+  .tr-src { display: flex; align-items: center; justify-content: center; align-self: stretch; width: 36px; margin: -6px 0; color: var(--muted); }
+  .tr-src span { display: none; }
+  .tr-src svg { display: block; }
   .tp-row { grid-template-columns: minmax(0, 1fr) 46px minmax(0, 1fr) 48px; }
   .tp-date { grid-column: 1 / -1; }
   .gb-teams, .gb-row { padding-left: 6px; padding-right: 6px; }
