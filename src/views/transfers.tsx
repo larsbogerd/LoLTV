@@ -101,12 +101,40 @@ function MoveRow(props: { m: TeamMove }) {
             <span class="tr-text">
                 <Sentence m={m} />
             </span>
-            {m.source && (
-                <a class="tr-src" href={m.source} target="_blank" rel="noopener nofollow">
-                    Source
-                </a>
-            )}
+            <SourceLink url={m.source} />
         </div>
+    )
+}
+
+function hostOf(url?: string | null): string | null {
+    try {
+        return url ? new URL(url).hostname.replace(/^www\./, '') : null
+    } catch {
+        return null
+    }
+}
+
+// The announcement behind a move: the word on desktop, an icon on a phone. Where it goes
+// (x.com, a team's site) is in the tooltip: sources are too mixed for one brand icon.
+function SourceLink(props: { url?: string | null }) {
+    const host = hostOf(props.url)
+
+    if (!props.url || !host) return null
+
+    return (
+        <a
+            class="tr-src"
+            href={props.url}
+            target="_blank"
+            rel="noopener nofollow"
+            title={`Source: ${host}`}
+            aria-label={`Source: ${host}`}
+        >
+            <span>Source</span>
+            <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6">
+                <path d="M9 2.5h4.5V7M13.5 2.5 7 9M11.5 9.5v3.5a.5.5 0 0 1-.5.5H3a.5.5 0 0 1-.5-.5V5a.5.5 0 0 1 .5-.5h3.5" />
+            </svg>
+        </a>
     )
 }
 
