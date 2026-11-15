@@ -1,4 +1,3 @@
-import type { Child } from 'hono/jsx'
 import {
     teamUrl,
     activeEvents,
@@ -43,11 +42,9 @@ export function HomePage(props: {
     last: LastMajor | null // only without a featured event
     schedule: Match[]
     ranking: Ranking | null
-    now?: Date // previews render another day
-    notice?: Child
 }) {
     const { fmt, featured, last } = props
-    const now = props.now ?? new Date()
+    const now = new Date()
     const fm = props.featuredMatches
     const centre = featured ? fm : props.schedule
     const live = centre.filter((m) => m.state === 'inProgress')
@@ -84,7 +81,6 @@ export function HomePage(props: {
 
     return (
         <Layout fmt={fmt} title="Home" watch={[...props.schedule, ...fm]} nav="home">
-            {props.notice}
             <div class="home">
                 <div class="col left">
                     {props.ranking && (
@@ -150,10 +146,8 @@ export function HomePage(props: {
                 </div>
 
                 <div class="col">
-                    {featured && (
-                        <EventBanner event={featured} fmt={fmt} matches={fm} sub={stage} now={now} />
-                    )}
-                    {last && leads && <MajorWinner last={last} fmt={fmt} now={now} />}
+                    {featured && <EventBanner event={featured} fmt={fmt} matches={fm} sub={stage} />}
+                    {last && leads && <MajorWinner last={last} fmt={fmt} />}
                     {onBreak && (
                         <section>
                             <h2 class="h">
@@ -224,12 +218,12 @@ export function HomePage(props: {
 
 // The last major in the centre column: its banner and the two finalists. The rest of the
 // placements and the bracket are a click away.
-function MajorWinner(props: { last: LastMajor; fmt: Fmt; now: Date }) {
+function MajorWinner(props: { last: LastMajor; fmt: Fmt }) {
     const { event, matches, places } = props.last
 
     return (
         <section>
-            <EventBanner event={event} fmt={props.fmt} matches={matches} now={props.now} />
+            <EventBanner event={event} fmt={props.fmt} matches={matches} />
             {places.length > 0 && (
                 <>
                     <div class="places">

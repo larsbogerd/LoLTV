@@ -98,9 +98,6 @@ Where LOLTV is going and what to watch. Continue from here in a new session.
       finalists lead, above the next events with their dates and the last four results. The
       winner also leads for 14 days after any major.
 
-    This is a first version. `/preview/home/december` and `/preview/home/january` show the break
-    and the restart with made-up 2027 events and matches (`src/preview.ts`), in local dev only.
-
 - **Finished events:** an event is finished once its last match is played, even when the API's
   end date is a day later. Its overview then shows the final placements, read from the last
   real bracket, in place of the latest results. The `/events` list has no matches to look at,
