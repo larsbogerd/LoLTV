@@ -308,10 +308,9 @@ export function EventBanner(props: {
     matches?: Match[]
     tab?: 'overview' | 'matches' | 'results'
     sub?: string
-    now?: Date
 }) {
     const { event: e, fmt } = props
-    const status = eventStatus(e, props.now, props.matches)
+    const status = eventStatus(e, new Date(), props.matches)
     const dates = `${fmt.shortDate(`${e.startDate}T12:00:00Z`)} – ${fmt.shortDate(`${e.endDate}T12:00:00Z`)}`
 
     const tab = (key: string, href: string, label: string) => (
