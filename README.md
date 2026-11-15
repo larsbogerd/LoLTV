@@ -125,9 +125,9 @@ A team page combines five sources:
 - Leaguepedia: the roster (starters, bench, coaches, contracts) and the team's roster moves
 - the live-stats feed: who played the team's latest game
 
-The roster is who is under contract according to Leaguepedia: one starter per role and the
-head coach as cards, everyone else in the roster list. A role or the head coach slot with nobody
-in it shows as "Open". This is right all winter, when the last game played still shows last
+The roster is who is under contract according to Leaguepedia: one starter per role as cards,
+the head coach as a line under the team's numbers (as on HLTV), everyone else in the roster
+list. A role or the head coach line with nobody in it shows as "Open". This is right all winter, when the last game played still shows last
 season's five.
 
 The live-stats feed remains for two cases. When Leaguepedia lists two starters for one role,

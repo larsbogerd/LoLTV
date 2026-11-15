@@ -342,8 +342,8 @@ a.tp-event:hover { color: var(--link); }
 .place.p2 { color: #c0c7d1; }
 .place.p3 { color: #c98a5a; }
 a.team-link:hover, a.sw-ot:hover { color: var(--link); }
-/* with a head coach card: Leaguepedia rosters only */
-.tp-lineup.six { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.tp-stats .tp-coach { font-weight: 400; color: var(--dim); text-align: right; }
+.tp-coach em { font-style: normal; font-weight: 700; color: var(--text); }
 .tp-player.open { opacity: .45; }
 .tp-player.open b { font-weight: 400; font-style: italic; }
 .tp-role { flex: none; width: 62px; color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
@@ -530,7 +530,6 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
   .mhead-ev { flex-wrap: wrap; font-size: 12px; }
   .tp-lineup { gap: 3px; padding: 10px 8px 0; }
   .tp-name { font-size: 11px; }
-  .tp-lineup.six { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 8px; }
   .tr { grid-template-columns: 30px 34px 10px 34px minmax(0, 1fr); gap: 6px; padding: 6px 8px; }
   .tr-text { font-size: 13px; }
   .tr-src { display: none; }
