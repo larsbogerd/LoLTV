@@ -99,10 +99,13 @@ export function EventsPage(props: { fmt: Fmt; events: Event[] }) {
         .filter((e) => eventStatus(e, now) === 'upcoming')
         .sort((a, b) => a.startDate.localeCompare(b.startDate))
 
-    const cutoff = new Date(now.getTime() - 60 * 86400e3).toISOString().slice(0, 10)
+    const daysAgo = (days: number) => new Date(now.getTime() - days * 86400e3).toISOString().slice(0, 10)
+    const recently = daysAgo(60)
 
-    const recent = props.events
-        .filter((e) => eventStatus(e, now) === 'finished' && e.endDate >= cutoff)
+    // A year back, newest first. Without the older ones a league's last split is unreachable
+    // from here all off-season: LCP and LCK end theirs weeks before the others.
+    const finished = props.events
+        .filter((e) => eventStatus(e, now) === 'finished' && e.endDate >= daysAgo(365))
         .sort((a, b) => b.endDate.localeCompare(a.endDate))
 
     const table = (title: string, events: Event[]) =>
@@ -121,7 +124,14 @@ export function EventsPage(props: { fmt: Fmt; events: Event[] }) {
         <Layout fmt={fmt} title="Events" nav="events">
             {table('Ongoing events', ongoing)}
             {table('Upcoming events', upcoming)}
-            {table('Recently finished', recent)}
+            {table(
+                'Recently finished',
+                finished.filter((e) => e.endDate >= recently),
+            )}
+            {table(
+                'Earlier',
+                finished.filter((e) => e.endDate < recently),
+            )}
         </Layout>
     )
 }
