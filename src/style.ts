@@ -1,6 +1,27 @@
 // All styling in one place. Deliberately HLTV-like: dark slate boxes, small type, fixed max
 // width, nothing that scales with the viewport.
 
+// Riot's position icons from the League client (via raw.communitydragon.org, the
+// rcp-fe-lol-static-assets plugin, svg/position-*.svg), without their colours. Used as CSS
+// masks, so an icon takes the text colour and the page loads nothing extra. The half-opaque
+// shape is the rest of the map, which is what makes top, mid and bot readable.
+const ROLE_ICONS: Record<string, string> = {
+    top: "<path opacity='.5' fill-rule='evenodd' d='M21,14H14v7h7V14Zm5-3V26L11.014,26l-4,4H30V7.016Z'/><polygon points='4 4 4.003 28.045 9 23 9 9 23 9 28.045 4.003 4 4'/>",
+    jungle: "<path fill-rule='evenodd' d='M25,3c-2.128,3.3-5.147,6.851-6.966,11.469A42.373,42.373,0,0,1,20,20a27.7,27.7,0,0,1,1-3C21,12.023,22.856,8.277,25,3ZM13,20c-1.488-4.487-4.76-6.966-9-9,3.868,3.136,4.422,7.52,5,12l3.743,3.312C14.215,27.917,16.527,30.451,17,31c4.555-9.445-3.366-20.8-8-28C11.67,9.573,13.717,13.342,13,20Zm8,5a15.271,15.271,0,0,1,0,2l4-4c0.578-4.48,1.132-8.864,5-12C24.712,13.537,22.134,18.854,21,25Z'/>",
+    mid: "<path opacity='.5' fill-rule='evenodd' d='M30,12.968l-4.008,4L26,26H17l-4,4H30ZM16.979,8L21,4H4V20.977L8,17,8,8h8.981Z'/><polygon points='25 4 4 25 4 30 9 30 30 9 30 4 25 4'/>",
+    bottom: "<path opacity='.5' fill-rule='evenodd' d='M13,20h7V13H13v7ZM4,4V26.984l3.955-4L8,8,22.986,8l4-4H4Z'/><polygon points='29.997 5.955 25 11 25 25 11 25 5.955 29.997 30 30 29.997 5.955'/>",
+    support:
+        "<path fill-rule='evenodd' d='M26,13c3.535,0,8-4,8-4H23l-3,3,2,7,5-2-3-4h2ZM22,5L20.827,3H13.062L12,5l5,6Zm-5,9-1-1L13,28l4,3,4-3L18,13ZM11,9H0s4.465,4,8,4h2L7,17l5,2,2-7Z'/>",
+}
+
+const ROLE_CSS = Object.entries(ROLE_ICONS)
+    .map(([role, shapes]) => {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'>${shapes}</svg>`
+
+        return `.role.r-${role} { --icon: url("data:image/svg+xml,${encodeURIComponent(svg)}"); }`
+    })
+    .join('\n')
+
 export const CSS = /* css */ `
 :root {
   --bg: #0d0f12;
@@ -349,7 +370,9 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 .tp-role { flex: none; width: 62px; color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
 
 /* ---------- transfers (after HLTV) ---------- */
-.tr { display: grid; grid-template-columns: 36px 44px 14px 44px minmax(0, 1fr) auto; align-items: center; gap: 8px; background: var(--box); padding: 6px 12px; min-height: 50px; }
+.role { display: block; width: 18px; height: 18px; background: var(--dim); -webkit-mask: var(--icon) center / contain no-repeat; mask: var(--icon) center / contain no-repeat; }
+${ROLE_CSS}
+.tr { display: grid; grid-template-columns: 36px 44px 14px 44px 18px minmax(0, 1fr) auto; align-items: center; gap: 8px; background: var(--box); padding: 6px 12px; min-height: 50px; }
 .tr + .tr { border-top: 1px solid var(--line); }
 .tr-photo { display: block; flex: none; border-radius: 50%; object-fit: cover; object-position: top; background: #ffffff10; }
 .tr-side { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; flex: none; }
@@ -530,7 +553,8 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
   .mhead-ev { flex-wrap: wrap; font-size: 12px; }
   .tp-lineup { gap: 3px; padding: 10px 8px 0; }
   .tp-name { font-size: 11px; }
-  .tr { grid-template-columns: 30px 34px 10px 34px minmax(0, 1fr); gap: 6px; padding: 6px 8px; }
+  .tr { grid-template-columns: 30px 34px 10px 34px 14px minmax(0, 1fr); gap: 6px; padding: 6px 8px; }
+  .tr .role { width: 14px; height: 14px; }
   .tr-text { font-size: 13px; }
   .tr-src { display: none; }
   .tp-row { grid-template-columns: minmax(0, 1fr) 46px minmax(0, 1fr) 48px; }

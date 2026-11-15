@@ -153,6 +153,26 @@ export function roleLabel(role: string): string {
     return ROLE_SHORT.get(role) ?? role
 }
 
+const ROLE_NAME = new Map([
+    ['top', 'Top'],
+    ['jungle', 'Jungle'],
+    ['mid', 'Mid'],
+    ['bottom', 'Bot'],
+    ['support', 'Support'],
+])
+
+// Top / Jungle / Mid / Bot / Support, the full words.
+export function roleName(role: string): string {
+    return ROLE_NAME.get(role) ?? role
+}
+
+// The game's own position icon. Other roles (coach) have none: an empty box of the same size.
+export function RoleIcon(props: { role: string }) {
+    const name = ROLE_NAME.get(props.role)
+
+    return name ? <i class={`role r-${props.role}`} role="img" aria-label={name} title={name} /> : <i />
+}
+
 // Small grey home-league label after a team name, at international events only.
 // A team name that links to the team page when the team's id is known.
 export function TeamName(props: { t: { id?: string; slug?: string; name: string } }) {

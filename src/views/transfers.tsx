@@ -1,7 +1,7 @@
 import { teamUrl, type Ranking } from '../data'
 import { logoUrl, type Fmt } from '../format'
 import type { MoveFeed, MoveSide, TeamMove } from '../wiki'
-import { Layout, Logo, roleLabel } from './ui'
+import { Layout, Logo, RoleIcon, roleLabel } from './ui'
 
 // HLTV's transfers page: who moved where, newest first, one row per player.
 export function TransfersPage(props: {
@@ -97,6 +97,7 @@ function MoveRow(props: { m: TeamMove }) {
             <SideLogo s={m.from} size={26} />
             <span class="tr-arrow">→</span>
             <SideLogo s={m.to} size={26} />
+            <RoleIcon role={m.role} />
             <span class="tr-text">
                 <Sentence m={m} />
             </span>
@@ -223,7 +224,6 @@ function Sentence(props: { m: TeamMove }) {
     return (
         <>
             <b>{m.handle}</b>
-            {m.role !== 'coach' && <span class="tag"> {roleLabel(m.role)}</span>}
             {phrase(m).map((p) => (
                 <> {typeof p === 'string' ? p : <TeamRef s={p} />}</>
             ))}
