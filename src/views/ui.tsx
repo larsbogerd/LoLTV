@@ -9,7 +9,7 @@ import {
     type Match,
     type Team,
 } from '../data'
-import { daysUntil, logoUrl, ordinal, type Fmt } from '../format'
+import { daysUntil, flagEmoji, logoUrl, ordinal, type Fmt } from '../format'
 import { CSS_VERSION } from '../style'
 
 // Stores the viewer's timezone in a cookie so the server can render local times.
@@ -171,6 +171,17 @@ export function RoleIcon(props: { role: string }) {
     const name = ROLE_NAME.get(props.role)
 
     return name ? <i class={`role r-${props.role}`} role="img" aria-label={name} title={name} /> : <i />
+}
+
+// A country as its flag, with the name as tooltip. Nothing for a country we can't map.
+export function Flag(props: { country?: string }) {
+    const flag = flagEmoji(props.country)
+
+    return flag ? (
+        <span class="flag" role="img" aria-label={props.country} title={props.country}>
+            {flag}
+        </span>
+    ) : null
 }
 
 // Small grey home-league label after a team name, at international events only.

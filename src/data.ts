@@ -980,7 +980,6 @@ export interface Player {
     image: string | null
     role: string // top, jungle, mid, bottom, support, coach
     // From Leaguepedia, so only on a 'wiki' roster:
-    title?: string | null // coaches: "Head Coach", "Assistant Coach"
     country?: string
     contractEnd?: string | null // YYYY-MM-DD
     status?: 'sub' | 'inactive' // why someone on the roster isn't starting
@@ -991,8 +990,7 @@ export interface Roster {
     source: 'wiki' | 'feed'
     slots: { role: string; player: Player | null }[] // top to support; null is an open slot
     headCoach: Player | null // unknown on a 'feed' roster
-    bench: Player[]
-    coaches: Player[] // everyone on the staff but the head coach
+    bench: Player[] // players only: the rest of the coaching staff isn't shown
 }
 
 // The five starters, when every slot is filled.
@@ -1162,7 +1160,6 @@ async function wikiRoster(
             name: p.name || match?.name || '',
             image: match?.image ?? null,
             role: p.role,
-            title: p.title,
             country: p.country,
             contractEnd: p.contractEnd,
             status: p.inactive ? 'inactive' : p.sub ? 'sub' : undefined,
@@ -1184,7 +1181,6 @@ async function wikiRoster(
         slots: ROLES.map((role, i) => ({ role, player: picks[i] ? player(picks[i]) : null })),
         headCoach: wiki.headCoach ? player(wiki.headCoach) : null,
         bench: wiki.players.filter((p) => !picks.includes(p)).map(player),
-        coaches: wiki.coaches.map(player),
     }
 }
 
@@ -1197,7 +1193,6 @@ function feedRoster(played: Player[] | null): Roster | null {
         slots: played.map((p) => ({ role: p.role, player: p })),
         headCoach: null,
         bench: [],
-        coaches: [],
     }
 }
 

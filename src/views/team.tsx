@@ -1,21 +1,15 @@
-import {
-    eventUrl,
-    matchUrl,
-    type Match,
-    type Player,
-    type Roster,
-    type Team,
-    type TeamProfile,
-} from '../data'
+import { eventUrl, matchUrl, type Match, type Player, type Team, type TeamProfile } from '../data'
 import { logoUrl, ordinal, type Fmt } from '../format'
 import { MovesBox } from './transfers'
-import { Layout, Logo, roleLabel, roleName, Tag } from './ui'
+import { Flag, Layout, Logo, roleLabel, roleName, Tag } from './ui'
 
 export function TeamPage(props: { fmt: Fmt; team: TeamProfile }) {
     const { fmt, team: t } = props
     const r = t.ranking
     const placements = new Map(t.achievements.map((a) => [a.tournamentId, a.placement]))
     const wiki = t.roster?.source === 'wiki'
+    const bench = t.roster?.bench ?? []
+    const contracts = !!t.roster?.slots.some((s) => s.player?.contractEnd)
 
     return (
         <Layout fmt={fmt} title={t.name} watch={t.upcoming} nav="ranking">
@@ -25,7 +19,7 @@ export function TeamPage(props: { fmt: Fmt; team: TeamProfile }) {
                         {t.roster && (
                             <div class="tp-lineup">
                                 {t.roster.slots.map((s) => (
-                                    <PlayerCard p={s.player} label={roleName(s.role)} />
+                                    <PlayerCard p={s.player} label={roleName(s.role)} contracts={contracts} />
                                 ))}
                             </div>
                         )}
@@ -64,6 +58,7 @@ export function TeamPage(props: { fmt: Fmt; team: TeamProfile }) {
                             </div>
                             {/* Only Leaguepedia knows the coach, so no line without it. */}
                             {wiki && <CoachLine coach={t.roster?.headCoach ?? null} />}
+                            {bench.length > 0 && <BenchLine bench={bench} />}
                         </div>
                     </section>
 
@@ -91,7 +86,6 @@ export function TeamPage(props: { fmt: Fmt; team: TeamProfile }) {
                 </div>
 
                 <div class="col">
-                    {wiki && t.roster && <RosterList roster={t.roster} />}
                     <MovesBox
                         title="Roster moves"
                         moves={t.moves}
@@ -123,71 +117,74 @@ export function TeamPage(props: { fmt: Fmt; team: TeamProfile }) {
 // the first name, which is also how Leaguepedia writes it (Im 'Tom' Jae-hyeon).
 function CoachLine(props: { coach: Player | null }) {
     const { coach } = props
-    const [first, ...rest] = (coach?.name ?? '').split(' ')
+    const words = (coach?.name ?? '').split(' ').filter(Boolean)
+    // A handle that is the coach's own name (André Pereira Guilhoto, "Guilhoto") isn't repeated.
+    const own = words.findIndex((w) => w.toLowerCase() === coach?.handle.toLowerCase())
 
     return (
         <div>
             <span>Head coach</span>
             {coach ? (
-                <b class="tp-coach">
-                    {first} <em>'{coach.handle}'</em> {rest.join(' ')}
+                <b class="tp-people" title={about(coach)}>
+                    <Flag country={coach.country} />{' '}
+                    {own >= 0 ? (
+                        words.map((w, i) => <>{i === own ? <em>{w}</em> : w} </>)
+                    ) : (
+                        <>
+                            {words[0]} <em>'{coach.handle}'</em> {words.slice(1).join(' ')}
+                        </>
+                    )}
                 </b>
             ) : (
-                <b class="tp-coach">Open</b>
+                <b class="tp-people">Open</b>
             )}
         </div>
     )
 }
 
-// One slot of the lineup. Nobody in it: the team is still looking.
-function PlayerCard(props: { p: Player | null; label: string }) {
+// Under contract but not starting, on one line: "Caltys MID, Sola BOT".
+function BenchLine(props: { bench: Player[] }) {
+    return (
+        <div>
+            <span>Bench</span>
+            <b class="tp-people">
+                {props.bench.map((p, i) => (
+                    <span title={about(p)}>
+                        {i > 0 && ', '}
+                        <Flag country={p.country} /> <em>{p.handle}</em> <small>{roleLabel(p.role)}</small>
+                    </span>
+                ))}
+            </b>
+        </div>
+    )
+}
+
+// Tooltip: what Leaguepedia knows about someone and the page has no room for.
+function about(p: Player): string | undefined {
+    const contract = p.contractEnd ? `contract until ${p.contractEnd}` : ''
+
+    return [p.name, p.country, p.status === 'inactive' ? 'inactive' : '', contract].filter(Boolean).join(', ')
+}
+
+// One slot of the lineup. Nobody in it: the team is still looking. `contracts` adds a third
+// line for the contract's last year, on every card or on none so the cards stay level.
+function PlayerCard(props: { p: Player | null; label: string; contracts: boolean }) {
     const { p } = props
     const photo = logoUrl(p?.image, 200)
 
     return (
-        <div class={`tp-player ${p ? '' : 'open'}`}>
+        <div class={`tp-player ${p ? '' : 'open'}`} title={p ? about(p) : undefined}>
             {photo ? <img src={photo} alt="" loading="lazy" decoding="async" /> : <div class="tp-nophoto" />}
             <div class="tp-name">
                 <b>{p?.handle ?? 'Open'}</b>
-                <span>{props.label}</span>
-            </div>
-        </div>
-    )
-}
-
-// Everyone under contract: the five, the bench and the staff, with what Leaguepedia knows
-// about them.
-function RosterList(props: { roster: Roster }) {
-    const r = props.roster
-
-    const row = (p: Player, role: string) => (
-        <div class="li">
-            <span class="tp-role">{role}</span>
-            <span class="grow">
-                <span class="name">{p.handle}</span>
-                <span class="sub name">{[p.name, p.country].filter(Boolean).join(' · ')}</span>
-            </span>
-            {p.contractEnd && (
-                <span class="sub" title={`Contract until ${p.contractEnd}`}>
-                    until {p.contractEnd.slice(0, 4)}
+                <span>
+                    <Flag country={p?.country} /> {props.label}
                 </span>
-            )}
-        </div>
-    )
-
-    return (
-        <section>
-            <h3 class="label">Roster</h3>
-            <div class="list">
-                {r.slots.map((s) => s.player && row(s.player, roleLabel(s.role)))}
-                {r.bench.map((p) => row(p, `${roleLabel(p.role)} ${p.status ?? 'bench'}`))}
-                {/* An interim head coach is the head coach here: the page says who does the job. */}
-                {r.headCoach && row(r.headCoach, 'Head coach')}
-                {r.coaches.map((p) =>
-                    row(p, `${p.title ?? 'Coach'}${p.status === 'inactive' ? ', inactive' : ''}`),
+                {props.contracts && (
+                    <small>{p?.contractEnd ? `until ${p.contractEnd.slice(0, 4)}` : '–'}</small>
                 )}
             </div>
-        </section>
+        </div>
     )
 }
 
