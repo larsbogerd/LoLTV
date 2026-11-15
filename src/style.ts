@@ -247,6 +247,23 @@ details.stage > summary small { margin-right: auto; color: var(--muted); }
 .einfo span { display: block; color: var(--muted); font-size: 11px; }
 .einfo b { font-size: 14px; font-weight: 600; text-transform: capitalize; }
 .egrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; align-items: start; }
+/* final placements of a finished event, after HLTV's prize distribution */
+/* four to a row, the top four two to a row; a short last row stretches to fill */
+.places { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.pl { flex: 1 1 calc(25% - 6px); display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; padding: 12px 10px; background: var(--box); border-radius: var(--radius); text-align: center; }
+a.pl:hover { background: var(--box-hover); }
+.pl.wide { flex-basis: calc(50% - 4px); }
+.pl.top { gap: 6px; padding: 18px 10px; }
+.pl-name { display: flex; align-items: baseline; justify-content: center; gap: 6px; max-width: 100%; font-weight: 600; }
+.pl-name .tn { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl.top .pl-name { font-size: 16px; }
+.pl-rank { font-weight: 800; color: var(--dim); }
+.pl.top .pl-rank { font-size: 15px; }
+.pl.p1 { background: linear-gradient(180deg, #c8aa6e24, transparent 75%), var(--box); box-shadow: inset 0 2px 0 var(--gold); }
+a.pl.p1:hover { background: linear-gradient(180deg, #c8aa6e24, transparent 75%), var(--box-hover); }
+.pl.p1 .pl-name, .pl.p1 .pl-rank { color: var(--gold); }
+.pl.p2 .pl-rank { color: #c0c7d1; }
+.pl.p3 .pl-rank { color: #c98a5a; }
 .tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px 16px; }
 details.sub { margin-top: 10px; }
 details.sub > summary { cursor: pointer; color: var(--link); font-size: 12px; margin-bottom: 8px; }
@@ -453,6 +470,8 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 @media (max-width: 760px) {
   .page { padding: 10px 10px 20px; }
   .home, .split, .egrid { grid-template-columns: minmax(0, 1fr); }
+  .pl { flex-basis: calc(50% - 4px); }
+  .pl.top .pl-name { font-size: 14px; }
   .home .left { grid-template-columns: minmax(0, 1fr); }
   /* HLTV mobile: today's matches become a horizontal strip at the top */
   .home .today { order: -1; }

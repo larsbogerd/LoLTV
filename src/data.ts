@@ -151,12 +151,25 @@ function shiftDay(date: string, days: number): string {
     return new Date(Date.parse(`${date}T00:00:00Z`) + days * 86400e3).toISOString().slice(0, 10)
 }
 
-export function eventStatus(e: Event, now = new Date()): 'ongoing' | 'upcoming' | 'finished' {
+// By the calendar, unless the event's own matches say it's over sooner: the API's end date is
+// often the day after the final. The schedule has to reach the end date for that, so a split
+// whose playoffs aren't scheduled yet stays ongoing.
+export function eventStatus(
+    e: Event,
+    now = new Date(),
+    matches: Match[] = [],
+): 'ongoing' | 'upcoming' | 'finished' {
     const today = now.toISOString().slice(0, 10)
 
     if (today < e.startDate) return 'upcoming'
 
     if (today > e.endDate) return 'finished'
+
+    const lastDay = matches.reduce((max, m) => (m.start > max ? m.start : max), '').slice(0, 10)
+
+    if (lastDay >= shiftDay(e.endDate, -2) && matches.every((m) => m.state === 'completed')) {
+        return 'finished'
+    }
 
     return 'ongoing'
 }
@@ -808,6 +821,43 @@ export function doubleElim(matches: Match[]): DoubleElim | null {
     }
 
     return { upper: named('upper'), lower: named('lower'), final, pending, from, drop }
+}
+
+// Where a team finished an event. Teams that went out in the same round share places from..to
+// (3-4th, 5-8th).
+export interface Finish {
+    team: Team
+    from: number
+    to: number
+}
+
+// Final placements of a finished event, read off its last real bracket: the final's winner and
+// loser, then each earlier round's losers. In double elimination everyone but the finalists goes
+// out in the lower bracket. A later stage that isn't a bracket decides something else (LPL's
+// regional qualifier), and teams that never reached the bracket aren't placed.
+export function finalPlacements(stages: Stage[]): Finish[] {
+    const stage = [...stages].reverse().find((s) => s.double || (s.columns?.length ?? 0) > 1)
+
+    if (!stage) return []
+
+    const rounds = stage.double
+        ? [...stage.double.lower.map((r) => r.matches), stage.double.final ? [stage.double.final] : []]
+        : (stage.columns ?? []).map((c) => c.matches)
+
+    const final = rounds.pop() ?? []
+    const winner = final[0]?.teams.find((t) => t.won === true)
+
+    if (final.length !== 1 || !winner) return []
+    const out: Finish[] = [{ team: winner, from: 1, to: 1 }]
+
+    for (const matches of [final, ...rounds.reverse()]) {
+        const losers = matches.flatMap((m) => m.teams.filter((t) => t.won === false))
+        const from = out.length + 1
+
+        for (const team of losers) out.push({ team, from, to: from + losers.length - 1 })
+    }
+
+    return out
 }
 
 // ---------- power ranking ----------
