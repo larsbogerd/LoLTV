@@ -32,12 +32,10 @@ export function TeamPage(props: { fmt: Fmt; team: TeamProfile }) {
                 <div class="col">
                     <section class="tprofile">
                         {t.roster && (
-                            <div class={`tp-lineup ${wiki ? 'six' : ''}`}>
+                            <div class="tp-lineup">
                                 {t.roster.slots.map((s) => (
                                     <PlayerCard p={s.player} label={ROLE_NAME.get(s.role) ?? s.role} />
                                 ))}
-                                {/* Only Leaguepedia knows the coach, so no empty card without it. */}
-                                {wiki && <PlayerCard p={t.roster.headCoach} label="Head coach" />}
                             </div>
                         )}
                         <div class="tp-head">
@@ -73,6 +71,8 @@ export function TeamPage(props: { fmt: Fmt; team: TeamProfile }) {
                                 <span>Matches this year</span>
                                 <b>{r ? `${r.wins}-${r.losses}` : '–'}</b>
                             </div>
+                            {/* Only Leaguepedia knows the coach, so no line without it. */}
+                            {wiki && <CoachLine coach={t.roster?.headCoach ?? null} />}
                         </div>
                     </section>
 
@@ -125,6 +125,26 @@ export function TeamPage(props: { fmt: Fmt; team: TeamProfile }) {
                 </div>
             </div>
         </Layout>
+    )
+}
+
+// HLTV's coach line under the team's numbers: Sergey 'hally' Shavaev. The handle goes after
+// the first name, which is also how Leaguepedia writes it (Im 'Tom' Jae-hyeon).
+function CoachLine(props: { coach: Player | null }) {
+    const { coach } = props
+    const [first, ...rest] = (coach?.name ?? '').split(' ')
+
+    return (
+        <div>
+            <span>{coach?.title && /interim/i.test(coach.title) ? 'Interim head coach' : 'Head coach'}</span>
+            {coach ? (
+                <b class="tp-coach">
+                    {first} <em>'{coach.handle}'</em> {rest.join(' ')}
+                </b>
+            ) : (
+                <b class="tp-coach">Open</b>
+            )}
+        </div>
     )
 }
 
