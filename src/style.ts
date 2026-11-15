@@ -365,7 +365,6 @@ a.tp-event:hover { color: var(--link); }
 a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 .tp-stats .tp-people { font-weight: 400; color: var(--dim); text-align: right; }
 .tp-people em { font-style: normal; font-weight: 700; color: var(--text); }
-.tp-role { flex: none; width: 28px; color: var(--muted); font-size: 10px; font-weight: 700; }
 /* the older results open in place, under a bar like the "All ..." links */
 .tp-older > summary { cursor: pointer; list-style: none; }
 .tp-older > summary::-webkit-details-marker { display: none; }
@@ -374,7 +373,7 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 .tp-player.open b { font-weight: 400; font-style: italic; }
 
 /* ---------- transfers (after HLTV) ---------- */
-.role { display: block; width: 18px; height: 18px; background: var(--dim); -webkit-mask: var(--icon) center / contain no-repeat; mask: var(--icon) center / contain no-repeat; }
+.role { display: block; flex: none; width: 18px; height: 18px; background: var(--dim); -webkit-mask: var(--icon) center / contain no-repeat; mask: var(--icon) center / contain no-repeat; }
 ${ROLE_CSS}
 .tr { display: grid; grid-template-columns: 36px 44px 14px 44px 18px minmax(0, 1fr) auto; align-items: center; gap: 8px; background: var(--box); padding: 6px 12px; min-height: 50px; }
 .tr + .tr { border-top: 1px solid var(--line); }
