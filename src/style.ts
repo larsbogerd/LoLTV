@@ -75,6 +75,7 @@ footer a { color: var(--dim); }
 .more small { display: block; color: var(--muted); font-size: 11px; margin-top: 1px; }
 .note { color: var(--muted); font-size: 11px; margin: 10px 2px 0; }
 .notice { background: #3b2a1e; color: #f1c79b; padding: 8px 12px; margin-bottom: 12px; border-radius: var(--radius); }
+.notice a { text-decoration: underline; }
 
 /* home-league tag after team names at international events */
 .tag { flex: none; color: var(--muted); font-size: 10px; font-weight: 600; letter-spacing: .3px; }
@@ -264,6 +265,10 @@ a.pl.p1:hover { background: linear-gradient(180deg, #c8aa6e24, transparent 75%),
 .pl.p1 .pl-name, .pl.p1 .pl-rank { color: var(--gold); }
 .pl.p2 .pl-rank { color: #c0c7d1; }
 .pl.p3 .pl-rank { color: #c98a5a; }
+/* the last major's finalists on the homepage: under its banner, and small in the sidebar */
+.home .places { margin: 8px 0; }
+.home .places + .more { margin-top: 0; border-radius: var(--radius); }
+.li.p1 .name { color: var(--gold); font-weight: 600; }
 .tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px 16px; }
 details.sub { margin-top: 10px; }
 details.sub > summary { cursor: pointer; color: var(--link); font-size: 12px; margin-bottom: 8px; }

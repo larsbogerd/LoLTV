@@ -1,6 +1,6 @@
-import { eventStatus, eventUrl, type Event, type Match } from '../data'
+import { eventStatus, type Event, type Match } from '../data'
 import type { Fmt } from '../format'
-import { ByDay, EventBanner, EventChips, eventWhen, Layout, Logo, MatchRow, ResultRow } from './ui'
+import { ByDay, EventBanner, EventChips, EventRow, Layout, MatchRow, ResultRow } from './ui'
 
 export function MatchesPage(props: { fmt: Fmt; event: Event | null; matches: Match[] }) {
     const { fmt, event } = props
@@ -111,19 +111,7 @@ export function EventsPage(props: { fmt: Fmt; events: Event[] }) {
                 <h2 class="h">{title}</h2>
                 <div class="list">
                     {events.map((e) => (
-                        <a class="li" href={eventUrl(e)}>
-                            <Logo src={e.league.image} size={24} />
-                            <span class="grow">
-                                <span class="name">{e.name}</span>
-                                <span class="sub">{e.league.region}</span>
-                            </span>
-                            <span class="sub" style="text-align:right">
-                                {fmt.shortDate(`${e.startDate}T12:00:00Z`)} –{' '}
-                                {fmt.shortDate(`${e.endDate}T12:00:00Z`)}
-                                <br />
-                                {eventWhen(e, fmt, now)}
-                            </span>
-                        </a>
+                        <EventRow event={e} fmt={fmt} now={now} />
                     ))}
                 </div>
             </section>

@@ -11,8 +11,8 @@ import {
     type SwissRow,
     type Team,
 } from '../data'
-import { dateRange, ordinal, type Fmt } from '../format'
-import { CompactMatch, EventBanner, Layout, Logo, Tag, TeamName } from './ui'
+import { dateRange, type Fmt } from '../format'
+import { CompactMatch, EventBanner, Layout, Logo, PlaceCard, Tag, TeamName } from './ui'
 
 // Next up / Latest results stay short; the full lists are one click away. Four fits a
 // whole knockout round (Worlds quarterfinals) without burying the bracket.
@@ -121,32 +121,9 @@ function Placements(props: { places: Finish[] }) {
         <section>
             <h2 class="h">Final placements</h2>
             <div class="places">
-                {props.places.map((p) => {
-                    const top = p.to <= 2
-                    const cls = `pl p${p.from} ${top ? 'top' : ''} ${p.to <= 4 ? 'wide' : ''}`
-                    const url = teamUrl(p.team)
-
-                    const body = (
-                        <>
-                            <Logo src={p.team.image} size={top ? 48 : 28} />
-                            <span class="pl-name">
-                                <span class="tn">{p.team.name}</span>
-                                <Tag t={p.team} />
-                            </span>
-                            <span class="pl-rank">
-                                {p.from === p.to ? ordinal(p.from) : `${p.from}-${ordinal(p.to)}`}
-                            </span>
-                        </>
-                    )
-
-                    return url ? (
-                        <a class={cls} href={url}>
-                            {body}
-                        </a>
-                    ) : (
-                        <div class={cls}>{body}</div>
-                    )
-                })}
+                {props.places.map((p) => (
+                    <PlaceCard p={p} />
+                ))}
             </div>
         </section>
     )

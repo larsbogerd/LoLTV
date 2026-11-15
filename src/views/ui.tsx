@@ -1,6 +1,15 @@
 import type { Child } from 'hono/jsx'
-import { eventStatus, eventUrl, matchUrl, teamUrl, type Event, type Match, type Team } from '../data'
-import { daysUntil, logoUrl, type Fmt } from '../format'
+import {
+    eventStatus,
+    eventUrl,
+    matchUrl,
+    teamUrl,
+    type Event,
+    type Finish,
+    type Match,
+    type Team,
+} from '../data'
+import { daysUntil, logoUrl, ordinal, type Fmt } from '../format'
 import { CSS_VERSION } from '../style'
 
 // Stores the viewer's timezone in a cookie so the server can render local times.
@@ -299,9 +308,10 @@ export function EventBanner(props: {
     matches?: Match[]
     tab?: 'overview' | 'matches' | 'results'
     sub?: string
+    now?: Date
 }) {
     const { event: e, fmt } = props
-    const status = eventStatus(e, new Date(), props.matches)
+    const status = eventStatus(e, props.now, props.matches)
     const dates = `${fmt.shortDate(`${e.startDate}T12:00:00Z`)} – ${fmt.shortDate(`${e.endDate}T12:00:00Z`)}`
 
     const tab = (key: string, href: string, label: string) => (
@@ -355,6 +365,53 @@ export function EventChips(props: { matches: Match[]; base: string; current?: st
                 </a>
             ))}
         </div>
+    )
+}
+
+// One event in a list: logo, name and region, its dates and how far off it is.
+export function EventRow(props: { event: Event; fmt: Fmt; now?: Date }) {
+    const { event: e, fmt } = props
+
+    return (
+        <a class="li" href={eventUrl(e)}>
+            <Logo src={e.league.image} size={24} />
+            <span class="grow">
+                <span class="name">{e.name}</span>
+                <span class="sub">{e.league.region}</span>
+            </span>
+            <span class="sub" style="text-align:right">
+                {fmt.shortDate(`${e.startDate}T12:00:00Z`)} – {fmt.shortDate(`${e.endDate}T12:00:00Z`)}
+                <br />
+                {eventWhen(e, fmt, props.now)}
+            </span>
+        </a>
+    )
+}
+
+// A team's final placement at an event: the two finalists large, the rest small.
+export function PlaceCard(props: { p: Finish }) {
+    const { p } = props
+    const top = p.to <= 2
+    const cls = `pl p${p.from} ${top ? 'top' : ''} ${p.to <= 4 ? 'wide' : ''}`
+    const url = teamUrl(p.team)
+
+    const body = (
+        <>
+            <Logo src={p.team.image} size={top ? 48 : 28} />
+            <span class="pl-name">
+                <span class="tn">{p.team.name}</span>
+                <Tag t={p.team} />
+            </span>
+            <span class="pl-rank">{p.from === p.to ? ordinal(p.from) : `${p.from}-${ordinal(p.to)}`}</span>
+        </>
+    )
+
+    return url ? (
+        <a class={cls} href={url}>
+            {body}
+        </a>
+    ) : (
+        <div class={cls}>{body}</div>
     )
 }
 

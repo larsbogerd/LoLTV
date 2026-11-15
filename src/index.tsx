@@ -3,10 +3,10 @@ import { getCookie } from 'hono/cookie'
 import type { HtmlEscapedString } from 'hono/utils/html'
 import { ApiError } from './api'
 import {
-    featuredEvent,
     getEvent,
     getEventMatches,
     getEvents,
+    getMajors,
     getMatchDetail,
     getRanking,
     getTeamProfile,
@@ -20,6 +20,7 @@ import {
 } from './data'
 import { makeFmt, safeTimeZone, type Fmt } from './format'
 import { ddragonVersion, getChampions, getGameStats, getItems } from './live'
+import { isScenario, previewHome, SCENARIOS } from './preview'
 import { CSS } from './style'
 import { ErrorPage } from './views/error'
 import { EventPage } from './views/event'
@@ -63,18 +64,62 @@ app.get('/favicon.ico', (c) => c.redirect('/favicon.svg', 301))
 
 app.get('/', async (c) => {
     const [events, page, ranking] = await Promise.all([getEvents(), getSchedulePage(), getRanking()])
-    const featured = featuredEvent(events)
-    const featuredMatches = featured ? await getEventMatches(featured) : []
+    const majors = await getMajors(events)
 
     return render(
         c,
         <HomePage
             fmt={fmtFor(c)}
             events={events}
-            featured={featured}
-            featuredMatches={featuredMatches}
+            featured={majors.featured}
+            featuredMatches={majors.matches}
+            last={majors.last}
             schedule={page.matches}
             ranking={ranking}
+        />,
+    )
+})
+
+// The homepage on a day the calendar hasn't reached, with invented events and matches (see
+// src/preview.ts). Local dev only: made-up results must never be served from the live site.
+app.get('/preview/home/:scenario', async (c) => {
+    const name = c.req.param('scenario')
+
+    if (!['localhost', '127.0.0.1'].includes(new URL(c.req.url).hostname) || !isScenario(name)) {
+        return notFound(c)
+    }
+
+    const [events, page, ranking] = await Promise.all([getEvents(), getSchedulePage(), getRanking()])
+    const fake = previewHome(name, events, page.matches, ranking)
+    const majors = await getMajors(fake.events, fake.now)
+    const fmt = makeFmt(safeTimeZone(getCookie(c, 'tz')), fake.now)
+
+    const notice = (
+        <div class="notice">
+            Preview with made-up 2027 data: {SCENARIOS[name].label}, {fmt.longDate(fake.now.toISOString())}.{' '}
+            {Object.keys(SCENARIOS)
+                .filter((s) => s !== name)
+                .map((s) => (
+                    <>
+                        <a href={`/preview/home/${s}`}>{s}</a> ·{' '}
+                    </>
+                ))}
+            <a href="/">real homepage</a>
+        </div>
+    )
+
+    return render(
+        c,
+        <HomePage
+            fmt={fmt}
+            events={fake.events}
+            featured={majors.featured}
+            featuredMatches={majors.matches}
+            last={majors.last}
+            schedule={fake.schedule}
+            ranking={ranking}
+            now={fake.now}
+            notice={notice}
         />,
     )
 })

@@ -89,7 +89,18 @@ Where LOLTV is going and what to watch. Continue from here in a new session.
   `src/data.ts`.
 - **Spoilers:** the site always shows results. There is deliberately no spoiler toggle.
 - **URLs:** HLTV's URL scheme. Slugs are cosmetic, and a wrong slug redirects to the correct one.
-- **Featured event:** the homepage features the ongoing (or next) Worlds, MSI or First Stand.
+- **Homepage:** three states.
+    - **A major is on:** Worlds, MSI or First Stand gets the banner and the centre column, from
+      14 days before it starts until its final is played.
+    - **The leagues are playing:** the centre column lists every league's matches. The last
+      major's champion and runner-up sit in the sidebar.
+    - **A break** (nothing live, nothing starting within 7 days): the last major's banner and
+      finalists lead, above the next events with their dates and the last four results. The
+      winner also leads for 14 days after any major.
+
+    This is a first version. `/preview/home/december` and `/preview/home/january` show the break
+    and the restart with made-up 2027 events and matches (`src/preview.ts`), in local dev only.
+
 - **Finished events:** an event is finished once its last match is played, even when the API's
   end date is a day later. Its overview then shows the final placements, read from the last
   real bracket, in place of the latest results. The `/events` list has no matches to look at,
