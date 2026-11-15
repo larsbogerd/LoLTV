@@ -188,20 +188,57 @@ export function activeEvents(events: Event[], now = new Date()): Event[] {
         )
 }
 
-// The event that gets the banner on the homepage — HLTV does this for majors.
+// A major about to start takes over the homepage this many days ahead. Before that, the
+// leagues still playing matter more than its empty schedule.
+const FEATURE_AHEAD_DAYS = 14
+
+// The event that gets the banner on the homepage — HLTV does this for majors. By the calendar:
+// a major that is on, or the next one once it's close.
 export function featuredEvent(events: Event[], now = new Date()): Event | null {
     const tier1 = events.filter((e) => e.league.tier === 1)
     const ongoing = tier1.find((e) => eventStatus(e, now) === 'ongoing')
 
     if (ongoing) return ongoing
+    const horizon = shiftDay(now.toISOString().slice(0, 10), FEATURE_AHEAD_DAYS)
 
-    const upcoming = tier1
-        .filter((e) => eventStatus(e, now) === 'upcoming')
-        .sort((a, b) => a.startDate.localeCompare(b.startDate))[0]
+    return (
+        tier1
+            .filter((e) => eventStatus(e, now) === 'upcoming' && e.startDate <= horizon)
+            .sort((a, b) => a.startDate.localeCompare(b.startDate))[0] ?? null
+    )
+}
 
-    if (upcoming) return upcoming
+// The latest major that has ended, with who won it.
+export interface LastMajor {
+    event: Event
+    matches: Match[]
+    places: Finish[]
+}
 
-    return tier1.sort((a, b) => b.endDate.localeCompare(a.endDate))[0] ?? null
+// What leads the homepage: `featured` (with its matches) while a major is on or about to start,
+// otherwise `last`. A major whose final has been played counts as ended, whatever its end date.
+export async function getMajors(
+    events: Event[],
+    now = new Date(),
+): Promise<{ featured: Event | null; matches: Match[]; last: LastMajor | null }> {
+    const featured = featuredEvent(events, now)
+    const matches = featured ? await getEventMatches(featured) : []
+
+    if (featured && eventStatus(featured, now, matches) !== 'finished') {
+        return { featured, matches, last: null }
+    }
+
+    const event =
+        featured ??
+        events
+            .filter((e) => e.league.tier === 1 && eventStatus(e, now) === 'finished')
+            .sort((a, b) => b.endDate.localeCompare(a.endDate))[0]
+
+    if (!event) return { featured: null, matches: [], last: null }
+    const played = featured ? matches : await getEventMatches(event)
+    const places = finalPlacements(await getStages(event, played))
+
+    return { featured: null, matches: [], last: { event, matches: played, places } }
 }
 
 // ---------- matches ----------
