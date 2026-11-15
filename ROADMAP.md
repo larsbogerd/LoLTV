@@ -90,3 +90,7 @@ Where LOLTV is going and what to watch. Continue from here in a new session.
 - **Spoilers:** the site always shows results. There is deliberately no spoiler toggle.
 - **URLs:** HLTV's URL scheme. Slugs are cosmetic, and a wrong slug redirects to the correct one.
 - **Featured event:** the homepage features the ongoing (or next) Worlds, MSI or First Stand.
+- **Finished events:** an event is finished once its last match is played, even when the API's
+  end date is a day later. Its overview then shows the final placements, read from the last
+  real bracket, in place of the latest results. The `/events` list has no matches to look at,
+  so it still goes by the end date.

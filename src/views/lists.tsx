@@ -16,7 +16,7 @@ export function MatchesPage(props: { fmt: Fmt; event: Event | null; matches: Mat
         >
             {event ? (
                 <div style="margin-bottom:14px">
-                    <EventBanner event={event} fmt={fmt} tab="matches" />
+                    <EventBanner event={event} fmt={fmt} matches={props.matches} tab="matches" />
                 </div>
             ) : (
                 <EventChips matches={props.matches} base="/matches" />
@@ -59,7 +59,7 @@ export function ResultsPage(props: {
         <Layout fmt={fmt} title={event ? `${event.name} results` : 'Results'} nav="results">
             {event ? (
                 <div style="margin-bottom:14px">
-                    <EventBanner event={event} fmt={fmt} tab="results" />
+                    <EventBanner event={event} fmt={fmt} matches={props.matches} tab="results" />
                 </div>
             ) : (
                 <EventChips matches={results} base="/results" />

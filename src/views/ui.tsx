@@ -291,14 +291,17 @@ export function CompactMatch(props: { m: Match; fmt: Fmt; day?: string }) {
 
 // ---------- event banner ----------
 
+// `matches` are the event's own, when the page has them: they can end the event before the
+// calendar does.
 export function EventBanner(props: {
     event: Event
     fmt: Fmt
+    matches?: Match[]
     tab?: 'overview' | 'matches' | 'results'
     sub?: string
 }) {
     const { event: e, fmt } = props
-    const status = eventStatus(e)
+    const status = eventStatus(e, new Date(), props.matches)
     const dates = `${fmt.shortDate(`${e.startDate}T12:00:00Z`)} – ${fmt.shortDate(`${e.endDate}T12:00:00Z`)}`
 
     const tab = (key: string, href: string, label: string) => (

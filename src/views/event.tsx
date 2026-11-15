@@ -1,14 +1,17 @@
 import {
+    eventStatus,
+    finalPlacements,
     matchUrl,
     teamUrl,
     type DoubleElim,
     type Event,
+    type Finish,
     type Match,
     type Stage,
     type SwissRow,
     type Team,
 } from '../data'
-import { dateRange, type Fmt } from '../format'
+import { dateRange, ordinal, type Fmt } from '../format'
 import { CompactMatch, EventBanner, Layout, Logo, Tag, TeamName } from './ui'
 
 // Next up / Latest results stay short; the full lists are one click away. Four fits a
@@ -29,6 +32,10 @@ export function EventPage(props: { fmt: Fmt; event: Event; matches: Match[]; sta
 
     const stage = (live[0] ?? next[0] ?? recent[0])?.stage
     const teams = new Set(matches.flatMap((m) => m.teams.filter((t) => !t.tbd).map((t) => t.code)))
+    // A finished event leads with who finished where. That says more than its last few results,
+    // so those make way; without a bracket to read placements from, they stay.
+    const over = eventStatus(event, new Date(), matches) === 'finished'
+    const places = over ? finalPlacements(stages) : []
 
     // Stages stay in their natural order (like HLTV); only the one in play is unfolded.
     // Between stages that's the next one up, and once everything is done, the last one.
@@ -38,7 +45,13 @@ export function EventPage(props: { fmt: Fmt; event: Event; matches: Match[]; sta
 
     return (
         <Layout fmt={fmt} title={event.name} watch={matches} nav="events">
-            <EventBanner event={event} fmt={fmt} tab="overview" sub={stage} />
+            <EventBanner
+                event={event}
+                fmt={fmt}
+                matches={matches}
+                tab="overview"
+                sub={over ? undefined : stage}
+            />
             <div class="einfo">
                 <div>
                     <span>Date</span>
@@ -48,15 +61,19 @@ export function EventPage(props: { fmt: Fmt; event: Event; matches: Match[]; sta
                     <span>Teams</span>
                     <b>{teams.size || '–'}</b>
                 </div>
-                <div>
-                    <span>Current stage</span>
-                    <b>{stage ?? '–'}</b>
-                </div>
+                {!over && (
+                    <div>
+                        <span>Current stage</span>
+                        <b>{stage ?? '–'}</b>
+                    </div>
+                )}
                 <div>
                     <span>Region</span>
                     <b>{event.league.region.toLowerCase()}</b>
                 </div>
             </div>
+
+            {places.length > 0 && <Placements places={places} />}
 
             {stages.length === 0 && <div class="empty">No stage information yet.</div>}
             {stages.map((s) => (
@@ -81,7 +98,7 @@ export function EventPage(props: { fmt: Fmt; event: Event; matches: Match[]; sta
                         </div>
                     </section>
                 )}
-                {recent.length > 0 && (
+                {recent.length > 0 && places.length === 0 && (
                     <section class="today">
                         <h3 class="label">
                             Latest results <a href={`/results?event=${event.id}`}>All</a>
@@ -95,6 +112,43 @@ export function EventPage(props: { fmt: Fmt; event: Event; matches: Match[]; sta
                 )}
             </div>
         </Layout>
+    )
+}
+
+// HLTV's prize distribution box, without the prizes: the finalists large, the rest below.
+function Placements(props: { places: Finish[] }) {
+    return (
+        <section>
+            <h2 class="h">Final placements</h2>
+            <div class="places">
+                {props.places.map((p) => {
+                    const top = p.to <= 2
+                    const cls = `pl p${p.from} ${top ? 'top' : ''} ${p.to <= 4 ? 'wide' : ''}`
+                    const url = teamUrl(p.team)
+
+                    const body = (
+                        <>
+                            <Logo src={p.team.image} size={top ? 48 : 28} />
+                            <span class="pl-name">
+                                <span class="tn">{p.team.name}</span>
+                                <Tag t={p.team} />
+                            </span>
+                            <span class="pl-rank">
+                                {p.from === p.to ? ordinal(p.from) : `${p.from}-${ordinal(p.to)}`}
+                            </span>
+                        </>
+                    )
+
+                    return url ? (
+                        <a class={cls} href={url}>
+                            {body}
+                        </a>
+                    ) : (
+                        <div class={cls}>{body}</div>
+                    )
+                })}
+            </div>
+        </section>
     )
 }
 

@@ -1,6 +1,7 @@
 import {
     teamUrl,
     activeEvents,
+    eventStatus,
     eventUrl,
     isSwiss,
     swissTable,
@@ -33,6 +34,8 @@ export function HomePage(props: {
 
     const swiss = swissTable(fm.filter((m) => isSwiss(m.stage)))
     const stage = (live[0] ?? upcoming[0] ?? results[0])?.stage
+    // Its last match played, the featured event is over, whatever its end date says.
+    const over = !!featured && eventStatus(featured, new Date(), fm) === 'finished'
     const matchesHref = featured ? `/matches?event=${featured.id}` : '/matches'
     const resultsHref = featured ? `/results?event=${featured.id}` : '/results'
 
@@ -83,6 +86,7 @@ export function HomePage(props: {
                         <h3 class="label">Events</h3>
                         <div class="list">
                             {activeEvents(props.events)
+                                .filter((e) => !(over && e.id === featured?.id))
                                 .slice(0, 7)
                                 .map((e) => (
                                     <a class="li" href={eventUrl(e)}>
@@ -101,7 +105,7 @@ export function HomePage(props: {
                 </div>
 
                 <div class="col">
-                    {featured && <EventBanner event={featured} fmt={fmt} sub={stage} />}
+                    {featured && <EventBanner event={featured} fmt={fmt} matches={fm} sub={stage} />}
                     {live.length > 0 && (
                         <section>
                             <h2 class="h">Live now</h2>
