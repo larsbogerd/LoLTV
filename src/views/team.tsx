@@ -9,16 +9,7 @@ import {
 } from '../data'
 import { logoUrl, ordinal, type Fmt } from '../format'
 import { MovesBox } from './transfers'
-import { Layout, Logo, roleLabel, Tag } from './ui'
-
-// Full words on the player cards (the shared roleLabel() is the short form).
-const ROLE_NAME = new Map([
-    ['top', 'Top'],
-    ['jungle', 'Jungle'],
-    ['mid', 'Mid'],
-    ['bottom', 'Bot'],
-    ['support', 'Support'],
-])
+import { Layout, Logo, roleLabel, roleName, Tag } from './ui'
 
 export function TeamPage(props: { fmt: Fmt; team: TeamProfile }) {
     const { fmt, team: t } = props
@@ -34,7 +25,7 @@ export function TeamPage(props: { fmt: Fmt; team: TeamProfile }) {
                         {t.roster && (
                             <div class="tp-lineup">
                                 {t.roster.slots.map((s) => (
-                                    <PlayerCard p={s.player} label={ROLE_NAME.get(s.role) ?? s.role} />
+                                    <PlayerCard p={s.player} label={roleName(s.role)} />
                                 ))}
                             </div>
                         )}
@@ -136,7 +127,7 @@ function CoachLine(props: { coach: Player | null }) {
 
     return (
         <div>
-            <span>{coach?.title && /interim/i.test(coach.title) ? 'Interim head coach' : 'Head coach'}</span>
+            <span>Head coach</span>
             {coach ? (
                 <b class="tp-coach">
                     {first} <em>'{coach.handle}'</em> {rest.join(' ')}
@@ -190,7 +181,8 @@ function RosterList(props: { roster: Roster }) {
             <div class="list">
                 {r.slots.map((s) => s.player && row(s.player, roleLabel(s.role)))}
                 {r.bench.map((p) => row(p, `${roleLabel(p.role)} ${p.status ?? 'bench'}`))}
-                {r.headCoach && row(r.headCoach, r.headCoach.title ?? 'Head coach')}
+                {/* An interim head coach is the head coach here: the page says who does the job. */}
+                {r.headCoach && row(r.headCoach, 'Head coach')}
                 {r.coaches.map((p) =>
                     row(p, `${p.title ?? 'Coach'}${p.status === 'inactive' ? ', inactive' : ''}`),
                 )}
