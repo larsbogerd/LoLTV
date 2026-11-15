@@ -1,6 +1,15 @@
-import { eventUrl, matchUrl, type Match, type Player, type Team, type TeamProfile } from '../data'
+import {
+    eventUrl,
+    matchUrl,
+    type Match,
+    type Player,
+    type Roster,
+    type Team,
+    type TeamProfile,
+} from '../data'
 import { logoUrl, ordinal, type Fmt } from '../format'
-import { Layout, Logo, Tag } from './ui'
+import { MovesBox } from './transfers'
+import { Layout, Logo, roleLabel, Tag } from './ui'
 
 // Full words on the player cards (the shared roleLabel() is the short form).
 const ROLE_NAME = new Map([
@@ -15,17 +24,20 @@ export function TeamPage(props: { fmt: Fmt; team: TeamProfile }) {
     const { fmt, team: t } = props
     const r = t.ranking
     const placements = new Map(t.achievements.map((a) => [a.tournamentId, a.placement]))
+    const wiki = t.roster?.source === 'wiki'
 
     return (
         <Layout fmt={fmt} title={t.name} watch={t.upcoming} nav="ranking">
             <div class="split">
                 <div class="col">
                     <section class="tprofile">
-                        {t.starters.length > 0 && (
-                            <div class="tp-lineup">
-                                {t.starters.map((p) => (
-                                    <PlayerCard p={p} />
+                        {t.roster && (
+                            <div class={`tp-lineup ${wiki ? 'six' : ''}`}>
+                                {t.roster.slots.map((s) => (
+                                    <PlayerCard p={s.player} label={ROLE_NAME.get(s.role) ?? s.role} />
                                 ))}
+                                {/* Only Leaguepedia knows the coach, so no empty card without it. */}
+                                {wiki && <PlayerCard p={t.roster.headCoach} label="Head coach" />}
                             </div>
                         )}
                         <div class="tp-head">
@@ -88,6 +100,13 @@ export function TeamPage(props: { fmt: Fmt; team: TeamProfile }) {
                 </div>
 
                 <div class="col">
+                    {wiki && t.roster && <RosterList roster={t.roster} />}
+                    <MovesBox
+                        title="Roster moves"
+                        moves={t.moves}
+                        fmt={fmt}
+                        href={`/transfers?team=${t.id}`}
+                    />
                     {t.achievements.length > 0 && (
                         <section>
                             <h3 class="label">Placements this year</h3>
@@ -109,18 +128,54 @@ export function TeamPage(props: { fmt: Fmt; team: TeamProfile }) {
     )
 }
 
-function PlayerCard(props: { p: Player }) {
+// One slot of the lineup. Nobody in it: the team is still looking.
+function PlayerCard(props: { p: Player | null; label: string }) {
     const { p } = props
-    const photo = logoUrl(p.image, 200)
+    const photo = logoUrl(p?.image, 200)
 
     return (
-        <div class="tp-player">
+        <div class={`tp-player ${p ? '' : 'open'}`}>
             {photo ? <img src={photo} alt="" loading="lazy" decoding="async" /> : <div class="tp-nophoto" />}
             <div class="tp-name">
-                <b>{p.handle}</b>
-                <span>{ROLE_NAME.get(p.role) ?? p.role}</span>
+                <b>{p?.handle ?? 'Open'}</b>
+                <span>{props.label}</span>
             </div>
         </div>
+    )
+}
+
+// Everyone under contract: the five, the bench and the staff, with what Leaguepedia knows
+// about them.
+function RosterList(props: { roster: Roster }) {
+    const r = props.roster
+
+    const row = (p: Player, role: string) => (
+        <div class="li">
+            <span class="tp-role">{role}</span>
+            <span class="grow">
+                <span class="name">{p.handle}</span>
+                <span class="sub name">{[p.name, p.country].filter(Boolean).join(' · ')}</span>
+            </span>
+            {p.contractEnd && (
+                <span class="sub" title={`Contract until ${p.contractEnd}`}>
+                    until {p.contractEnd.slice(0, 4)}
+                </span>
+            )}
+        </div>
+    )
+
+    return (
+        <section>
+            <h3 class="label">Roster</h3>
+            <div class="list">
+                {r.slots.map((s) => s.player && row(s.player, roleLabel(s.role)))}
+                {r.bench.map((p) => row(p, `${roleLabel(p.role)} ${p.status ?? 'bench'}`))}
+                {r.headCoach && row(r.headCoach, r.headCoach.title ?? 'Head coach')}
+                {r.coaches.map((p) =>
+                    row(p, `${p.title ?? 'Coach'}${p.status === 'inactive' ? ', inactive' : ''}`),
+                )}
+            </div>
+        </section>
     )
 }
 

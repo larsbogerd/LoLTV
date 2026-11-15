@@ -6,4 +6,8 @@
     // Home-screen icons and the web app manifest. Files here are served before the Worker runs.
     "assets": { "directory": "./public" },
     "observability": { "enabled": true },
+    // Leaguepedia roster data (src/wiki.ts): one fetch step every five minutes, stored in KV.
+    // Without an id, Wrangler creates the namespace on the first deploy.
+    "kv_namespaces": [{ "binding": "WIKI" }],
+    "triggers": { "crons": ["*/5 * * * *"] },
 }

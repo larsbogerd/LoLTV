@@ -342,6 +342,27 @@ a.tp-event:hover { color: var(--link); }
 .place.p2 { color: #c0c7d1; }
 .place.p3 { color: #c98a5a; }
 a.team-link:hover, a.sw-ot:hover { color: var(--link); }
+/* with a head coach card: Leaguepedia rosters only */
+.tp-lineup.six { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.tp-player.open { opacity: .45; }
+.tp-player.open b { font-weight: 400; font-style: italic; }
+.tp-role { flex: none; width: 62px; color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
+
+/* ---------- transfers (after HLTV) ---------- */
+.tr { display: grid; grid-template-columns: 36px 44px 14px 44px minmax(0, 1fr) auto; align-items: center; gap: 8px; background: var(--box); padding: 6px 12px; min-height: 50px; }
+.tr + .tr { border-top: 1px solid var(--line); }
+.tr-photo { display: block; flex: none; border-radius: 50%; object-fit: cover; object-position: top; background: #ffffff10; }
+.tr-side { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; flex: none; }
+.tr-side small, .tr-side.none { color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; text-align: center; line-height: 1.1; }
+.tr-ph { display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; background: #ffffff14; color: var(--dim); font-weight: 800; }
+.tr-arrow { color: var(--muted); text-align: center; }
+.tr-text { min-width: 0; color: var(--dim); font-size: 14px; }
+.tr-text b { color: var(--text); font-weight: 600; }
+.tr-text a:hover b { color: var(--link); }
+.tr-src { color: var(--link); font-size: 11px; }
+.li.trm { gap: 6px; }
+.trm .tr-side.none { width: 20px; font-size: 8px; }
+.note a { color: var(--dim); text-decoration: underline; }
 
 /* ---------- game scoreboards (match page) ---------- */
 .gboards { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
@@ -509,6 +530,10 @@ a.team-link:hover, a.sw-ot:hover { color: var(--link); }
   .mhead-ev { flex-wrap: wrap; font-size: 12px; }
   .tp-lineup { gap: 3px; padding: 10px 8px 0; }
   .tp-name { font-size: 11px; }
+  .tp-lineup.six { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 8px; }
+  .tr { grid-template-columns: 30px 34px 10px 34px minmax(0, 1fr); gap: 6px; padding: 6px 8px; }
+  .tr-text { font-size: 13px; }
+  .tr-src { display: none; }
   .tp-row { grid-template-columns: minmax(0, 1fr) 46px minmax(0, 1fr) 48px; }
   .tp-date { grid-column: 1 / -1; }
   .gb-teams, .gb-row { padding-left: 6px; padding-right: 6px; }

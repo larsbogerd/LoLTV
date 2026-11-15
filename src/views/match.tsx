@@ -1,5 +1,6 @@
 import {
     eventUrl,
+    startingFive,
     teamUrl,
     type Event,
     type Match,
@@ -54,6 +55,8 @@ export function MatchPage(props: {
     const side = (t: Team) => (t.won === false ? 'side lost' : 'side')
     // Form only matters before a match; once it's on, the sidebar is just streams.
     const form = state === 'unstarted' ? props.profiles : null
+    // Expected lineups, only when both teams have five known starters.
+    const fives = props.profiles?.map((p) => startingFive(p.roster))
     const streams = state !== 'completed' && detail.streams.length > 0
     const splitCls = ['split', live && 'mfull', !form && !streams && 'solo'].filter(Boolean).join(' ')
 
@@ -93,9 +96,7 @@ export function MatchPage(props: {
                 </div>
                 {detail.stakes && <div class="mstakes">{detail.stakes}</div>}
             </div>
-            {props.profiles && state === 'unstarted' && props.profiles.every((p) => p.starters.length) && (
-                <Lineups lineups={[props.profiles[0].starters, props.profiles[1].starters]} />
-            )}
+            {state === 'unstarted' && fives?.[0] && fives[1] && <Lineups lineups={[fives[0], fives[1]]} />}
 
             {live && (
                 // Phones while a game is on: the scoreboard below is the point, so games and streams

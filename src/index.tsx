@@ -28,6 +28,8 @@ import { EventsPage, MatchesPage, ResultsPage } from './views/lists'
 import { MatchPage } from './views/match'
 import { RankingPage } from './views/ranking'
 import { TeamPage } from './views/team'
+import { TransfersPage } from './views/transfers'
+import { getMoves, tick } from './wiki'
 
 const app = new Hono()
 
@@ -62,7 +64,13 @@ app.get('/favicon.svg', (c) =>
 app.get('/favicon.ico', (c) => c.redirect('/favicon.svg', 301))
 
 app.get('/', async (c) => {
-    const [events, page, ranking] = await Promise.all([getEvents(), getSchedulePage(), getRanking()])
+    const [events, page, ranking, feed] = await Promise.all([
+        getEvents(),
+        getSchedulePage(),
+        getRanking(),
+        getMoves(),
+    ])
+
     const majors = await getMajors(events)
 
     return render(
@@ -75,6 +83,7 @@ app.get('/', async (c) => {
             last={majors.last}
             schedule={page.matches}
             ranking={ranking}
+            moves={feed?.moves.slice(0, 5) ?? []}
         />,
     )
 })
@@ -84,6 +93,22 @@ app.get('/ranking', async (c) => {
     const ranking = await getRanking()
 
     return render(c, <RankingPage fmt={fmtFor(c)} ranking={ranking} league={c.req.query('league')} />)
+})
+
+// HLTV style: /transfers, filterable with ?league=<slug> or ?team=<id>
+app.get('/transfers', async (c) => {
+    const [feed, ranking] = await Promise.all([getMoves(), getRanking()])
+
+    return render(
+        c,
+        <TransfersPage
+            fmt={fmtFor(c)}
+            feed={feed}
+            ranking={ranking}
+            league={c.req.query('league')}
+            team={c.req.query('team')}
+        />,
+    )
 })
 
 // HLTV style: /matches, /matches?event=<id>
@@ -243,4 +268,10 @@ app.onError((err, c) => {
     )
 })
 
-export default app
+export default {
+    fetch: app.fetch,
+    // Every five minutes: the next step of the Leaguepedia refresh (see src/wiki.ts).
+    scheduled(event, _env, ctx) {
+        ctx.waitUntil(tick(event.scheduledTime))
+    },
+} satisfies ExportedHandler
