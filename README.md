@@ -13,7 +13,14 @@ the page. It reloads every minute while a match is live, or once when the next m
 npm install
 npm run dev        # http://localhost:8787
 npm run typecheck
+npm test           # the transfer pairing rules (node --test, no dependencies)
 ```
+
+Transfers and rosters come from a cron trigger, which doesn't run by itself in `wrangler dev`.
+To fill the local KV, start the server with `npx wrangler dev --test-scheduled` and request
+`/cdn-cgi/handler/scheduled?time=<ms>` once for each of the twelve steps of an hour: the
+`time` values are the start of an hour plus 0, 5, 10 ... 55 minutes, in milliseconds. Leave a
+few seconds between the requests (see "Rosters and transfers" below).
 
 ## Deploy (Cloudflare Workers)
 
@@ -27,7 +34,10 @@ npm run typecheck
       Wrangler bundles the TypeScript itself.
     - **Deploy command:** `npx wrangler deploy` (the default).
     - **Path:** `/`.
-    - The Worker needs no variables or secrets.
+    - The Worker needs no variables or secrets. It has one KV namespace (`WIKI`, for rosters
+      and transfers) and a cron trigger, both declared in `wrangler.jsonc`. The namespace has no
+      id there, so Wrangler creates it on deploy. If a deploy asks for an id instead, run
+      `npx wrangler kv namespace create WIKI` and put the id it prints in `wrangler.jsonc`.
 3. Click **Deploy**. The site goes live at `https://loltv.<your-subdomain>.workers.dev`.
 4. Under **Settings → Build → Branch control**, check that the production branch is `master`.
    Pushes to other branches upload only preview versions.
@@ -61,12 +71,13 @@ Dockerfile, and nothing else changes.
 | Match           | `/matches/<id>/<team1>-vs-<team2>-<event>`                                |
 | Ranking         | `/ranking`, `/ranking?league=<slug>`                                      |
 | Team            | `/team/<id>/<slug>` (e.g. `/team/100205573496804586/hanwha-life-esports`) |
+| Transfers       | `/transfers`, `/transfers?league=<slug>`, `/transfers?team=<id>`          |
 
 Slugs are cosmetic: a wrong or missing slug redirects to the correct one.
 
 ## Data
 
-All data comes from the **unofficial** API that lolesports.com itself uses
+Matches, events, teams and rankings come from the **unofficial** API that lolesports.com itself uses
 (`esports-api.lolesports.com/persisted/gw/*`, with the public key from their frontend). The API
 can change without notice. The Worker caches responses in memory: 60s for schedules, 6h for
 leagues and tournaments. When the API fails, the Worker continues to serve the last good copy.
@@ -106,15 +117,63 @@ for the grey `LEC` / `LCK` tags next to team names at international events.
 
 ### Team pages
 
-A team page combines four sources:
+A team page combines five sources:
 
-- `getTeams` (REST): the team and its roster
+- `getTeams` (REST): the team, and photos of everyone lolesports.com lists with it
 - the `GetTeamEvents` GraphQL query: its matches across all leagues
 - the power ranking: rank and this year's placements
-- the live-stats feed: the lineup
+- Leaguepedia: the roster (starters, bench, coaches, contracts) and the team's roster moves
+- the live-stats feed: who played the team's latest game
 
-lolesports.com lists subs and academy players with a team, and doesn't say who starts. So
-`lineup()` in `src/data.ts` reads the starting five from the metadata of the team's latest game.
+The roster is who is under contract according to Leaguepedia: one starter per role and the
+head coach as cards, everyone else in the roster list. A role or the head coach slot with nobody
+in it shows as "Open". This is right all winter, when the last game played still shows last
+season's five.
+
+The live-stats feed remains for two cases. When Leaguepedia lists two starters for one role,
+the one who played the latest game gets the card. When Leaguepedia has nothing for a team (KV
+empty, or the team isn't matched), `lineup()` in `src/data.ts` gives the five who played the
+latest game, as before, and the page shows no coach.
+
+### Rosters and transfers (Leaguepedia)
+
+lolesports.com has no roster changes, coaches or contracts. [Leaguepedia](https://lol.fandom.com)
+has them, in Cargo tables that anyone can query without a key: `RosterChanges` (one row per
+join or leave), `NewsItems` (the announcement behind it), `Players` (who is on a team now) and
+`Teams`. The content is CC BY-SA 3.0, so the footer credits it. `src/wiki.ts` holds the client.
+
+Leaguepedia is slow on purpose: more than about one request per six seconds gets a
+`ratelimited` error. So no page ever queries it. A cron trigger runs every five minutes and does
+one step per run, twelve steps to the hour, each with at most one Leaguepedia request:
+
+| Step                 | Does                                                                 |
+| -------------------- | -------------------------------------------------------------------- |
+| `teams`              | the ranked teams, matched to their Leaguepedia names                 |
+| `rosterA`, `rosterB` | everyone on those teams, half the teams at a time                    |
+| `coachesA/B`         | the coaches' joins, which say who is head coach                      |
+| `moves0`, `moves1`   | joins and leaves at those teams in the last 90 days, 500 rows a page |
+| `others0` – `2`      | the same players' joins and leaves at teams outside tier 1           |
+| `photos`             | player photos from the lolesports rosters, 20 teams per hour         |
+| `assemble`           | builds the two documents that pages read                             |
+
+Each step stores its rows in a Workers KV namespace (binding `WIKI`). `assemble` writes
+`wiki:rosters` and `wiki:moves`, and pages read only those two. A step that fails keeps its
+previous rows, and the next hour tries again. The step follows from the clock, so the cron keeps
+no state. One step per run also keeps the Worker under the free plan's limits (CPU time,
+50 subrequests).
+
+Teams are matched by name, then by short code when exactly one active team has it. What neither
+finds goes in `ALIASES` in `src/wiki.ts`, and the `teams` step logs every team it can't match.
+
+Leaguepedia has no "transfer" rows. `toMoves()` in `src/transfers.ts` makes them:
+
+- a leave and a join on the same team and day is a contract renewal (not shown), unless the
+  status changed: then the player was benched, or came back
+- a leave and a join at two teams within a week is one transfer
+- a row on its own is a signing from no team, or a departure to no team
+
+`test/transfers.test.mjs` covers these rules with real rows. The transfers page shows players
+and coaches. It leaves out streamers, managers, analysts and owners.
 
 ### Events and stages
 
@@ -135,11 +194,15 @@ next one. See `featuredEvent()` in `src/data.ts`.
 src/
   index.tsx        routes
   api.ts           raw API client + cache
-  data.ts          domain model: events, matches, standings
+  data.ts          domain model: events, matches, standings, team profiles
+  live.ts          live-stats feed: game scoreboards
+  wiki.ts          Leaguepedia client, the cron steps, and the KV documents pages read
+  transfers.ts     pure roster logic: rows to transfers, players to a roster
   format.ts        timezone-aware formatting, slugs, logo resizing
   style.ts         all CSS
   views/           ui.tsx (shared components), home, lists (matches/results/events),
-                   event, match, ranking
+                   event, match, ranking, team, transfers
+test/              node --test fixtures for transfers.ts
 public/            web app manifest and home-screen icons, served as static assets
 reference/         HLTV (good) and lolesports.com (bad) screenshots used as design reference
 ```
