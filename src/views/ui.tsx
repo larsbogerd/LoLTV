@@ -50,7 +50,7 @@ function refreshHints(matches: Match[], now = Date.now()) {
     return { live, next }
 }
 
-type NavKey = 'home' | 'matches' | 'results' | 'events' | 'ranking'
+type NavKey = 'home' | 'matches' | 'results' | 'events' | 'ranking' | 'transfers'
 
 export function Layout(props: { title?: string; fmt: Fmt; watch?: Match[]; nav?: NavKey; children: Child }) {
     const { live, next } = refreshHints(props.watch ?? [])
@@ -89,6 +89,7 @@ export function Layout(props: { title?: string; fmt: Fmt; watch?: Match[]; nav?:
                             {link('results', '/results', 'Results')}
                             {link('events', '/events', 'Events')}
                             {link('ranking', '/ranking', 'Ranking')}
+                            {link('transfers', '/transfers', 'Transfers')}
                         </nav>
                     </div>
                 </header>
@@ -97,6 +98,10 @@ export function Layout(props: { title?: string; fmt: Fmt; watch?: Match[]; nav?:
                     <span>Times in {props.fmt.tz}</span>
                     <span>
                         Data: <a href="https://lolesports.com">lolesports.com</a> (unofficial)
+                    </span>
+                    <span>
+                        Rosters and transfers: <a href="https://lol.fandom.com">Leaguepedia</a> (
+                        <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>)
                     </span>
                     {live && <span>Auto-refreshing while live</span>}
                     {!live && next && (

@@ -10,6 +10,8 @@ import {
     type Ranking,
 } from '../data'
 import type { Fmt } from '../format'
+import type { TeamMove } from '../wiki'
+import { MovesBox } from './transfers'
 import {
     ByDay,
     CompactMatch,
@@ -42,6 +44,7 @@ export function HomePage(props: {
     last: LastMajor | null // only without a featured event
     schedule: Match[]
     ranking: Ranking | null
+    moves: TeamMove[]
 }) {
     const { fmt, featured, last } = props
     const now = new Date()
@@ -143,6 +146,7 @@ export function HomePage(props: {
                             </a>
                         </section>
                     )}
+                    <MovesBox title="Recent transfers" moves={props.moves} fmt={fmt} href="/transfers" />
                 </div>
 
                 <div class="col">
