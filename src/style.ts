@@ -365,10 +365,15 @@ a.tp-event:hover { color: var(--link); }
 a.team-link:hover, a.sw-ot:hover { color: var(--link); }
 .tp-stats .tp-people { font-weight: 400; color: var(--dim); text-align: right; }
 .tp-people em { font-style: normal; font-weight: 700; color: var(--text); }
-/* the older results open in place, under a bar like the "All ..." links */
-.tp-older > summary { cursor: pointer; list-style: none; }
-.tp-older > summary::-webkit-details-marker { display: none; }
-.tp-older[open] > summary { border-radius: 0; margin-bottom: 8px; }
+/* Results fold: a checkbox, the list, and its label as a bar under the list. Unchecked, the
+   rows past the fold are hidden. Phones fold sooner (see the responsive block). */
+.tp-fold { position: absolute; opacity: 0; pointer-events: none; }
+.tp-fold:not(:checked) ~ .tp-matches .fold { display: none; }
+.tp-foldbar { cursor: pointer; user-select: none; }
+.tp-foldbar.phone { display: none; }
+.tp-foldbar .less, .tp-fold:checked ~ .tp-foldbar .all { display: none; }
+.tp-fold:checked ~ .tp-foldbar .less { display: inline; }
+.tp-fold:focus-visible ~ .tp-foldbar { outline: 1px solid var(--link); outline-offset: -1px; }
 .tp-player.open { opacity: .45; }
 .tp-player.open b { font-weight: 400; font-style: italic; }
 
@@ -556,6 +561,8 @@ ${ROLE_CSS}
   .mhead-ev { flex-wrap: wrap; font-size: 12px; }
   .tp-lineup { gap: 3px; padding: 10px 8px 0; }
   .tp-name { font-size: 11px; }
+  .tp-fold:not(:checked) ~ .tp-matches .fold-phone { display: none; }
+  .tp-foldbar.phone { display: block; }
   .tr { grid-template-columns: 30px 34px 10px 34px 14px minmax(0, 1fr); gap: 6px; padding: 6px 8px; }
   .tr .role { width: 14px; height: 14px; }
   .tr-text { font-size: 13px; }

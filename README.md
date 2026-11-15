@@ -133,8 +133,9 @@ that repeats the five names next to the cards, which is accepted for now. The re
 coaching staff isn't shown. This is right all winter, when the last game played still shows last
 season's five.
 
-The page shows a team's eight latest results. The older ones of the last four months open in
-place: there is no results page per team.
+The page shows a team's latest results, four on a phone and eight on desktop. A bar under the
+list unfolds the rest of the last four months in place, and folds them again: there is no
+results page per team. It is a checkbox and its label, so it needs no script.
 
 Flags are emoji made from the country name (`flagEmoji()` in `src/format.ts`), so there are no
 image files. Windows browsers show two letters instead of a flag.

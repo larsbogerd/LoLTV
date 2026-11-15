@@ -11,15 +11,18 @@ import { logoUrl, ordinal, type Fmt } from '../format'
 import { MovesBox } from './transfers'
 import { Flag, Layout, Logo, RoleIcon, roleName, Tag } from './ui'
 
-// Results shown at once. A team plays some thirty matches in the four months the page covers.
-const SHOWN_RESULTS = 8
+// Results shown before "Show all": a screenful on a phone, more where there is room. A team
+// plays some thirty matches in the four months the page covers.
+const FOLD_PHONE = 4
+const FOLD_DESKTOP = 8
 
 export function TeamPage(props: { fmt: Fmt; team: TeamProfile }) {
     const { fmt, team: t } = props
     const r = t.ranking
     const placements = new Map(t.achievements.map((a) => [a.tournamentId, a.placement]))
     const wiki = t.roster?.source === 'wiki'
-    const older = t.results.slice(SHOWN_RESULTS)
+    // Which results the fold hides: "fold" everywhere, "fold-phone" on phones only.
+    const fold = (i: number) => (i >= FOLD_DESKTOP ? 'fold' : i >= FOLD_PHONE ? 'fold-phone' : '')
     // Has someone to list: a team between rosters can be five open slots.
     const listed = wiki && (t.roster!.bench.length > 0 || t.roster!.slots.some((s) => s.player))
 
@@ -88,24 +91,30 @@ export function TeamPage(props: { fmt: Fmt; team: TeamProfile }) {
                     </section>
                     <section>
                         <h2 class="h">Recent results for {t.name}</h2>
+                        {/* One list that folds: a checkbox and its label under the list, no script.
+                            There is no results page per team to link to (yet). */}
+                        {t.results.length > FOLD_PHONE && (
+                            <input type="checkbox" id="tp-fold" class="tp-fold" />
+                        )}
                         {t.results.length ? (
                             <ByEvent
-                                matches={t.results.slice(0, SHOWN_RESULTS)}
+                                matches={t.results}
                                 team={t}
                                 fmt={fmt}
                                 placements={placements}
+                                fold={fold}
                             />
                         ) : (
                             <div class="empty">No results in the last few months.</div>
                         )}
-                        {/* The rest open in place: there is no results page per team (yet). */}
-                        {older.length > 0 && (
-                            <details class="tp-older">
-                                <summary class="more">
-                                    {older.length} more {older.length === 1 ? 'result' : 'results'}
-                                </summary>
-                                <ByEvent matches={older} team={t} fmt={fmt} placements={placements} />
-                            </details>
+                        {t.results.length > FOLD_PHONE && (
+                            <label
+                                for="tp-fold"
+                                class={`more tp-foldbar ${t.results.length > FOLD_DESKTOP ? '' : 'phone'}`}
+                            >
+                                <span class="all">Show all {t.results.length} results ▾</span>
+                                <span class="less">Show fewer ▴</span>
+                            </label>
                         )}
                     </section>
                 </div>
@@ -268,16 +277,25 @@ function own(m: Match, t: TeamProfile): Team {
 
 // Matches grouped under event headers, like HLTV's team page. Finished events show the
 // team's placement ("LCK Split 3 2026 - 2nd").
-function ByEvent(props: { matches: Match[]; team: TeamProfile; fmt: Fmt; placements: Map<string, number> }) {
-    const groups: { key: string; matches: Match[] }[] = []
+// `fold` gives the class of the match at a position in the list, for rows a fold can hide.
+function ByEvent(props: {
+    matches: Match[]
+    team: TeamProfile
+    fmt: Fmt
+    placements: Map<string, number>
+    fold?: (index: number) => string
+}) {
+    const groups: { key: string; matches: Match[]; first: number }[] = []
 
-    for (const m of props.matches) {
+    props.matches.forEach((m, i) => {
         const key = m.event?.id ?? m.leagueSlug
         const last = groups[groups.length - 1]
 
         if (last?.key === key) last.matches.push(m)
-        else groups.push({ key, matches: [m] })
-    }
+        else groups.push({ key, matches: [m], first: i })
+    })
+
+    const fold = props.fold ?? (() => '')
 
     return (
         <div class="tp-matches">
@@ -287,12 +305,13 @@ function ByEvent(props: { matches: Match[]; team: TeamProfile; fmt: Fmt; placeme
 
                 return (
                     <>
-                        <a class="tp-event" href={e ? eventUrl(e) : undefined}>
+                        {/* An event's header hides with its first match. */}
+                        <a class={`tp-event ${fold(g.first)}`} href={e ? eventUrl(e) : undefined}>
                             {e?.name ?? g.matches[0]!.leagueName}
                             {place && ` - ${ordinal(place)}`}
                         </a>
-                        {g.matches.map((m) => (
-                            <TeamMatchRow m={m} team={props.team} fmt={props.fmt} />
+                        {g.matches.map((m, i) => (
+                            <TeamMatchRow m={m} team={props.team} fmt={props.fmt} cls={fold(g.first + i)} />
                         ))}
                     </>
                 )
@@ -301,7 +320,7 @@ function ByEvent(props: { matches: Match[]; team: TeamProfile; fmt: Fmt; placeme
     )
 }
 
-function TeamMatchRow(props: { m: Match; team: TeamProfile; fmt: Fmt }) {
+function TeamMatchRow(props: { m: Match; team: TeamProfile; fmt: Fmt; cls: string }) {
     const { m, fmt } = props
     const us = own(m, props.team)
     const them = m.teams.find((x) => x !== us) ?? m.teams[1]
@@ -309,7 +328,7 @@ function TeamMatchRow(props: { m: Match; team: TeamProfile; fmt: Fmt }) {
 
     // The whole row links to the match (like match rows elsewhere), so no nested team link.
     return (
-        <a class={`tp-row ${m.state}`} href={matchUrl(m)}>
+        <a class={`tp-row ${m.state} ${props.cls}`} href={matchUrl(m)}>
             <span class="tp-date">{m.state === 'unstarted' ? `${date} ${fmt.time(m.start)}` : date}</span>
             <span class={`tp-side us ${us.won === false ? 'lost' : ''}`}>
                 <span class="tn">{us.name}</span>
