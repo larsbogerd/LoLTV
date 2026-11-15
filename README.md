@@ -122,13 +122,17 @@ A team page combines five sources:
 - `getTeams` (REST): the team, and photos of everyone lolesports.com lists with it
 - the `GetTeamEvents` GraphQL query: its matches across all leagues
 - the power ranking: rank and this year's placements
-- Leaguepedia: the roster (starters, bench, coaches, contracts) and the team's roster moves
+- Leaguepedia: the roster (starters, bench, head coach, contracts) and the team's roster moves
 - the live-stats feed: who played the team's latest game
 
-The roster is who is under contract according to Leaguepedia: one starter per role as cards,
-the head coach as a line under the team's numbers (as on HLTV), everyone else in the roster
-list. A role or the head coach line with nobody in it shows as "Open". This is right all winter, when the last game played still shows last
-season's five.
+The roster is who is under contract according to Leaguepedia. It all sits in the profile box:
+one starter per role as a card (with flag and the contract's last year), then the head coach
+and the bench as lines under the team's numbers, as on HLTV. A role or the head coach line with
+nobody in it shows as "Open". The rest of the coaching staff isn't shown. This is right all
+winter, when the last game played still shows last season's five.
+
+Flags are emoji made from the country name (`flagEmoji()` in `src/format.ts`), so there are no
+image files. Windows browsers show two letters instead of a flag.
 
 The live-stats feed remains for two cases. When Leaguepedia lists two starters for one role,
 the one who played the latest game gets the card. When Leaguepedia has nothing for a team (KV

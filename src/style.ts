@@ -325,7 +325,8 @@ details.sub > summary { cursor: pointer; color: var(--link); font-size: 12px; ma
 .tp-player img, .tp-nophoto { width: 100%; max-width: 120px; aspect-ratio: 1 / 1; object-fit: cover; object-position: top; }
 .tp-nophoto { background: #ffffff0d; border-radius: 50% 50% 0 0; }
 .tp-name { width: 100%; text-align: center; background: #0b1220d0; padding: 4px 2px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tp-name span { display: block; color: var(--muted); font-size: 10px; text-transform: uppercase; }
+.tp-name > span { display: block; color: var(--muted); font-size: 10px; text-transform: uppercase; }
+.tp-name small { display: block; color: var(--muted); font-size: 10px; }
 .tp-head { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
 .tp-head h1 { font-size: 24px; color: #fff; }
 .tp-league { display: flex; align-items: center; gap: 6px; text-transform: capitalize; }
@@ -363,11 +364,11 @@ a.tp-event:hover { color: var(--link); }
 .place.p2 { color: #c0c7d1; }
 .place.p3 { color: #c98a5a; }
 a.team-link:hover, a.sw-ot:hover { color: var(--link); }
-.tp-stats .tp-coach { font-weight: 400; color: var(--dim); text-align: right; }
-.tp-coach em { font-style: normal; font-weight: 700; color: var(--text); }
+.tp-stats .tp-people { font-weight: 400; color: var(--dim); text-align: right; }
+.tp-people em { font-style: normal; font-weight: 700; color: var(--text); }
+.tp-people small { font-size: 10px; font-weight: 700; }
 .tp-player.open { opacity: .45; }
 .tp-player.open b { font-weight: 400; font-style: italic; }
-.tp-role { flex: none; width: 62px; color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
 
 /* ---------- transfers (after HLTV) ---------- */
 .role { display: block; width: 18px; height: 18px; background: var(--dim); -webkit-mask: var(--icon) center / contain no-repeat; mask: var(--icon) center / contain no-repeat; }
