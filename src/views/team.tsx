@@ -9,7 +9,7 @@ import {
 } from '../data'
 import { logoUrl, ordinal, type Fmt } from '../format'
 import { MovesBox } from './transfers'
-import { Flag, Layout, Logo, roleLabel, roleName, Tag } from './ui'
+import { Flag, Layout, Logo, RoleIcon, roleName, Tag } from './ui'
 
 // Results shown at once. A team plays some thirty matches in the four months the page covers.
 const SHOWN_RESULTS = 8
@@ -199,7 +199,7 @@ function RosterList(props: { roster: Roster }) {
 
     const row = (p: Player, note?: string) => (
         <div class="li">
-            <span class="tp-role">{roleLabel(p.role)}</span>
+            <RoleIcon role={p.role} />
             <span class="grow">
                 <span class="name">{p.handle}</span>
                 <span class="sub name">
