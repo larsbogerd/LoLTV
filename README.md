@@ -125,11 +125,16 @@ A team page combines five sources:
 - Leaguepedia: the roster (starters, bench, head coach, contracts) and the team's roster moves
 - the live-stats feed: who played the team's latest game
 
-The roster is who is under contract according to Leaguepedia. It all sits in the profile box:
-one starter per role as a card (with flag and the contract's last year), then the head coach
-and the bench as lines under the team's numbers, as on HLTV. A role or the head coach line with
-nobody in it shows as "Open". The rest of the coaching staff isn't shown. This is right all
-winter, when the last game played still shows last season's five.
+The roster is who is under contract according to Leaguepedia: one starter per role as a card,
+and the head coach as a line under the team's numbers, as on HLTV. A role or the head coach line
+with nobody in it shows as "Open". The sidebar lists the players again, starters then bench,
+with what the cards have no room for: flag, real name and the contract's last year. On desktop
+that repeats the five names next to the cards, which is accepted for now. The rest of the
+coaching staff isn't shown. This is right all winter, when the last game played still shows last
+season's five.
+
+The page shows a team's eight latest results. The older ones of the last four months open in
+place: there is no results page per team.
 
 Flags are emoji made from the country name (`flagEmoji()` in `src/format.ts`), so there are no
 image files. Windows browsers show two letters instead of a flag.
