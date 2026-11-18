@@ -59,6 +59,11 @@ export async function getTeamProfile(id: string, now = new Date()): Promise<Team
 
     if (!raw) return null
     const day = 86400e3
+    const hour = 3600e3
+    // The time windows go into the request URL, which is the cache key. Whole hours keep that
+    // key the same for an hour, so the cache can hit.
+    const from = Math.floor(now.getTime() / hour) * hour
+    const to = from + hour
     const iso = (t: number) => new Date(t).toISOString()
     // Everything thrown here is an Error: ApiError from the clients, or a runtime error.
     const optional = <T>(p: Promise<T>) => p.catch((err: Error) => (console.error(err), null))
@@ -68,15 +73,9 @@ export async function getTeamProfile(id: string, now = new Date()): Promise<Team
         getRanking(now),
         getRosters(),
         getMoves(),
-        optional(fetchTeamEvents(raw.id, ['completed'], iso(now.getTime() - 120 * day), iso(now.getTime()))),
+        optional(fetchTeamEvents(raw.id, ['completed'], iso(from - 120 * day), iso(to))),
         optional(
-            fetchTeamEvents(
-                raw.id,
-                ['unstarted', 'inProgress'],
-                iso(now.getTime() - day),
-                iso(now.getTime() + 60 * day),
-                30,
-            ),
+            fetchTeamEvents(raw.id, ['unstarted', 'inProgress'], iso(from - day), iso(to + 60 * day), 30),
         ),
     ])
 
@@ -84,12 +83,7 @@ export async function getTeamProfile(id: string, now = new Date()): Promise<Team
     const past =
         recentPast?.length === 0
             ? await optional(
-                  fetchTeamEvents(
-                      raw.id,
-                      ['completed'],
-                      `${now.getUTCFullYear()}-01-01T00:00:00Z`,
-                      iso(now.getTime()),
-                  ),
+                  fetchTeamEvents(raw.id, ['completed'], `${now.getUTCFullYear()}-01-01T00:00:00Z`, iso(to)),
               )
             : recentPast
 
