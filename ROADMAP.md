@@ -46,7 +46,7 @@ Where LOLTV is going and what to watch. Continue from here in a new session.
 - **HLTV-style match stars** (importance), e.g. from the power ranks of both teams.
 - **Proper double-elimination brackets** for regional playoffs (LEC, LCS, LPL, ...). Draw them
   like Liquipedia: upper bracket on top, lower bracket below, connector lines, grand final on
-  the right. See `reference/good/liquipedia-lec-double-elim-playoffs.webp` and
+  the right. See
   [the LEC 2025 Summer playoffs](https://liquipedia.net/leagueoflegends/LEC/2025/Summer/Playoffs).
   For now, `bracketColumns()` in `src/data.ts` shows irregular playoffs as a chronological grid.
     - **The hard part is the data:** the API has no bracket structure (`previousMatchIds` is
