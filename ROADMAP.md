@@ -18,7 +18,6 @@ describes how the site works today.
   [Liquipedia's](https://liquipedia.net/leagueoflegends/LEC/2025/Summer/Playoffs).
 - **Match stars** (importance) like HLTV's, e.g. from the power ranks of both teams.
 
-
 ## Fragile points
 
 - **Swiss bracket** (`swissBracket()` in `src/data.ts`). It assumes 16 teams and 3 wins or 3
@@ -31,7 +30,6 @@ describes how the site works today.
       and pages keep the last good data.
     - **Team names:** a team that rebrands on one site only stops matching. The `teams` step
       logs `no Leaguepedia team for ...`. Add the team to `ALIASES`.
-
 
 ## Decisions
 

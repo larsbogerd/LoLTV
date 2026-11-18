@@ -1,6 +1,6 @@
 # LOLTV
 
-An HLTV-style overview of League of Legends esports: live and upcoming matches, results, events,
+An HLTV inspired overview of League of Legends esports: live and upcoming matches, results, events,
 rankings, teams and transfers at a glance.
 
 Live at [loltv.larsbogerd.com](https://loltv.larsbogerd.com/).
@@ -8,23 +8,18 @@ Live at [loltv.larsbogerd.com](https://loltv.larsbogerd.com/).
 ## Why
 
 I follow CS2 esports, and [HLTV](https://www.hltv.org) is a big part of why that is easy: small
-type, dense rows, everything on one page, easy on the eyes. Then Worlds 2026 came up and I wanted
-to follow it the same way. lolesports.com made that hard: big cards, autoplaying video, spoiler
+type, dense rows, everything on one page, easy on the eyes. When League of Legends' Worlds 2026 came up I wanted
+to follow it the same way. [LoL Esports](https://lolesports.com) made that hard: big cards, autoplaying video, spoiler
 gates, and a lot of clicks to learn who plays when.
 
 So I built the site I wanted to use. It shows League of Legends esports the way HLTV shows
-Counter-Strike. It started as a schedule for Worlds and grew into events, brackets, power
-rankings, team pages and a transfers page.
+Counter-Strike. It started as a simple schedule for Worlds and grew into events, brackets, power
+rankings, team pages and a transfers page for the off-season.
 
 Thanks to Riot Games for leaving the data behind lolesports.com open enough to build on, and to
 [Leaguepedia](https://lol.fandom.com) for the rosters and transfers.
 
 ## How it is built
-
-A Cloudflare Worker renders the HTML on the server, with [Hono](https://hono.dev) and server-only
-JSX. The browser gets plain HTML and one CSS file. There is no client framework. The few
-scripts are small and inline: they set a timezone cookie, remember which scoreboards are open,
-and reload the page every minute while a match is live, or once when the next match is due.
 
 The site runs on the free plan of Cloudflare Workers and deploys on every push to `master`. It
 needs no variables or secrets. `wrangler.jsonc` declares the only two resources: a KV namespace
@@ -35,13 +30,13 @@ The parts that took the most thought:
 - **Swiss brackets.** The API gives no Swiss records, so the site replays the results round by
   round to put each match in its record pool (see "Events and stages").
 - **Transfers.** Leaguepedia has joins and leaves, not transfers. Pure functions pair them, and
-  tests cover the rules with real rows (see "Rosters and transfers").
+  tests cover the rules with real rows.
 - **A slow source on a free plan.** Leaguepedia allows about one request per six seconds, so a
   cron trigger fetches it in twelve small steps per hour and no page ever waits for it.
-- **An API that can change.** The data source is unofficial, so each part falls back to
-  something useful when a call fails (see "Data").
+- **APIs that can easily change.** The data source is unofficial, so each part tries falling back to
+  something useful when a call fails.
 
-## URLs (copied from HLTV)
+## URLs
 
 | Page            | URL                                                                       |
 | --------------- | ------------------------------------------------------------------------- |
@@ -54,8 +49,6 @@ The parts that took the most thought:
 | Ranking         | `/ranking`, `/ranking?league=<slug>`                                      |
 | Team            | `/team/<id>/<slug>` (e.g. `/team/100205573496804586/hanwha-life-esports`) |
 | Transfers       | `/transfers`, `/transfers?league=<slug>`, `/transfers?team=<id>`          |
-
-Slugs are cosmetic: a wrong or missing slug redirects to the correct one.
 
 ## Data
 
@@ -79,93 +72,8 @@ Dragon.
 ### Which leagues
 
 The site shows tier 1 only: Worlds, MSI, First Stand, Esports World Cup and Americas Cup, plus
-LCK, LPL, LEC, LCS, CBLOL and LCP. It excludes everything else that the API carries (ERLs,
+LCK, LPL, LEC, LCS, CBLOL and LCP. It excludes everything else that the API carries that I consider noise (ERLs,
 Challengers, promotion tournaments, off-season cups). The list is at the top of `src/data.ts`.
-
-### Global Power Ranking
-
-The Global Power Ranking (GPR) isn't in that API. It comes from lolesports.com's own GraphQL
-endpoint (`lolesports.com/api/gql`). That endpoint runs only _persisted_ queries: a request
-sends the id of a query that their frontend registered, not the query itself. `QUERY_IDS` in
-`src/api.ts` holds the ids that their frontend uses. The ids come from the query manifest chunk
-in their JS bundle.
-
-If Riot changes that query, the id stops working. Then the homepage panel shows the Swiss table
-instead, `/ranking` shows a notice, and the league tags and team links disappear. To fix it,
-find the new `GetTeamGpr` id in their manifest. The Worker caches the ranking for 3 hours.
-
-The ranking also gives each team's id and home league. The site uses them for team links and
-for the grey `LEC` / `LCK` tags next to team names at international events.
-
-### Team pages
-
-A team page combines five sources:
-
-- `getTeams` (REST): the team, and photos of everyone lolesports.com lists with it
-- the `GetTeamEvents` GraphQL query: its matches across all leagues
-- the power ranking: rank and this year's placements
-- Leaguepedia: the roster (starters, bench, head coach, contracts) and the team's roster moves
-- the live-stats feed: who played the team's latest game
-
-The roster is who is under contract according to Leaguepedia: one starter per role as a card,
-and the head coach as a line under the team's numbers, as on HLTV. A role or the head coach line
-with nobody in it shows as "Open". The sidebar lists the players again, starters then bench,
-with what the cards have no room for: flag, real name and the contract's last year. On desktop
-that repeats the five names next to the cards, which is accepted for now. The rest of the
-coaching staff isn't shown. This is right all winter, when the last game played still shows last
-season's five.
-
-The page shows a team's latest results, four on a phone and eight on desktop. A bar under the
-list unfolds the rest of the last four months in place, and folds them again: there is no
-results page per team. It is a checkbox and its label, so it needs no script.
-
-Flags are emoji made from the country name (`flagEmoji()` in `src/format.ts`), so there are no
-image files. Windows browsers show two letters instead of a flag.
-
-The live-stats feed remains for two cases. When Leaguepedia lists two starters for one role,
-the one who played the latest game gets the card. When Leaguepedia has nothing for a team (KV
-empty, or the team isn't matched), `lineup()` in `src/data.ts` gives the five who played the
-latest game, as before, and the page shows no coach.
-
-### Rosters and transfers (Leaguepedia)
-
-lolesports.com has no roster changes, coaches or contracts. [Leaguepedia](https://lol.fandom.com)
-has them, in Cargo tables that anyone can query without a key: `RosterChanges` (one row per
-join or leave), `NewsItems` (the announcement behind it), `Players` (who is on a team now) and
-`Teams`. The content is CC BY-SA 3.0, so the footer credits it. `src/wiki.ts` holds the client.
-
-Leaguepedia is slow on purpose: more than about one request per six seconds gets a
-`ratelimited` error. So no page ever queries it. A cron trigger runs every five minutes and does
-one step per run, twelve steps to the hour, each with at most one Leaguepedia request:
-
-| Step                 | Does                                                                 |
-| -------------------- | -------------------------------------------------------------------- |
-| `teams`              | the ranked teams, matched to their Leaguepedia names                 |
-| `rosterA`, `rosterB` | everyone on those teams, half the teams at a time                    |
-| `coachesA/B`         | the coaches' joins, which say who is head coach                      |
-| `moves0`, `moves1`   | joins and leaves at those teams in the last 90 days, 500 rows a page |
-| `others0` – `2`      | the same players' joins and leaves at teams outside tier 1           |
-| `photos`             | player photos from the lolesports rosters, 20 teams per hour         |
-| `assemble`           | builds the two documents that pages read                             |
-
-Each step stores its rows in a Workers KV namespace (binding `WIKI`). `assemble` writes
-`wiki:rosters` and `wiki:moves`, and pages read only those two. A step that fails keeps its
-previous rows, and the next hour tries again. The step follows from the clock, so the cron keeps
-no state. One step per run also keeps the Worker under the free plan's limits (CPU time,
-50 subrequests).
-
-Teams are matched by name, then by short code when exactly one active team has it. What neither
-finds goes in `ALIASES` in `src/wiki.ts`, and the `teams` step logs every team it can't match.
-
-Leaguepedia has no "transfer" rows. `toMoves()` in `src/transfers.ts` makes them:
-
-- a leave and a join on the same team and day is a contract renewal (not shown), unless the
-  status changed: then the player was benched, or came back
-- a leave and a join at two teams within a week is one transfer
-- a row on its own is a signing from no team, or a departure to no team
-
-`test/transfers.test.mjs` covers these rules with real rows. The transfers page shows players
-and coaches. It leaves out streamers, managers, analysts and owners.
 
 ### Events and stages
 
@@ -180,26 +88,18 @@ use. For other formats it shows the table instead.
 The homepage features the ongoing international event (Worlds / MSI / First Stand), or else the
 next one. See `featuredEvent()` in `src/data.ts`.
 
-## Layout
-
-```
-src/
-  index.tsx        routes
-  api.ts           raw API client + cache
-  data.ts          domain model: events, matches, standings, team profiles
-  live.ts          live-stats feed: game scoreboards
-  wiki.ts          Leaguepedia client, the cron steps, and the KV documents pages read
-  transfers.ts     pure roster logic: rows to transfers, players to a roster
-  format.ts        timezone-aware formatting, slugs, logo resizing
-  style.ts         all CSS
-  views/           ui.tsx (shared components), home, lists (matches/results/events),
-                   event, match, ranking, team, transfers
-test/              node --test fixtures for transfers.ts
-public/            web app manifest and home-screen icons, served as static assets
-```
-
 The server renders times in the viewer's timezone. It reads the timezone from a `tz` cookie that
 a small inline script sets on the first visit.
+
+## Tech stack
+
+- **Language:** TypeScript, strict mode.
+- **Server:** [Hono](https://hono.dev) on Cloudflare Workers, with server-rendered JSX.
+- **Storage and jobs:** Workers KV and a cron trigger, for the Leaguepedia data.
+- **Frontend:** plain HTML and one CSS file. No client framework, and only a few small inline
+  scripts.
+- **Tests:** Node's built-in test runner (`node --test`).
+- **Tooling:** ESLint, Prettier and `tsc`, run by GitHub Actions on every push and pull request.
 
 ## Run locally
 
@@ -213,8 +113,7 @@ npm test           # the transfer pairing rules (node --test, no dependencies)
 Transfers and rosters come from a cron trigger, which doesn't run by itself in `wrangler dev`.
 To fill the local KV, start the server with `npx wrangler dev --test-scheduled` and request
 `/cdn-cgi/handler/scheduled?time=<ms>` once for each of the twelve steps of an hour: the
-`time` values are the start of an hour plus 0, 5, 10 ... 55 minutes, in milliseconds. Leave a
-few seconds between the requests (see "Rosters and transfers" above).
+`time` values are the start of an hour plus 0, 5, 10 ... 55 minutes, in milliseconds.
 
 ## Credits and legal
 
@@ -227,6 +126,9 @@ few seconds between the requests (see "Rosters and transfers" above).
 
 LOLTV was created under Riot Games' "Legal Jibber Jabber" policy using assets owned by Riot
 Games. Riot Games does not endorse or sponsor this project.
+
+The code is licensed under the [MIT License](LICENSE). The license doesn't cover the data, logos
+and photos that the site shows, or the Leaguepedia rows in the test fixtures.
 
 ## Roadmap
 
