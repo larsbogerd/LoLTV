@@ -73,7 +73,7 @@ Dragon.
 
 The site shows tier 1 only: Worlds, MSI, First Stand, Esports World Cup and Americas Cup, plus
 LCK, LPL, LEC, LCS, CBLOL and LCP. It excludes everything else that the API carries that I consider noise (ERLs,
-Challengers, promotion tournaments, off-season cups). The list is at the top of `src/data.ts`.
+Challengers, promotion tournaments, off-season cups). The list is at the top of `src/data/events.ts`.
 
 ### Events and stages
 
@@ -86,7 +86,7 @@ match in its record pool. It assumes the 16-team, 3-wins/3-losses format that Wo
 use. For other formats it shows the table instead.
 
 The homepage features the ongoing international event (Worlds / MSI / First Stand), or else the
-next one. See `featuredEvent()` in `src/data.ts`.
+next one. See `featuredEvent()` in `src/data/events.ts`.
 
 The server renders times in the viewer's timezone. It reads the timezone from a `tz` cookie that
 a small inline script sets on the first visit.

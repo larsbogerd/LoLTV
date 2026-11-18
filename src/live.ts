@@ -1,5 +1,5 @@
 // Live game stats: the lolesports live-stats feed (feed.lolesports.com/livestats/v1).
-// Kept apart from api.ts/data.ts on purpose: it's a different service with its own timing rules.
+// Kept apart from api.ts and data/ on purpose: it's a different service with its own timing rules.
 //
 // How the feed works:
 // - /window/<gameId>?startingTime=<ISO, whole 10s> returns ~10 frames (one per second) from
