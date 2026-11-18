@@ -98,7 +98,7 @@ Where LOLTV is going and what to watch. Continue from here in a new session.
 
 ## Decisions so far
 
-- **Hosting:** Cloudflare Workers, and the site is live (see the README's "Deploy" section). It
+- **Hosting:** Cloudflare Workers, and the site is live (see the README's "How it is built" section). It
   stays on Workers, also for future live stats, which will poll from the client. Only push
   updates would need self-hosting.
 - **Match page:** a stakes line, plus expected lineups before a match starts. Live and result

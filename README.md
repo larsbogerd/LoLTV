@@ -1,63 +1,45 @@
 # LOLTV
 
-HLTV-inspired overview of League of Legends esports: live and upcoming matches and results at a
-glance. Small type, dense rows, no autoplay, no spoiler gates. Personal project.
+An HLTV-style overview of League of Legends esports: live and upcoming matches, results, events,
+rankings, teams and transfers at a glance.
+
+Live at [loltv.larsbogerd.com](https://loltv.larsbogerd.com/).
+
+## Why
+
+I follow CS2 esports, and [HLTV](https://www.hltv.org) is a big part of why that is easy: small
+type, dense rows, everything on one page, easy on the eyes. Then Worlds 2026 came up and I wanted
+to follow it the same way. lolesports.com made that hard: big cards, autoplaying video, spoiler
+gates, and a lot of clicks to learn who plays when.
+
+So I built the site I wanted to use. It shows League of Legends esports the way HLTV shows
+Counter-Strike. It started as a schedule for Worlds and grew into events, brackets, power
+rankings, team pages and a transfers page.
+
+Thanks to Riot Games for leaving the data behind lolesports.com open enough to build on, and to
+[Leaguepedia](https://lol.fandom.com) for the rosters and transfers.
+
+## How it is built
 
 A Cloudflare Worker renders the HTML on the server, with [Hono](https://hono.dev) and server-only
-JSX. The browser gets plain HTML and one CSS file. The only JS sets a timezone cookie and reloads
-the page. It reloads every minute while a match is live, or once when the next match is due.
+JSX. The browser gets plain HTML and one CSS file. There is no client framework. The few
+scripts are small and inline: they set a timezone cookie, remember which scoreboards are open,
+and reload the page every minute while a match is live, or once when the next match is due.
 
-## Run locally
+The site runs on the free plan of Cloudflare Workers and deploys on every push to `master`. It
+needs no variables or secrets. `wrangler.jsonc` declares the only two resources: a KV namespace
+for the Leaguepedia data and a cron trigger that fills it.
 
-```bash
-npm install
-npm run dev        # http://localhost:8787
-npm run typecheck
-npm test           # the transfer pairing rules (node --test, no dependencies)
-```
+The parts that took the most thought:
 
-Transfers and rosters come from a cron trigger, which doesn't run by itself in `wrangler dev`.
-To fill the local KV, start the server with `npx wrangler dev --test-scheduled` and request
-`/cdn-cgi/handler/scheduled?time=<ms>` once for each of the twelve steps of an hour: the
-`time` values are the start of an hour plus 0, 5, 10 ... 55 minutes, in milliseconds. Leave a
-few seconds between the requests (see "Rosters and transfers" below).
-
-## Deploy (Cloudflare Workers)
-
-### From the Cloudflare dashboard (deploys on every push to `master`)
-
-1. Go to **Workers & Pages → Create → Import a repository**. Connect GitHub. Give the Cloudflare
-   app access to the `LoLTV` repo only.
-2. Select the repo and use these settings:
-    - **Project name:** `loltv`. It must match `name` in `wrangler.jsonc`.
-    - **Build command:** leave it empty. The build installs the dependencies automatically, and
-      Wrangler bundles the TypeScript itself.
-    - **Deploy command:** `npx wrangler deploy` (the default).
-    - **Path:** `/`.
-    - The Worker needs no variables or secrets. It has one KV namespace (`WIKI`, for rosters
-      and transfers) and a cron trigger, both declared in `wrangler.jsonc`. The namespace has no
-      id there, so Wrangler creates it on deploy. If a deploy asks for an id instead, run
-      `npx wrangler kv namespace create WIKI` and put the id it prints in `wrangler.jsonc`.
-3. Click **Deploy**. The site goes live at `https://loltv.<your-subdomain>.workers.dev`.
-4. Under **Settings → Build → Branch control**, check that the production branch is `master`.
-   Pushes to other branches upload only preview versions.
-5. To use your own domain, go to **Settings → Domains & Routes → Add → Custom domain** and add
-   it, e.g. `loltv.example.com`. The domain must be on the same Cloudflare account. Cloudflare
-   configures DNS and the certificate automatically. A Worker needs no tunnel.
-
-The Worker's logs are in its **Observability** tab. The free plan is enough. It allows 100k
-requests a day and 10 ms of CPU time per request. A page uses a few ms. Error 1102 means
-that a request exceeded the CPU time limit.
-
-### From the terminal
-
-```bash
-npx wrangler login
-npm run deploy     # -> https://loltv.<your-subdomain>.workers.dev
-```
-
-The code uses only standard `fetch`. A later move to Node/Docker needs `@hono/node-server` and a
-Dockerfile, and nothing else changes.
+- **Swiss brackets.** The API gives no Swiss records, so the site replays the results round by
+  round to put each match in its record pool (see "Events and stages").
+- **Transfers.** Leaguepedia has joins and leaves, not transfers. Pure functions pair them, and
+  tests cover the rules with real rows (see "Rosters and transfers").
+- **A slow source on a free plan.** Leaguepedia allows about one request per six seconds, so a
+  cron trigger fetches it in twelve small steps per hour and no page ever waits for it.
+- **An API that can change.** The data source is unofficial, so each part falls back to
+  something useful when a call fails (see "Data").
 
 ## URLs (copied from HLTV)
 
@@ -214,11 +196,37 @@ src/
                    event, match, ranking, team, transfers
 test/              node --test fixtures for transfers.ts
 public/            web app manifest and home-screen icons, served as static assets
-reference/         HLTV (good) and lolesports.com (bad) screenshots used as design reference
 ```
 
 The server renders times in the viewer's timezone. It reads the timezone from a `tz` cookie that
 a small inline script sets on the first visit.
+
+## Run locally
+
+```bash
+npm install
+npm run dev        # http://localhost:8787
+npm run typecheck
+npm test           # the transfer pairing rules (node --test, no dependencies)
+```
+
+Transfers and rosters come from a cron trigger, which doesn't run by itself in `wrangler dev`.
+To fill the local KV, start the server with `npx wrangler dev --test-scheduled` and request
+`/cdn-cgi/handler/scheduled?time=<ms>` once for each of the twelve steps of an hour: the
+`time` values are the start of an hour plus 0, 5, 10 ... 55 minutes, in milliseconds. Leave a
+few seconds between the requests (see "Rosters and transfers" above).
+
+## Credits and legal
+
+- Match, event, team and ranking data: [lolesports.com](https://lolesports.com), through its
+  unofficial API. Champion icons: Data Dragon.
+- Rosters and transfers: [Leaguepedia](https://lol.fandom.com), licensed
+  [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/).
+- Layout and URL scheme: inspired by [HLTV](https://www.hltv.org). This project has no
+  connection to HLTV.
+
+LOLTV was created under Riot Games' "Legal Jibber Jabber" policy using assets owned by Riot
+Games. Riot Games does not endorse or sponsor this project.
 
 ## Roadmap
 
