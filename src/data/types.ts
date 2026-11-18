@@ -1,3 +1,7 @@
+// Domain layer: turns raw API responses into the shapes the views use.
+// "Event" follows HLTV's meaning: one tournament (e.g. Worlds 2026), which in API terms
+// is a tournament inside a league.
+
 import type { RawState } from '../api'
 
 export type State = RawState

@@ -2,22 +2,13 @@ import { Hono, type Context } from 'hono'
 import { getCookie } from 'hono/cookie'
 import type { HtmlEscapedString } from 'hono/utils/html'
 import { ApiError } from './api'
-import {
-    getEvent,
-    getEventMatches,
-    getEvents,
-    getMajors,
-    getMatchDetail,
-    getRanking,
-    getTeamProfile,
-    type MatchDetail,
-    type TeamProfile,
-    getSchedulePage,
-    getStages,
-    getUpcoming,
-    matchSlug,
-    eventUrl,
-} from './data'
+import { getEvent, getEvents } from './data/events'
+import { getMajors } from './data/majors'
+import { getMatchDetail, type MatchDetail } from './data/match-detail'
+import { eventUrl, getEventMatches, getSchedulePage, getUpcoming, matchSlug } from './data/matches'
+import { getRanking } from './data/ranking'
+import { getStages } from './data/stages'
+import { getTeamProfile, type TeamProfile } from './data/team'
 import { makeFmt, safeTimeZone, type Fmt } from './format'
 import { ddragonVersion, getChampions, getGameStats, getItems } from './live'
 import { CSS } from './style'

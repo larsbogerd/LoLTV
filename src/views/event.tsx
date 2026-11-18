@@ -1,16 +1,8 @@
-import {
-    eventStatus,
-    finalPlacements,
-    matchUrl,
-    teamUrl,
-    type DoubleElim,
-    type Event,
-    type Finish,
-    type Match,
-    type Stage,
-    type SwissRow,
-    type Team,
-} from '../data'
+import { eventStatus } from '../data/events'
+import { matchUrl, teamUrl } from '../data/matches'
+import { finalPlacements, type DoubleElim, type Finish, type Stage } from '../data/stages'
+import type { SwissRow } from '../data/swiss'
+import type { Event, Match, Team } from '../data/types'
 import { dateRange, type Fmt } from '../format'
 import { CompactMatch, EventBanner, Layout, Logo, PlaceCard, Tag, TeamName } from './ui'
 

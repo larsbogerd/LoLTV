@@ -1,4 +1,5 @@
-import { eventStatus, type Event, type Match } from '../data'
+import { eventStatus } from '../data/events'
+import type { Event, Match } from '../data/types'
 import type { Fmt } from '../format'
 import { ByDay, EventBanner, EventChips, EventRow, Layout, MatchRow, ResultRow } from './ui'
 

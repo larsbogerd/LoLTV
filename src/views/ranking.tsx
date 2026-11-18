@@ -1,4 +1,5 @@
-import { teamUrl, type Ranking, type RankedTeam } from '../data'
+import { teamUrl } from '../data/matches'
+import type { RankedTeam, Ranking } from '../data/ranking'
 import type { Fmt } from '../format'
 import { Layout, Logo } from './ui'
 

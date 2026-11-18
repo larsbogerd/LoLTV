@@ -1,14 +1,8 @@
 import type { Child } from 'hono/jsx'
-import {
-    eventStatus,
-    eventUrl,
-    matchUrl,
-    teamUrl,
-    type Event,
-    type Finish,
-    type Match,
-    type Team,
-} from '../data'
+import { eventStatus } from '../data/events'
+import { eventUrl, matchUrl, teamUrl } from '../data/matches'
+import type { Finish } from '../data/stages'
+import type { Event, Match, Team } from '../data/types'
 import { daysUntil, flagEmoji, logoUrl, ordinal, type Fmt } from '../format'
 import { CSS_VERSION } from '../style'
 
