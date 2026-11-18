@@ -107,7 +107,7 @@ a small inline script sets on the first visit.
 npm install
 npm run dev        # http://localhost:8787
 npm run typecheck
-npm test           # the transfer pairing rules (node --test, no dependencies)
+npm test           # transfer pairing rules and the cache (node --test, no dependencies)
 ```
 
 Transfers and rosters come from a cron trigger, which doesn't run by itself in `wrangler dev`.
