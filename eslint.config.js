@@ -4,7 +4,7 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-    globalIgnores(['.wrangler', 'reference', '.agents', '.claude']),
+    globalIgnores(['.wrangler', '.agents', '.claude']),
     {
         files: ['**/*.{ts,tsx}'],
         extends: [js.configs.recommended, tseslint.configs.recommendedTypeChecked],
@@ -15,5 +15,10 @@ export default defineConfig([
                 tsconfigRootDir: import.meta.dirname,
             },
         },
+    },
+    {
+        files: ['test/**/*.mjs'],
+        extends: [js.configs.recommended],
+        languageOptions: { globals: globals.node },
     },
 ])
