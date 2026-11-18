@@ -1,4 +1,5 @@
-import { teamUrl, type Ranking } from '../data'
+import { teamUrl } from '../data/matches'
+import type { Ranking } from '../data/ranking'
 import { logoUrl, type Fmt } from '../format'
 import type { MoveFeed, MoveSide, TeamMove } from '../wiki'
 import { Layout, Logo, RoleIcon, roleLabel } from './ui'

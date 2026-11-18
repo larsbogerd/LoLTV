@@ -1,15 +1,7 @@
-import {
-    eventUrl,
-    startingFive,
-    teamUrl,
-    type Event,
-    type Match,
-    type MatchDetail,
-    type Player,
-    type Stream,
-    type Team,
-    type TeamProfile,
-} from '../data'
+import type { MatchDetail, Stream } from '../data/match-detail'
+import { eventUrl, teamUrl } from '../data/matches'
+import { startingFive, type Player, type TeamProfile } from '../data/team'
+import type { Event, Match, Team } from '../data/types'
 import { logoUrl } from '../format'
 import type { Fmt } from '../format'
 import type { GameStats, ItemInfo } from '../live'

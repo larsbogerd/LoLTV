@@ -1,12 +1,6 @@
-import {
-    eventUrl,
-    matchUrl,
-    type Match,
-    type Player,
-    type Roster,
-    type Team,
-    type TeamProfile,
-} from '../data'
+import { eventUrl, matchUrl } from '../data/matches'
+import type { Player, Roster, TeamProfile } from '../data/team'
+import type { Match, Team } from '../data/types'
 import { logoUrl, ordinal, type Fmt } from '../format'
 import { MovesBox } from './transfers'
 import { Flag, Layout, Logo, RoleIcon, roleName, Tag } from './ui'

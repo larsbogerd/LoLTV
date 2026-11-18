@@ -20,7 +20,7 @@ describes how the site works today.
 
 ## Fragile points
 
-- **Swiss bracket** (`swissBracket()` in `src/data.ts`). It assumes 16 teams and 3 wins or 3
+- **Swiss bracket** (`swissBracket()` in `src/data/swiss.ts`). It assumes 16 teams and 3 wins or 3
   losses, with rounds of 8/8/8/6/3 matches. Other formats show the standings table instead.
 - **Leaguepedia** (`src/wiki.ts`).
     - **Rate limit:** about one request per six seconds per address, measured in November 2026.
@@ -33,7 +33,7 @@ describes how the site works today.
 
 ## Decisions
 
-- **Leagues:** tier 1 only. The list is at the top of `src/data.ts`.
+- **Leagues:** tier 1 only. The list is at the top of `src/data/events.ts`.
 - **Rosters:** who is under contract according to Leaguepedia, not who played the last game.
   Trade-off: when a substitute plays mid-season, the page shows the contracted starter until
   Leaguepedia marks the change.

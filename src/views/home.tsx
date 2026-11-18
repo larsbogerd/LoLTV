@@ -1,14 +1,9 @@
-import {
-    teamUrl,
-    activeEvents,
-    eventUrl,
-    isSwiss,
-    swissTable,
-    type Event,
-    type LastMajor,
-    type Match,
-    type Ranking,
-} from '../data'
+import { activeEvents } from '../data/events'
+import type { LastMajor } from '../data/majors'
+import { eventUrl, teamUrl } from '../data/matches'
+import type { Ranking } from '../data/ranking'
+import { isSwiss, swissTable } from '../data/swiss'
+import type { Event, Match } from '../data/types'
 import type { Fmt } from '../format'
 import type { TeamMove } from '../wiki'
 import { MovesBox } from './transfers'

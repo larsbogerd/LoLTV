@@ -103,10 +103,22 @@ export class ApiError extends Error {}
 const cache = new Map<string, { expires: number; value: unknown }>()
 const MAX_ENTRIES = 300
 
-export async function cached<T>(key: string, ttlSeconds: number, load: () => Promise<T>): Promise<T> {
+// `keep` says whether a loaded value is worth a cache entry. Loaders for ids that come from a
+// request URL use it to leave out "no such team" answers, so junk URLs can't fill the cache.
+export async function cached<T>(
+    key: string,
+    ttlSeconds: number,
+    load: () => Promise<T>,
+    keep: (value: T) => boolean = () => true,
+): Promise<T> {
     const hit = cache.get(key)
 
     if (hit && hit.expires > Date.now()) {
+        // A Map keeps insertion order. Putting a hit back at the end makes the first entry the
+        // one that was used longest ago, which is the one to evict.
+        cache.delete(key)
+        cache.set(key, hit)
+
         // SAFETY: every cache key (a request URL or a fixed name) is only ever loaded by one
         // call site with one result type, so the stored value has type T.
         return hit.value as T
@@ -114,6 +126,10 @@ export async function cached<T>(key: string, ttlSeconds: number, load: () => Pro
 
     try {
         const value = await load()
+
+        if (!keep(value)) return value
+
+        cache.delete(key)
 
         if (cache.size >= MAX_ENTRIES) cache.delete(cache.keys().next().value!)
         cache.set(key, { expires: Date.now() + ttlSeconds * 1000, value })
@@ -133,22 +149,28 @@ async function get<T>(
     path: string,
     params: Record<string, string | undefined>,
     ttlSeconds: number,
+    keep?: (data: T) => boolean,
 ): Promise<T> {
     const qs = new URLSearchParams({ hl: 'en-US' })
 
     for (const [k, v] of Object.entries(params)) if (v) qs.set(k, v)
     const url = `${BASE}/${path}?${qs.toString()}`
 
-    return cached(url, ttlSeconds, async () => {
-        const res = await fetch(url, { headers: { 'x-api-key': API_KEY } })
+    return cached(
+        url,
+        ttlSeconds,
+        async () => {
+            const res = await fetch(url, { headers: { 'x-api-key': API_KEY } })
 
-        if (!res.ok) throw new ApiError(`${path} returned ${res.status}`)
-        const body = await res.json<{ data?: T }>()
+            if (!res.ok) throw new ApiError(`${path} returned ${res.status}`)
+            const body = await res.json<{ data?: T }>()
 
-        if (!body.data) throw new ApiError(`${path} returned no data`)
+            if (!body.data) throw new ApiError(`${path} returned no data`)
 
-        return body.data
-    })
+            return body.data
+        },
+        keep,
+    )
 }
 
 export async function fetchSchedule(
@@ -183,7 +205,12 @@ export async function fetchStandings(tournamentId: string): Promise<RawStage[]> 
 }
 
 export async function fetchEventDetails(matchId: string): Promise<RawEventDetails | null> {
-    const data = await get<{ event: RawEventDetails | null }>('getEventDetails', { id: matchId }, 30)
+    const data = await get<{ event: RawEventDetails | null }>(
+        'getEventDetails',
+        { id: matchId },
+        30,
+        (d) => d.event !== null,
+    )
 
     return data.event
 }
@@ -191,8 +218,9 @@ export async function fetchEventDetails(matchId: string): Promise<RawEventDetail
 // ---------- lolesports.com GraphQL ----------
 // Power ranking and team data live in lolesports.com's own GraphQL API, not the API above.
 // It only runs registered ("persisted") queries, sent by id. These ids come from the query
-// manifest in their frontend bundle (see ROADMAP.md). If Riot changes a query, its id stops
-// working and callers fall back gracefully.
+// manifest in their frontend bundle (search the bundles for
+// `generatePersistedQueryIdsFromManifest`). If Riot changes a query, its id stops working and
+// callers fall back gracefully.
 
 const GQL = 'https://lolesports.com/api/gql'
 
@@ -346,7 +374,12 @@ export interface RawTeamDetail {
 
 // Accepts a numeric team id or a slug.
 export async function fetchTeam(idOrSlug: string): Promise<RawTeamDetail | null> {
-    const data = await get<{ teams: RawTeamDetail[] | null }>('getTeams', { id: idOrSlug }, 6 * 3600)
+    const data = await get<{ teams: RawTeamDetail[] | null }>(
+        'getTeams',
+        { id: idOrSlug },
+        6 * 3600,
+        (d) => !!d.teams?.length,
+    )
 
     return data.teams?.[0] ?? null
 }
