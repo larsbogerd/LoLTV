@@ -141,7 +141,7 @@ export function HomePage(props: {
                             </a>
                         </section>
                     )}
-                    <MovesBox title="Recent transfers" moves={props.moves} fmt={fmt} href="/transfers" />
+                    <MovesBox title="Recent transfers" moves={props.moves} href="/transfers" />
                 </div>
 
                 <div class="col">
