@@ -153,14 +153,16 @@ const ROLE_NAME = new Map([
     ['mid', 'Mid'],
     ['bottom', 'Bot'],
     ['support', 'Support'],
+    ['coach', 'Coach'],
 ])
 
-// Top / Jungle / Mid / Bot / Support, the full words.
+// Top / Jungle / Mid / Bot / Support / Coach, the full words.
 export function roleName(role: string): string {
     return ROLE_NAME.get(role) ?? role
 }
 
-// The game's own position icon. Other roles (coach) have none: an empty box of the same size.
+// The game's own position icon, or our coach icon. Any other role gets an empty box of the
+// same size.
 export function RoleIcon(props: { role: string }) {
     const name = ROLE_NAME.get(props.role)
 

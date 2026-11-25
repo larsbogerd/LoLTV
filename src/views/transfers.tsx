@@ -2,7 +2,7 @@ import { teamUrl } from '../data/matches'
 import type { Ranking } from '../data/ranking'
 import { logoUrl, type Fmt } from '../format'
 import type { MoveFeed, MoveSide, TeamMove } from '../wiki'
-import { Layout, Logo, RoleIcon, roleLabel } from './ui'
+import { Layout, Logo, RoleIcon, roleName } from './ui'
 
 // HLTV's transfers page: who moved where, newest first, one row per player.
 export function TransfersPage(props: {
@@ -139,8 +139,11 @@ function SourceLink(props: { url?: string | null }) {
     )
 }
 
-// "Recent transfers" on the homepage and "Roster moves" on a team page.
-export function MovesBox(props: { title: string; moves: TeamMove[]; fmt: Fmt; href: string }) {
+// "Recent transfers" on the homepage and "Roster moves" on a team page. Without fmt the
+// rows leave out the date: the homepage's sidebar has no room for it next to the name.
+export function MovesBox(props: { title: string; moves: TeamMove[]; fmt?: Fmt; href: string }) {
+    const { fmt } = props
+
     if (!props.moves.length) return null
 
     return (
@@ -153,8 +156,8 @@ export function MovesBox(props: { title: string; moves: TeamMove[]; fmt: Fmt; hr
                         <span class="grow">
                             <span class="name">{m.handle}</span>
                             <span class="sub name">
-                                {m.role === 'coach' ? 'Coach' : roleLabel(m.role)} ·{' '}
-                                {props.fmt.shortDate(`${m.date}T12:00:00Z`)}
+                                {roleName(m.role)}
+                                {fmt && ` · ${fmt.shortDate(`${m.date}T12:00:00Z`)}`}
                             </span>
                         </span>
                         <SideLogo s={m.from} size={20} />
@@ -181,8 +184,8 @@ function Photo(props: { m: TeamMove; size: number }) {
     )
 }
 
-// A team's logo with BENCH or COACH under it, as on HLTV. Teams outside tier 1 have no
-// logo here: they get their initial. No team at all is spelled out.
+// A team's logo. Teams outside tier 1 have no logo here: they get their initial. No team
+// at all is spelled out. Bench or coach status isn't shown: what matters is team A to B.
 function SideLogo(props: { s: MoveSide; size: number }) {
     const { s, size } = props
 
@@ -198,7 +201,6 @@ function SideLogo(props: { s: MoveSide; size: number }) {
                     {s.team.slice(0, 1).toUpperCase()}
                 </span>
             )}
-            {s.label && <small>{s.label}</small>}
         </>
     )
 
