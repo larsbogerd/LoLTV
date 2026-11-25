@@ -181,8 +181,8 @@ function Photo(props: { m: TeamMove; size: number }) {
     )
 }
 
-// A team's logo with BENCH or COACH under it, as on HLTV. Teams outside tier 1 have no
-// logo here: they get their initial. No team at all is spelled out.
+// A team's logo. Teams outside tier 1 have no logo here: they get their initial. No team
+// at all is spelled out. Bench or coach status isn't shown: what matters is team A to B.
 function SideLogo(props: { s: MoveSide; size: number }) {
     const { s, size } = props
 
@@ -198,7 +198,6 @@ function SideLogo(props: { s: MoveSide; size: number }) {
                     {s.team.slice(0, 1).toUpperCase()}
                 </span>
             )}
-            {s.label && <small>{s.label}</small>}
         </>
     )
 

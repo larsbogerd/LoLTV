@@ -386,7 +386,7 @@ ${ROLE_CSS}
 .tr + .tr { border-top: 1px solid var(--line); }
 .tr-photo { display: block; flex: none; border-radius: 50%; object-fit: cover; object-position: top; background: #ffffff10; }
 .tr-side { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; flex: none; }
-.tr-side small, .tr-side.none { color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; text-align: center; line-height: 1.1; }
+.tr-side.none { color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; text-align: center; line-height: 1.1; }
 .tr-ph { display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; background: #ffffff14; color: var(--dim); font-weight: 800; }
 .tr-arrow { color: var(--muted); text-align: center; }
 .tr-text { min-width: 0; color: var(--dim); font-size: 14px; }
